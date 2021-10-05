@@ -1584,7 +1584,7 @@ def test_cliffords__circuit_2(n_qubits, n_gates):
 
 
 @pytest.mark.parametrize('n_qubits,depth', [(12, 100) for _ in range(10)])
-def test_simulation__tensor_trace(n_qubits, depth):
+def test_simulation_1__tensor_trace(n_qubits, depth):
     # Get alphabet
     from string import ascii_letters
     from opt_einsum import contract
@@ -1688,7 +1688,7 @@ def test_simulation__tensor_trace(n_qubits, depth):
 @pytest.mark.parametrize(
     'n_qubits',
     [(n_qubits) for n_qubits in range(16, 25, 4) for _ in range(10)])
-def test_simulation__initialize_state_1a(n_qubits):
+def test_simulation_1__initialize_state_1a(n_qubits):
 
     # Get random initial_state
     initial_state = ''.join(np.random.choice(list('01'), size=n_qubits))
@@ -1708,7 +1708,7 @@ def test_simulation__initialize_state_1a(n_qubits):
 @pytest.mark.parametrize(
     'n_qubits',
     [(n_qubits) for n_qubits in range(16, 25, 4) for _ in range(10)])
-def test_simulation__initialize_state_1b(n_qubits):
+def test_simulation_1__initialize_state_1b(n_qubits):
 
     # Get initial_state
     initial_state = '0' * n_qubits
@@ -1742,7 +1742,7 @@ def test_simulation__initialize_state_1b(n_qubits):
 @pytest.mark.parametrize(
     'n_qubits',
     [(n_qubits) for n_qubits in range(16, 25, 4) for _ in range(10)])
-def test_simulation__initialize_state_2(n_qubits):
+def test_simulation_1__initialize_state_2(n_qubits):
 
     # Get random initial_state
     initial_state = ''.join(np.random.choice(list('01+-'), size=n_qubits))
@@ -1760,7 +1760,7 @@ def test_simulation__initialize_state_2(n_qubits):
 
 
 @pytest.mark.parametrize('n_qubits,depth', [(12, 200) for _ in range(3)])
-def test_simulation__tuple(n_qubits, depth):
+def test_simulation_2__tuple(n_qubits, depth):
     from more_itertools import chunked
     from hybridq.gate.utils import merge
     import pickle
@@ -1799,7 +1799,7 @@ def test_simulation__tuple(n_qubits, depth):
 
 
 @pytest.mark.parametrize('n_qubits,depth', [(12, 200) for _ in range(3)])
-def test_simulation__message(n_qubits, depth):
+def test_simulation_2__message(n_qubits, depth):
     from hybridq.extras.gate import Gate as ExtraGate
     from hybridq.extras.gate import MessageGate
     from more_itertools import flatten
@@ -1855,7 +1855,7 @@ def test_simulation__message(n_qubits, depth):
 
 
 @pytest.mark.parametrize('n_qubits,depth', [(14, 400) for _ in range(3)])
-def test_simulation__fn(n_qubits, depth):
+def test_simulation_2__fn(n_qubits, depth):
     from hybridq.utils.dot import dot
     import pickle
 
@@ -1932,7 +1932,7 @@ def test_simulation__fn(n_qubits, depth):
 
 @pytest.mark.parametrize('n_qubits,depth,n_samples',
                          [(12, 100, 200) for _ in range(3)])
-def test_simulation__stochastic(n_qubits, depth, n_samples):
+def test_simulation_2__stochastic(n_qubits, depth, n_samples):
     import pickle
 
     # Get first random circuits
@@ -1990,7 +1990,7 @@ def test_simulation__stochastic(n_qubits, depth, n_samples):
 
 @pytest.mark.parametrize('n_qubits,depth',
                          [(n_qubits, 200) for n_qubits in range(6, 10, 2)])
-def test_simulation__simulation(n_qubits, depth):
+def test_simulation_3__simulation(n_qubits, depth):
 
     # Get random initial_state
     initial_state = ''.join(np.random.choice(list('01'), size=3)) + ''.join(
@@ -2127,7 +2127,7 @@ def test_simulation__simulation(n_qubits, depth):
 
 @pytest.mark.parametrize('n_qubits,depth',
                          [(n_qubits, 600) for n_qubits in range(16, 23, 2)])
-def test_simulation__simulation_large(n_qubits, depth):
+def test_simulation_4__simulation_large(n_qubits, depth):
 
     # Get random initial_state
     initial_state = ''.join(np.random.choice(list('01'), size=3)) + ''.join(
@@ -2165,7 +2165,7 @@ def test_simulation__simulation_large(n_qubits, depth):
 
 @pytest.mark.parametrize('n_qubits,depth',
                          [(n_qubits, 200) for n_qubits in range(6, 13, 2)])
-def test_simulation__expectation_value_1(n_qubits, depth):
+def test_simulation_5__expectation_value_1(n_qubits, depth):
 
     # Get random initial_state
     initial_state = ''.join(np.random.choice(list('01+-'), size=n_qubits))
@@ -2202,7 +2202,7 @@ def test_simulation__expectation_value_1(n_qubits, depth):
 
 @pytest.mark.parametrize('n_qubits,depth',
                          [(n_qubits, 25) for n_qubits in range(6, 13, 2)])
-def test_simulation__expectation_value_2(n_qubits, depth):
+def test_simulation_5__expectation_value_2(n_qubits, depth):
 
     # Get random circuit
     circuit = _get_rqc_unitary(n_qubits, depth)
@@ -2251,7 +2251,7 @@ def test_simulation__expectation_value_2(n_qubits, depth):
 
 @pytest.mark.parametrize('n_qubits,depth',
                          [(n_qubits, 200) for n_qubits in range(6, 21, 4)])
-def test_simulation__iswap(n_qubits, depth):
+def test_simulation_5__iswap(n_qubits, depth):
 
     # Get random initial_state
     initial_state = ''.join(np.random.choice(list('01+-'), size=n_qubits))
@@ -2297,7 +2297,7 @@ def test_simulation__iswap(n_qubits, depth):
 @pytest.mark.parametrize('n_qubits,k,ndim', [(7, k, ndim) for k in range(1, 4)
                                              for ndim in range(0, 3)
                                              for _ in range(5)])
-def test_dm__supergate_1(n_qubits, k, ndim):
+def test_dm_0__supergate_1(n_qubits, k, ndim):
     from hybridq.dm.gate.utils import to_matrix_supergate
     from hybridq.dm.gate import KrausSuperGate
 
@@ -2370,7 +2370,7 @@ def test_dm__supergate_1(n_qubits, k, ndim):
 
 
 @pytest.mark.parametrize('nq', [8 for _ in range(20)])
-def test_dm__supergate_2(nq):
+def test_dm_0__supergate_2(nq):
     from hybridq.dm.gate import KrausSuperGate, MatrixSuperGate
     from hybridq.gate import MatrixGate, SchmidtGate
     from hybridq.gate.utils import decompose
@@ -2410,7 +2410,7 @@ def test_dm__supergate_2(nq):
 
 
 @pytest.mark.parametrize('n_qubits,n_gates', [(12, 200) for _ in range(3)])
-def test_dm__simulation_1(n_qubits, n_gates):
+def test_dm_1__simulation_1(n_qubits, n_gates):
     from hybridq.circuit.simulation.utils import prepare_state
     from hybridq.dm.gate import KrausSuperGate
     from scipy.linalg import eigvalsh
@@ -2455,7 +2455,7 @@ def test_dm__simulation_1(n_qubits, n_gates):
 
 @pytest.mark.parametrize('n_qubits,n_gates',
                          [(q, 60) for _ in range(4) for q in [4, 8]])
-def test_dm__simulation_2(n_qubits, n_gates):
+def test_dm_2__simulation_2(n_qubits, n_gates):
     from hybridq.dm.gate import KrausSuperGate, BaseSuperGate
     from hybridq.gate import BaseGate
     from scipy.linalg import eigvalsh
@@ -2576,7 +2576,7 @@ def test_dm__simulation_2(n_qubits, n_gates):
 
 
 @pytest.mark.parametrize('n_qubits,n_gates', [(8, 60) for _ in range(4)])
-def test_dm__simulation_3(n_qubits, n_gates):
+def test_dm_3__simulation_3(n_qubits, n_gates):
     from hybridq.gate.measure import _Measure
     from scipy.linalg import eigvalsh
     from string import ascii_letters
