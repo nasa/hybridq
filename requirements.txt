@@ -1,7 +1,6 @@
 autoray
 baytune
 cirq
-cffi
 cotengra @ git+https://github.com/jcmgray/cotengra@master
 dask
 docopt
