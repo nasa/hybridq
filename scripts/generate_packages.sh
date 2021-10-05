@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations under the License.
 
 DOCKER=${DOCKER:-docker}
-COMPOSER=${COMPOSER:-docker-compose}
+COMPOSER=${COMPOSER:-${DOCKER}-compose}
 
 # Create and copy packages
 true && \
