@@ -1002,10 +1002,8 @@ def test_circuit__conj_T_adj_inv(n_qubits, n_gates):
                 for g1, g2 in tqdm(zip(reversed(circuit), circuit.inv()),
                                    total=len(circuit))))
 
-    # Get matrix
+    # Get matrices
     U = utils.matrix(circuit)
-
-    # Get matrix of adjunt
     Ud = utils.matrix(circuit.adj())
     Uc = utils.matrix(circuit.conj())
     UT = utils.matrix(circuit.T())
@@ -1015,7 +1013,8 @@ def test_circuit__conj_T_adj_inv(n_qubits, n_gates):
     assert (np.allclose(U.conj().T, Ud, atol=1e-3))
     assert (np.allclose(U.conj(), Uc, atol=1e-3))
     assert (np.allclose(U.T, UT, atol=1e-3))
-    assert (np.allclose(np.linalg.inv(U), Ui, atol=1e-3))
+    assert (np.allclose(U @ Ui, np.eye(U.shape[0]), atol=1e-3))
+    assert (np.allclose(Ui @ U, np.eye(U.shape[0]), atol=1e-3))
 
 
 @pytest.mark.parametrize('n_qubits,n_gates', [(12, 200) for _ in range(10)])
