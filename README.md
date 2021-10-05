@@ -40,6 +40,12 @@ or by using `conda`:
 conda env create -f envinronment.yml
 ```
 
+**HybridQ** is also available as `docker` container (compiled for a generic
+`x86-64` architecture):
+```
+docker pull smandra/hybridq
+```
+
 ## Installation Troubleshoots
 
 **HybridQ** depends on [KaHyPar](https://github.com/kahypar/kahypar), which

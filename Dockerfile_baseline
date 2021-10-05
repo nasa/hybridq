@@ -15,7 +15,7 @@ RUN curl https://yum.oracle.com/RPM-GPG-KEY-oracle-ol7 --output /etc/pki/rpm-gpg
     gpg --quiet --with-fingerprint /etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
 
 # Update baseline
-RUN yum update && \
+RUN yum -y update && \
     yum -y upgrade && \
     yum install -y openmpi-devel devtoolset-10-gcc-c++.x86_64 && \
     yum clean all -y
