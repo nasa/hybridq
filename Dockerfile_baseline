@@ -1,0 +1,47 @@
+# Get baseline
+FROM quay.io/pypa/manylinux2014_x86_64
+
+# Add Oracle repo
+RUN echo -e "\
+[ol7_software_collections]\n\
+name=Software Collection packages for Oracle Linux 7 (\$basearch)\n\
+baseurl=http://yum.oracle.com/repo/OracleLinux/OL7/SoftwareCollections/\$basearch/\n\
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle\n\
+gpgcheck=1\n\
+enabled=1" > /etc/yum.repos.d/OracleLinux7.repo
+
+# Update Key
+RUN curl https://yum.oracle.com/RPM-GPG-KEY-oracle-ol7 --output /etc/pki/rpm-gpg/RPM-GPG-KEY-oracle && \
+    gpg --quiet --with-fingerprint /etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
+
+# Update baseline
+RUN yum update && \
+    yum -y upgrade && \
+    yum install -y openmpi-devel devtoolset-10-gcc-c++.x86_64 && \
+    yum clean all -y
+
+# Get Python version
+ARG PYTHON
+
+# Set default if needed
+ENV PYTHON=${PYTHON:-cp37-cp37m}
+
+# Update PATH
+ENV PATH=/opt/python/${PYTHON}/bin/:/usr/lib64/openmpi/bin:$PATH
+
+# Update LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=/usr/lib64/openmpi/lib:$LD_LIBRARY_PATH
+
+# Copy requirements
+COPY requirements.txt /tmp/
+
+# Install requirements
+RUN python -m pip install mpi4py && \
+    python -m pip install -r /tmp/requirements.txt && \
+    (python -m pip cache purge || true)
+
+# Remove requirements file
+RUN rm /tmp/requirements.txt
+
+# Add entry point
+ENTRYPOINT ["/bin/bash"]

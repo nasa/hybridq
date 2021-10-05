@@ -1,0 +1,16 @@
+version: "3"
+services:
+  hybridq-baseline:
+    image: hybridq-baseline
+    container_name: hybridq-baseline
+    build:
+      context: ./
+      dockerfile: Dockerfile_baseline
+  hybridq:
+    image: hybridq
+    container_name: hybridq
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    depends_on:
+      - hybridq-baseline

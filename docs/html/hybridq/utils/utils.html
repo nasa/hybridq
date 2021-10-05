@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>hybridq.utils.utils API documentation</title>
+<meta name="description" content="Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>hybridq.utils.utils</code></h1>
+</header>
+<section id="section-intro">
+<p>Author: Salvatore Mandra (salvatore.mandra@nasa.gov)</p>
+<p>Copyright © 2021, United States Government, as represented by the Administrator
+of the National Aeronautics and Space Administration. All rights reserved.</p>
+<p>The HybridQ: A Hybrid Simulator for Quantum Circuits platform is licensed under
+the Apache License, Version 2.0 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of the License at
+<a href="http://www.apache.org/licenses/LICENSE-2.0.">http://www.apache.org/licenses/LICENSE-2.0.</a></p>
+<p>Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Author: Salvatore Mandra (salvatore.mandra@nasa.gov)
+
+Copyright © 2021, United States Government, as represented by the Administrator
+of the National Aeronautics and Space Administration. All rights reserved.
+
+The HybridQ: A Hybrid Simulator for Quantum Circuits platform is licensed under
+the Apache License, Version 2.0 (the &#34;License&#34;); you may not use this file
+except in compliance with the License. You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+&#34;&#34;&#34;
+
+from __future__ import annotations
+import numpy as np
+
+
+def _type(x):
+    try:
+        float(x)
+    except:
+        return type(x)
+    else:
+        return float
+
+
+class _Wrapper:
+    &#34;&#34;&#34;
+    Wrapper used to sort most of the iterables.
+    &#34;&#34;&#34;
+
+    def __init__(self, v):
+        # Only hashable objects are allowed
+        if not getattr(v, &#39;__hash__&#39;, None):
+            raise ValueError(&#34;Only hashable objects are allowed.&#34;)
+
+        # Assign
+        self.__v = v
+
+    @property
+    def v(self):
+        return self.__v
+
+    def __str__(self):
+        return self.v.__str__()
+
+    def __repr__(self):
+        return self.v.__repr__()
+
+    def __hash__(self):
+        return self.v.__hash__()
+
+    def __eq__(self, other: any):
+        # Get value if Wrapper
+        other = other.v if isinstance(other, _Wrapper) else v
+
+        # Return if equal
+        return self.v == other
+
+    def __lt__(self, other: any):
+        # Get value if Wrapper
+        other = other.v if isinstance(other, _Wrapper) else v
+
+        # If they are the same, just return False
+        if self.v == other:
+            return False
+
+        # Try directly
+        try:
+            return self.v &lt; other
+
+        # Try alternatives
+        except:
+
+            # If types differ, sort accordingly to the type
+            if type(self.v) != type(other):
+                return str(type(self.v)) &lt; str(type(other))
+
+            # If the types are the same, sort accordingly to
+            # their representation
+            try:
+                # Get the two representations
+                _r1 = self.v.__repr__()
+                _r2 = other.__repr__()
+
+                # Ther two representations should be different as
+                # we already checked that the two objects differ
+                if _r1 != _r2:
+                    return _r1 &lt; _r2
+
+            except:
+                pass
+
+            # Raise an Error if nothing works
+            raise TypeError(f&#34;&#39;&lt;&#39; not supported.&#34;)
+
+    def __le__(self, other):
+        return self == other or self &lt; v
+
+    def __ge__(self, other):
+        return not self &lt; other
+
+    def __gt__(self, other):
+        return not self &lt;= other
+
+
+def isintegral(x: any):
+    &#34;&#34;&#34;
+    Return `True` if `x` is integral. The test is done by converting the `x` to
+    `int`.
+    &#34;&#34;&#34;
+    try:
+        int(x)
+    except:
+        return False
+    else:
+        return int(x) == x
+
+
+def isnumber(x: any):
+    &#34;&#34;&#34;
+    Return `True` if `x` is integral. The test is done by converting the `x` to
+    `int`.
+    &#34;&#34;&#34;
+    try:
+        float(x)
+    except:
+        return False
+    else:
+        return True
+
+
+def sort(iterable, *, key=None, reverse=False):
+    &#34;&#34;&#34;
+    Sort heterogeneous list.
+
+    &#34;&#34;&#34;
+
+    return sorted(iterable,
+                  key=lambda x: _Wrapper(x if key is None else key(x)),
+                  reverse=reverse)
+
+
+def argsort(iterable, *, key=None, reverse=False):
+    &#34;&#34;&#34;
+    Argsort heterogeneous list.
+    &#34;&#34;&#34;
+
+    return [
+        x for _, x in sort((
+            (y if key is None else key(y), x) for x, y in enumerate(iterable)),
+                           key=lambda x: x[0],
+                           reverse=reverse)
+    ]
+
+
+def svd(a, axes: iter[int], sort: bool = False, atol: float = 1e-8, **kwargs):
+    &#34;&#34;&#34;
+    Return the SVD of `a` by splitting it accordingly to `axes`.
+
+    Parameters
+    ----------
+    a: numpy.ndarray
+        Array to decompose.
+    axes: iter[int]
+        Axes used to split `a`.
+    sort: bool, optional
+        If `True`, sort Schmidt decomposition.
+    atol: float, optoinal
+        Remove all Schmidt decomposition with weight smaller than `atol`.
+
+    Returns
+    -------
+    s, uh, vh:
+        Decomposition of `a` in `uh` and `vh`, with `uh` containing `axes`. `s`
+        are the weights of the decomposition.
+
+    See Also
+    --------
+    `scipy.linalg.svd`
+    &#34;&#34;&#34;
+    from scipy.linalg import svd
+
+    # Set defaults
+    kwargs.setdefault(&#39;full_matrices&#39;, False)
+
+    # Get array
+    a = np.asarray(a)
+
+    # Check axes
+    axes = tuple(map(int, axes))
+
+    # Check that there are no repeated axes
+    if len(axes) != len(set(axes)):
+        raise ValueError(&#34;Axes cannot be repeated in &#39;axes&#39;.&#34;)
+
+    # Check axes are within a dimenions
+    if any(not 0 &lt;= x &lt; a.ndim for x in axes):
+        raise ValueError(&#34;&#39;axes&#39; must be a list of valid &#39;a&#39; axes.&#34;)
+
+    # Get second half
+    alt_axes = tuple(x for x in range(a.ndim) if x not in axes)
+
+    # Get order
+    order = axes + alt_axes
+
+    # Save shape
+    shape = a.shape
+
+    # Get sizes of the left and right
+    size_l = int(np.prod([shape[x] for x in axes]))
+    size_r = int(np.prod([shape[x] for x in alt_axes]))
+
+    # Check
+    assert (size_l * size_r == np.prod(shape))
+
+    # Transpose and reshape
+    a = np.reshape(np.transpose(a, order), (size_l, size_r))
+
+    # Apply SVD
+    u, s, vh = svd(a, **kwargs)
+    uh = u.T
+
+    # Remove all weights below atol
+    if atol:
+        _sel = np.abs(s) &gt;= atol
+        s, uh, vh = s[_sel], uh[_sel], vh[_sel]
+
+    # Sort if required
+    if sort:
+        _sel = np.argsort(s)
+        s, uh, vh = s[_sel], uh[_sel], vh[_sel]
+
+    # Check
+    #assert (np.allclose(np.reshape(
+    #    sum(s * np.kron(uh, vh) for s, uh, vh in zip(s, uh, vh)),
+    #    (size_l, size_r)),
+    #                    a,
+    #                    atol=1e-5))
+
+    # Reshape
+    uh = np.reshape(uh, [len(s)] + [shape[x] for x in axes])
+    vh = np.reshape(vh, [len(s)] + [shape[x] for x in alt_axes])
+
+    return s, uh, vh
+
+
+def kron(a: np.ndarray, *cs: tuple[np.ndarray, ...], **kwargs):
+    &#34;&#34;&#34;
+    Compute the Kronecker product among multiple arrays.
+
+    Parameters
+    ----------
+    a, cs...: numpy.ndarray
+        Arrays used to compute the Kronecker product
+
+    Returns
+    -------
+    numpy.ndarray
+        The Kronecker product.
+
+    See Also
+    --------
+    numpy.kron
+    &#34;&#34;&#34;
+
+    # Iteratively compute Kronecker product
+    return kron(np.kron(a, cs[0]), *cs[1:]) if len(cs) else a
+
+
+class globalize(object):
+    &#34;&#34;&#34;
+    Globalize any function.
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 f: callable,
+                 *,
+                 name: str = None,
+                 check_if_safe: bool = False):
+        from copy import copy
+        import sys
+
+        # If name not provided ..
+        if name is None:
+            import uuid
+
+            # Get initial node
+            uuid.getnode()
+
+            # Get random UUID
+            name = uuid.uuid1()
+
+            # Check if safely generated
+            if check_if_safe and name.is_safe != uuid.SafeUUID.safe:
+                raise RuntimeError(
+                    f&#34;Unique name &#39;{name}&#39; generated not in a safe way.&#34;)
+
+        # Initialize
+        self.__f = copy(f)
+        self.__name = self.__f.__name__
+        self.__qualname = self.__f.__qualname__
+        self.__global_name = str(name)
+        self.__namespace = sys.modules[self.__f.__module__]
+
+    @property
+    def f(self):
+        return self.__f
+
+    @property
+    def name(self):
+        return self.__global_name
+
+    @property
+    def namespace(self):
+        return self.__namespace
+
+    def __enter__(self):
+        # Assign new name to function
+        self.f.__name__ = self.f.__qualname__ = self.name
+
+        # Add function to namespace
+        setattr(self.namespace, self.name, self.f)
+
+        # Return function
+        return self.f
+
+    def __exit__(self, type, value, traceback):
+        # Return original name
+        self.f.__name__ = self.__name
+        self.f.__qualname__ = self.__qualname
+
+        # Delete global name from namespace
+        delattr(self.namespace, self.name)
+
+    def __call__(self, *args, **kwargs):
+        with self as f:
+            return f(*args, **kwargs)
+
+
+# Define new DeprecationWarning (to always print the warning signal)
+class DeprecationWarning(Warning):
+    pass
+
+
+# Load library
+def load_library(libname: str,
+                 prefix: list[str, ...] = (None, &#39;lib&#39;, &#39;local/lib&#39;, &#39;usr/lib&#39;,
+                                           &#39;usr/local/lib&#39;)):
+    from sys import base_prefix
+    from os import path
+    import ctypes
+
+    # Define how to load library
+    def _load(p: str = None):
+        # Get library name
+        _lib = libname if p is None else path.join(base_prefix, p, libname)
+
+        # Try to load. If fails, return None
+        try:
+            return ctypes.cdll.LoadLibrary(_lib)
+        except OSError:
+            return None
+
+    # Load library
+    return next((lib for lib in map(_load, prefix) if lib is not None), None)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="hybridq.utils.utils.argsort"><code class="name flex">
+<span>def <span class="ident">argsort</span></span>(<span>iterable, *, key=None, reverse=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Argsort heterogeneous list.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def argsort(iterable, *, key=None, reverse=False):
+    &#34;&#34;&#34;
+    Argsort heterogeneous list.
+    &#34;&#34;&#34;
+
+    return [
+        x for _, x in sort((
+            (y if key is None else key(y), x) for x, y in enumerate(iterable)),
+                           key=lambda x: x[0],
+                           reverse=reverse)
+    ]</code></pre>
+</details>
+</dd>
+<dt id="hybridq.utils.utils.isintegral"><code class="name flex">
+<span>def <span class="ident">isintegral</span></span>(<span>x: any)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return <code>True</code> if <code>x</code> is integral. The test is done by converting the <code>x</code> to
+<code>int</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isintegral(x: any):
+    &#34;&#34;&#34;
+    Return `True` if `x` is integral. The test is done by converting the `x` to
+    `int`.
+    &#34;&#34;&#34;
+    try:
+        int(x)
+    except:
+        return False
+    else:
+        return int(x) == x</code></pre>
+</details>
+</dd>
+<dt id="hybridq.utils.utils.isnumber"><code class="name flex">
+<span>def <span class="ident">isnumber</span></span>(<span>x: any)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return <code>True</code> if <code>x</code> is integral. The test is done by converting the <code>x</code> to
+<code>int</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isnumber(x: any):
+    &#34;&#34;&#34;
+    Return `True` if `x` is integral. The test is done by converting the `x` to
+    `int`.
+    &#34;&#34;&#34;
+    try:
+        float(x)
+    except:
+        return False
+    else:
+        return True</code></pre>
+</details>
+</dd>
+<dt id="hybridq.utils.utils.kron"><code class="name flex">
+<span>def <span class="ident">kron</span></span>(<span>a: np.ndarray, *cs: tuple[np.ndarray, ...], **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute the Kronecker product among multiple arrays.</p>
+<h2 id="parameters">Parameters</h2>
+<p>a, cs&hellip;: numpy.ndarray
+Arrays used to compute the Kronecker product</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>numpy.ndarray</code></dt>
+<dd>The Kronecker product.</dd>
+</dl>
+<h2 id="see-also">See Also</h2>
+<p><code>numpy.kron</code></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def kron(a: np.ndarray, *cs: tuple[np.ndarray, ...], **kwargs):
+    &#34;&#34;&#34;
+    Compute the Kronecker product among multiple arrays.
+
+    Parameters
+    ----------
+    a, cs...: numpy.ndarray
+        Arrays used to compute the Kronecker product
+
+    Returns
+    -------
+    numpy.ndarray
+        The Kronecker product.
+
+    See Also
+    --------
+    numpy.kron
+    &#34;&#34;&#34;
+
+    # Iteratively compute Kronecker product
+    return kron(np.kron(a, cs[0]), *cs[1:]) if len(cs) else a</code></pre>
+</details>
+</dd>
+<dt id="hybridq.utils.utils.load_library"><code class="name flex">
+<span>def <span class="ident">load_library</span></span>(<span>libname: str, prefix: list[str, ...] = (None, 'lib', 'local/lib', 'usr/lib', 'usr/local/lib'))</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_library(libname: str,
+                 prefix: list[str, ...] = (None, &#39;lib&#39;, &#39;local/lib&#39;, &#39;usr/lib&#39;,
+                                           &#39;usr/local/lib&#39;)):
+    from sys import base_prefix
+    from os import path
+    import ctypes
+
+    # Define how to load library
+    def _load(p: str = None):
+        # Get library name
+        _lib = libname if p is None else path.join(base_prefix, p, libname)
+
+        # Try to load. If fails, return None
+        try:
+            return ctypes.cdll.LoadLibrary(_lib)
+        except OSError:
+            return None
+
+    # Load library
+    return next((lib for lib in map(_load, prefix) if lib is not None), None)</code></pre>
+</details>
+</dd>
+<dt id="hybridq.utils.utils.sort"><code class="name flex">
+<span>def <span class="ident">sort</span></span>(<span>iterable, *, key=None, reverse=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sort heterogeneous list.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sort(iterable, *, key=None, reverse=False):
+    &#34;&#34;&#34;
+    Sort heterogeneous list.
+
+    &#34;&#34;&#34;
+
+    return sorted(iterable,
+                  key=lambda x: _Wrapper(x if key is None else key(x)),
+                  reverse=reverse)</code></pre>
+</details>
+</dd>
+<dt id="hybridq.utils.utils.svd"><code class="name flex">
+<span>def <span class="ident">svd</span></span>(<span>a, axes: iter[int], sort: bool = False, atol: float = 1e-08, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the SVD of <code>a</code> by splitting it accordingly to <code>axes</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>a</code></strong> :&ensp;<code>numpy.ndarray</code></dt>
+<dd>Array to decompose.</dd>
+<dt><strong><code>axes</code></strong> :&ensp;<code>iter[int]</code></dt>
+<dd>Axes used to split <code>a</code>.</dd>
+<dt><strong><code>sort</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, sort Schmidt decomposition.</dd>
+<dt><strong><code>atol</code></strong> :&ensp;<code>float, optoinal</code></dt>
+<dd>Remove all Schmidt decomposition with weight smaller than <code>atol</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>s, uh, vh:</code></dt>
+<dd>Decomposition of <code>a</code> in <code>uh</code> and <code>vh</code>, with <code>uh</code> containing <code>axes</code>. <code>s</code>
+are the weights of the decomposition.</dd>
+</dl>
+<h2 id="see-also">See Also</h2>
+<p><code>scipy.linalg.svd</code></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def svd(a, axes: iter[int], sort: bool = False, atol: float = 1e-8, **kwargs):
+    &#34;&#34;&#34;
+    Return the SVD of `a` by splitting it accordingly to `axes`.
+
+    Parameters
+    ----------
+    a: numpy.ndarray
+        Array to decompose.
+    axes: iter[int]
+        Axes used to split `a`.
+    sort: bool, optional
+        If `True`, sort Schmidt decomposition.
+    atol: float, optoinal
+        Remove all Schmidt decomposition with weight smaller than `atol`.
+
+    Returns
+    -------
+    s, uh, vh:
+        Decomposition of `a` in `uh` and `vh`, with `uh` containing `axes`. `s`
+        are the weights of the decomposition.
+
+    See Also
+    --------
+    `scipy.linalg.svd`
+    &#34;&#34;&#34;
+    from scipy.linalg import svd
+
+    # Set defaults
+    kwargs.setdefault(&#39;full_matrices&#39;, False)
+
+    # Get array
+    a = np.asarray(a)
+
+    # Check axes
+    axes = tuple(map(int, axes))
+
+    # Check that there are no repeated axes
+    if len(axes) != len(set(axes)):
+        raise ValueError(&#34;Axes cannot be repeated in &#39;axes&#39;.&#34;)
+
+    # Check axes are within a dimenions
+    if any(not 0 &lt;= x &lt; a.ndim for x in axes):
+        raise ValueError(&#34;&#39;axes&#39; must be a list of valid &#39;a&#39; axes.&#34;)
+
+    # Get second half
+    alt_axes = tuple(x for x in range(a.ndim) if x not in axes)
+
+    # Get order
+    order = axes + alt_axes
+
+    # Save shape
+    shape = a.shape
+
+    # Get sizes of the left and right
+    size_l = int(np.prod([shape[x] for x in axes]))
+    size_r = int(np.prod([shape[x] for x in alt_axes]))
+
+    # Check
+    assert (size_l * size_r == np.prod(shape))
+
+    # Transpose and reshape
+    a = np.reshape(np.transpose(a, order), (size_l, size_r))
+
+    # Apply SVD
+    u, s, vh = svd(a, **kwargs)
+    uh = u.T
+
+    # Remove all weights below atol
+    if atol:
+        _sel = np.abs(s) &gt;= atol
+        s, uh, vh = s[_sel], uh[_sel], vh[_sel]
+
+    # Sort if required
+    if sort:
+        _sel = np.argsort(s)
+        s, uh, vh = s[_sel], uh[_sel], vh[_sel]
+
+    # Check
+    #assert (np.allclose(np.reshape(
+    #    sum(s * np.kron(uh, vh) for s, uh, vh in zip(s, uh, vh)),
+    #    (size_l, size_r)),
+    #                    a,
+    #                    atol=1e-5))
+
+    # Reshape
+    uh = np.reshape(uh, [len(s)] + [shape[x] for x in axes])
+    vh = np.reshape(vh, [len(s)] + [shape[x] for x in alt_axes])
+
+    return s, uh, vh</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="hybridq.utils.utils.DeprecationWarning"><code class="flex name class">
+<span>class <span class="ident">DeprecationWarning</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for warning categories.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DeprecationWarning(Warning):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Warning</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="hybridq.utils.utils.globalize"><code class="flex name class">
+<span>class <span class="ident">globalize</span></span>
+<span>(</span><span>f: callable, *, name: str = None, check_if_safe: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Globalize any function.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class globalize(object):
+    &#34;&#34;&#34;
+    Globalize any function.
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 f: callable,
+                 *,
+                 name: str = None,
+                 check_if_safe: bool = False):
+        from copy import copy
+        import sys
+
+        # If name not provided ..
+        if name is None:
+            import uuid
+
+            # Get initial node
+            uuid.getnode()
+
+            # Get random UUID
+            name = uuid.uuid1()
+
+            # Check if safely generated
+            if check_if_safe and name.is_safe != uuid.SafeUUID.safe:
+                raise RuntimeError(
+                    f&#34;Unique name &#39;{name}&#39; generated not in a safe way.&#34;)
+
+        # Initialize
+        self.__f = copy(f)
+        self.__name = self.__f.__name__
+        self.__qualname = self.__f.__qualname__
+        self.__global_name = str(name)
+        self.__namespace = sys.modules[self.__f.__module__]
+
+    @property
+    def f(self):
+        return self.__f
+
+    @property
+    def name(self):
+        return self.__global_name
+
+    @property
+    def namespace(self):
+        return self.__namespace
+
+    def __enter__(self):
+        # Assign new name to function
+        self.f.__name__ = self.f.__qualname__ = self.name
+
+        # Add function to namespace
+        setattr(self.namespace, self.name, self.f)
+
+        # Return function
+        return self.f
+
+    def __exit__(self, type, value, traceback):
+        # Return original name
+        self.f.__name__ = self.__name
+        self.f.__qualname__ = self.__qualname
+
+        # Delete global name from namespace
+        delattr(self.namespace, self.name)
+
+    def __call__(self, *args, **kwargs):
+        with self as f:
+            return f(*args, **kwargs)</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="hybridq.utils.utils.globalize.f"><code class="name">var <span class="ident">f</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def f(self):
+    return self.__f</code></pre>
+</details>
+</dd>
+<dt id="hybridq.utils.utils.globalize.name"><code class="name">var <span class="ident">name</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def name(self):
+    return self.__global_name</code></pre>
+</details>
+</dd>
+<dt id="hybridq.utils.utils.globalize.namespace"><code class="name">var <span class="ident">namespace</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def namespace(self):
+    return self.__namespace</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="hybridq.utils" href="index.html">hybridq.utils</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="two-column">
+<li><code><a title="hybridq.utils.utils.argsort" href="#hybridq.utils.utils.argsort">argsort</a></code></li>
+<li><code><a title="hybridq.utils.utils.isintegral" href="#hybridq.utils.utils.isintegral">isintegral</a></code></li>
+<li><code><a title="hybridq.utils.utils.isnumber" href="#hybridq.utils.utils.isnumber">isnumber</a></code></li>
+<li><code><a title="hybridq.utils.utils.kron" href="#hybridq.utils.utils.kron">kron</a></code></li>
+<li><code><a title="hybridq.utils.utils.load_library" href="#hybridq.utils.utils.load_library">load_library</a></code></li>
+<li><code><a title="hybridq.utils.utils.sort" href="#hybridq.utils.utils.sort">sort</a></code></li>
+<li><code><a title="hybridq.utils.utils.svd" href="#hybridq.utils.utils.svd">svd</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="hybridq.utils.utils.DeprecationWarning" href="#hybridq.utils.utils.DeprecationWarning">DeprecationWarning</a></code></h4>
+</li>
+<li>
+<h4><code><a title="hybridq.utils.utils.globalize" href="#hybridq.utils.utils.globalize">globalize</a></code></h4>
+<ul class="">
+<li><code><a title="hybridq.utils.utils.globalize.f" href="#hybridq.utils.utils.globalize.f">f</a></code></li>
+<li><code><a title="hybridq.utils.utils.globalize.name" href="#hybridq.utils.utils.globalize.name">name</a></code></li>
+<li><code><a title="hybridq.utils.utils.globalize.namespace" href="#hybridq.utils.utils.globalize.namespace">namespace</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

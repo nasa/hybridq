@@ -1,0 +1,1783 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>hybridq.circuit.circuit API documentation</title>
+<meta name="description" content="Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>hybridq.circuit.circuit</code></h1>
+</header>
+<section id="section-intro">
+<p>Author: Salvatore Mandra (salvatore.mandra@nasa.gov)</p>
+<p>Copyright © 2021, United States Government, as represented by the Administrator
+of the National Aeronautics and Space Administration. All rights reserved.</p>
+<p>The HybridQ: A Hybrid Simulator for Quantum Circuits platform is licensed under
+the Apache License, Version 2.0 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of the License at
+<a href="http://www.apache.org/licenses/LICENSE-2.0.">http://www.apache.org/licenses/LICENSE-2.0.</a></p>
+<p>Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Author: Salvatore Mandra (salvatore.mandra@nasa.gov)
+
+Copyright © 2021, United States Government, as represented by the Administrator
+of the National Aeronautics and Space Administration. All rights reserved.
+
+The HybridQ: A Hybrid Simulator for Quantum Circuits platform is licensed under
+the Apache License, Version 2.0 (the &#34;License&#34;); you may not use this file
+except in compliance with the License. You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+&#34;&#34;&#34;
+
+from __future__ import annotations
+from hybridq.gate import BaseGate
+
+
+class BaseCircuit(list):
+    &#34;&#34;&#34;
+    Class representing a circuit.
+
+    Attributes
+    ----------
+    gates: iter[Gate], optional
+        Gates to be added to `Circuit`.
+    copy: bool, optional
+        If `True`, every gate is copied using `deepcopy`.
+
+    Example
+    -------
+    &gt;&gt;&gt; c = Circuit(Gate(&#39;H&#39;, qubits=[q]) for q in range(10))
+    &gt;&gt;&gt; c
+    Circuit([
+            Gate(name=H, qubits=[0])
+            Gate(name=H, qubits=[1])
+            Gate(name=H, qubits=[2])
+            Gate(name=H, qubits=[3])
+            Gate(name=H, qubits=[4])
+            Gate(name=H, qubits=[5])
+            Gate(name=H, qubits=[6])
+            Gate(name=H, qubits=[7])
+            Gate(name=H, qubits=[8])
+            Gate(name=H, qubits=[9])
+    ])
+    &gt;&gt;&gt; c + [Gate(&#39;X&#39;)]
+    Circuit([
+            Gate(name=H, qubits=[0])
+            Gate(name=H, qubits=[1])
+            Gate(name=H, qubits=[2])
+            Gate(name=H, qubits=[3])
+            Gate(name=H, qubits=[4])
+            Gate(name=H, qubits=[5])
+            Gate(name=H, qubits=[6])
+            Gate(name=H, qubits=[7])
+            Gate(name=H, qubits=[8])
+            Gate(name=H, qubits=[9])
+    ])
+    &gt;&gt;&gt; c[5:2:-1]
+    Circuit([
+            Gate(name=H, qubits=[5])
+            Gate(name=H, qubits=[4])
+            Gate(name=H, qubits=[3])
+    ])
+    &#34;&#34;&#34;
+
+    def __init__(self, gates: iter[Gate] = None, copy: bool = False) -&gt; None:
+        from copy import deepcopy
+
+        # Initialize gates
+        gates = [] if gates is None else list(gates)
+
+        # Assign gates
+        super().__init__(map(deepcopy, gates) if copy else gates)
+
+    def __str__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Return string representation of `Circuit`.
+        &#34;&#34;&#34;
+
+        if len(self) &lt;= 10:
+            s = &#39;Circuit([\n&#39;
+            for gate in self[:-1]:
+                s += &#39;\t&#39; + str(gate) + &#39;,\n&#39;
+            s += &#39;\t&#39; + str(self[-1]) + &#39;\n&#39;
+            s += &#39;])&#39;
+        elif len(self) &gt; 10:
+            s = &#39;Circuit([\n&#39;
+            for gate in self[:4]:
+                s += &#39;\t&#39; + str(gate) + &#39;\n&#39;
+            s += &#39;\t...\n&#39;
+            for gate in self[-4:-1]:
+                s += &#39;\t&#39; + str(gate) + &#39;,\n&#39;
+            s += &#39;\t&#39; + str(self[-1]) + &#39;\n&#39;
+            s += &#39;])&#39;
+        else:
+            s = &#39;Circuit([])&#39;
+
+        return s
+
+    def __repr__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Return string representation of `Circuit`.
+        &#34;&#34;&#34;
+
+        return self.__str__()
+
+    def __add__(self, circuit: Circuit) -&gt; Circuit:
+        &#34;&#34;&#34;
+        Add `Circuit` to an existing `Circuit`, and return a new `Circuit`.
+        &#34;&#34;&#34;
+
+        # Return new circuit
+        return type(self)(list(self) + list(type(self)(circuit)))
+
+    def __getitem__(self, key: any) -&gt; {Gate, Circuit}:
+        &#34;&#34;&#34;
+        Get elements from `Circuit`.
+        &#34;&#34;&#34;
+        # Convert key to int
+        try:
+            key = int(key)
+        except:
+            pass
+
+        # Get item
+        _out = super().__getitem__(key)
+
+        # Convert to circuit if needed
+        return _out if isinstance(key, int) else type(self)(_out)
+
+    def __setitem__(self, key: any, values: {Gate, iter(Gate)}) -&gt; None:
+        &#34;&#34;&#34;
+        Set elements of `Circuit`
+        &#34;&#34;&#34;
+        # Convert key to int
+        try:
+            key = int(key)
+        except:
+            pass
+
+        # Check if key is integral
+        if isinstance(key, int):
+            key = slice(key, key + 1)
+            values = [values]
+
+        # Update
+        super().__setitem__(key, values)
+
+    def append(self, gate: Gate) -&gt; None:
+        &#34;&#34;&#34;
+        Append `Gate` to existing `Circuit`.
+
+        Parameters
+        ----------
+        gate: Gate
+            `Gate` to append.
+
+        Example
+        -------
+        &gt;&gt;&gt; c = Circuit()
+        &gt;&gt;&gt; c.append(Gate(&#39;H&#39;))
+        &gt;&gt;&gt; c
+        Circuit([
+                Gate(name=H)
+        ])
+        &#34;&#34;&#34;
+
+        # Append
+        super().extend(type(self)([gate]))
+
+    def extend(self, circuit: iter[Gate]) -&gt; None:
+        &#34;&#34;&#34;
+        Extend existing `Circuit`.
+
+        Parameters
+        ----------
+        circuit: iter[Gate]
+            Extend `Circuit` using `circuit`.
+
+        Example
+        -------
+        &gt;&gt;&gt; c = Circuit()
+        &gt;&gt;&gt; c.extend(Gate(&#39;X&#39;, qubits=[q]) for q in range(10))
+        Circuit([
+                Gate(name=X, qubits=[0])
+                Gate(name=X, qubits=[1])
+                Gate(name=X, qubits=[2])
+                Gate(name=X, qubits=[3])
+                Gate(name=X, qubits=[4])
+                Gate(name=X, qubits=[5])
+                Gate(name=X, qubits=[6])
+                Gate(name=X, qubits=[7])
+                Gate(name=X, qubits=[8])
+                Gate(name=X, qubits=[9])
+        ])
+        &#34;&#34;&#34;
+
+        # Extend
+        super().extend(type(self)(circuit))
+
+    def __neq__(self, circuit: iter[Gate]) -&gt; bool:
+        return not self.__eq__(circuit)
+
+    def __eq__(self, circuit: iter[Gate]) -&gt; bool:
+        &#34;&#34;&#34;
+        Two circuits are equivalent if they match gate by gate
+        &#34;&#34;&#34;
+        return isinstance(circuit, type(self)) and super().__eq__(circuit)
+
+    def all_tags(self) -&gt; list[dict]:
+        &#34;&#34;&#34;
+        Return a list of all tags in each `Gate`.
+
+        Returns
+        -------
+        list[dict]
+            List of all tags in each `Gate`.
+
+        Example
+        -------
+        &gt;&gt;&gt; Circuit(Gate(&#39;X&#39;, tags={q:q}) for q in range(10)).all_tags()
+        [{0: 0},
+         {1: 1},
+         {2: 2},
+         {3: 3},
+         {4: 4},
+         {5: 5},
+         {6: 6},
+         {7: 7},
+         {8: 8},
+         {9: 9}]
+        &#34;&#34;&#34;
+
+        return [
+            gate.tags for gate in self if gate.provides(&#39;tags&#39;) and gate.tags
+        ]
+
+    def _update_all_tags(self, *args, **kwargs) -&gt; None:
+        &#34;&#34;&#34;
+        Update all `Gate`s&#39; tags in `Circuit`.
+        &#34;&#34;&#34;
+
+        self.update_all_tags(*args, inplace=True, **kwargs)
+
+    def update_all_tags(self,
+                        *args,
+                        inplace: bool = False,
+                        **kwargs) -&gt; Circuit:
+        &#34;&#34;&#34;
+        Update all `Gate`s&#39; tags in `Circuit`. If `inplace` is `True`, `Circuit`
+        is modified in place.
+
+        Parameters
+        ----------
+        inplace: bool, optional
+            If `True`, `Circuit` is modified in place. Otherwise, a new
+            `Circuit` is returned.
+
+        Returns
+        -------
+        Circuit
+            `Circuit` with update tags in all `Gate`s. If `inplace` is `True`,
+            `Circuit` is modified in place.
+
+        Example
+        -------
+        &gt;&gt;&gt; c = Circuit(Gate(&#39;H&#39;, tags={q%4:q}) for q in range(10))
+        &gt;&gt;&gt; c
+        Circuit([
+                Gate(name=H, tags={0: 0})
+                Gate(name=H, tags={1: 1})
+                Gate(name=H, tags={2: 2})
+                Gate(name=H, tags={3: 3})
+                Gate(name=H, tags={0: 4})
+                Gate(name=H, tags={1: 5})
+                Gate(name=H, tags={2: 6})
+                Gate(name=H, tags={3: 7})
+                Gate(name=H, tags={0: 8})
+                Gate(name=H, tags={1: 9})
+        ])
+        &gt;&gt;&gt; c.update_all_tags({-1:&#39;x&#39;, &#39;42&#39;: 1.23})
+        Circuit([
+                Gate(name=H, tags={0: 0, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={1: 1, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={2: 2, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={3: 3, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={0: 4, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={1: 5, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={2: 6, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={3: 7, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={0: 8, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={1: 9, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+        ])
+        &#34;&#34;&#34;
+
+        if inplace:
+            for gate in self:
+                gate._update_tags(*args, **kwargs)
+            return self
+        else:
+            return type(self)(gate.update_tags(*args, inplace=False, **kwargs)
+                              for gate in self)
+
+    def _remove_all_tags(self, keys: iter[any]) -&gt; None:
+        &#34;&#34;&#34;
+        Remove all tags matching `keys` from all `Gate`s.
+        &#34;&#34;&#34;
+
+        self.remove_all_tags(keys, inplace=True)
+
+    def remove_all_tags(self,
+                        keys: iter[any],
+                        *,
+                        inplace: bool = False) -&gt; Circuit:
+        &#34;&#34;&#34;
+        Remove all tags matching `keys` from all `Gate`s. If `inplace` is
+        `True`, `Circuit` is modified in place.
+
+        Parameters
+        ----------
+        keys: iter[any]
+            Keys to remove from tags.
+        inplace: bool, optional
+            If `True`, `Circuit` is modified in place. Otherwise, a new
+            `Circuit` is returned.
+
+        Returns
+        -------
+        Circuit
+            `Circuit` with tags matching `keys` from all `Gate`s removed. If
+            `inplace` is `True`, `Circuit` is modified in place.
+
+        Example
+        -------
+        &gt;&gt;&gt; c = Circuit(Gate(&#39;H&#39;, tags={q%4:q}) for q in range(10))
+        &gt;&gt;&gt; c
+        Circuit([
+                Gate(name=H, tags={0: 0})
+                Gate(name=H, tags={1: 1})
+                Gate(name=H, tags={2: 2})
+                Gate(name=H, tags={3: 3})
+                Gate(name=H, tags={0: 4})
+                Gate(name=H, tags={1: 5})
+                Gate(name=H, tags={2: 6})
+                Gate(name=H, tags={3: 7})
+                Gate(name=H, tags={0: 8})
+                Gate(name=H, tags={1: 9})
+        ])
+        &gt;&gt;&gt; c.remove_all_tags([0, 3])
+        Circuit([
+                Gate(name=H)
+                Gate(name=H, tags={1: 1})
+                Gate(name=H, tags={2: 2})
+                Gate(name=H)
+                Gate(name=H)
+                Gate(name=H, tags={1: 5})
+                Gate(name=H, tags={2: 6})
+                Gate(name=H)
+                Gate(name=H)
+                Gate(name=H, tags={1: 9})
+        ])
+        &#34;&#34;&#34;
+
+        # Convert keys to set
+        keys = set(keys)
+
+        if inplace:
+            for gate in self:
+                gate._remove_tags(keys)
+            return self
+        else:
+            return type(self)(
+                gate.remove_tags(keys, inplace=False) for gate in self)
+
+
+class Circuit(BaseCircuit):
+
+    @staticmethod
+    def __check_gate__(gate: Gate):
+        from hybridq.gate import BaseGate
+        if isinstance(gate, BaseGate):
+            return gate
+        else:
+            raise ValueError(f&#34;&#39;{type(gate).__name__}&#39; not supported.&#34;)
+
+    def __init__(self, gates: iter[Gate] = tuple(), *args, **kwargs) -&gt; None:
+        super().__init__(gates=map(self.__check_gate__, gates), **kwargs)
+
+    def all_qubits(self, *, ignore_missing_qubits: bool = False) -&gt; list[any]:
+        &#34;&#34;&#34;
+        Get all qubits in `Circuit`. It raises a `ValueError` if qubits in
+        `Gate` are missing, unless `ignore_missing_qubits` is `True`. The
+        returned qubits are always sorted using `hybridq.utils.sort` for
+        consistency.
+
+        Parameters
+        ----------
+        ignore_missing_qubits: bool, optional
+            If `True`, ignore gates without specified qubits. Otherwise, raise
+            `ValueError`.
+
+        Returns
+        -------
+        list[any]
+            Sorted list of all qubits in `Circuit`.
+
+        Example
+        -------
+        &gt;&gt;&gt; Circuit([Gate(&#39;H&#39;, qubits=[2]), Gate(&#39;X&#39;, qubits=[1])]).all_qubits()
+        [1, 2]
+        &gt;&gt;&gt; Circuit([Gate(&#39;H&#39;, qubits=[2]), Gate(&#39;X&#39;, qubits=[1]), Gate(&#39;H&#39;)]).all_qubits()
+        ValueError: Circuit contains virtual gates with no qubits.
+        &gt;&gt;&gt; Circuit([Gate(&#39;H&#39;, qubits=[2]), Gate(&#39;X&#39;, qubits=[1]), Gate(&#39;H&#39;)]).all_qubits(ignore_missing_qubits=True)
+        [1, 2]
+        &#34;&#34;&#34;
+        from hybridq.utils import sort
+
+        # Check if there are virtual gates with no qubits
+        if not ignore_missing_qubits and any(
+                not gate.provides(&#39;qubits&#39;) or gate.qubits is None
+                for gate in self
+                if gate.n_qubits):
+            raise ValueError(&#34;Circuit contains virtual gates with no qubits.&#34;)
+
+        # Return sorted qubits
+        return sort({
+            q for gate in self if gate.provides(&#39;qubits&#39;) and gate.qubits
+            for q in gate.qubits
+        })
+
+    def inv(self) -&gt; Circuit:
+        &#34;&#34;&#34;
+        Return the inverse circuit of `Circuit`.
+
+        Returns
+        -------
+        Circuit
+            Inverse of `Circuit`.
+
+        Example
+        -------
+        &gt;&gt;&gt; from numpy.random import random
+        &gt;&gt;&gt; from hybridq.circuit.utils import simplify
+        &gt;&gt;&gt; c = Circuit(Gate(&#39;RX&#39;, qubits=[q], params=[random()]) for q in range(10))
+        &gt;&gt;&gt; simplify(c + c.inv())
+        Circuit([
+        ])
+        &#34;&#34;&#34;
+
+        return type(self)(gate.inv() for gate in reversed(self))
+
+    def conj(self) -&gt; Circuit:
+        &#34;&#34;&#34;
+        Return the conjugate circuit of `Circuit`.
+
+        Returns
+        -------
+        Circuit
+            Conjugation of `Circuit`.
+        &#34;&#34;&#34;
+
+        return type(self)(gate.conj() for gate in self)
+
+    def T(self) -&gt; Circuit:
+        &#34;&#34;&#34;
+        Return the transposed circuit of `Circuit`.
+
+        Returns
+        -------
+        Circuit
+            Transposition of `Circuit`.
+        &#34;&#34;&#34;
+
+        return type(self)(gate.T() for gate in reversed(self))
+
+    def adj(self) -&gt; Circuit:
+        &#34;&#34;&#34;
+        Return the adjoint circuit of `Circuit`.
+
+        Returns
+        -------
+        Circuit
+            Adjoint of `Circuit`.
+        &#34;&#34;&#34;
+
+        return type(self)(gate.adj() for gate in reversed(self))</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="hybridq.circuit.circuit.BaseCircuit"><code class="flex name class">
+<span>class <span class="ident">BaseCircuit</span></span>
+<span>(</span><span>gates: iter[Gate] = None, copy: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class representing a circuit.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>gates</code></strong> :&ensp;<code>iter[Gate]</code>, optional</dt>
+<dd>Gates to be added to <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code>.</dd>
+<dt><strong><code>copy</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, every gate is copied using <code>deepcopy</code>.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; c = Circuit(Gate('H', qubits=[q]) for q in range(10))
+&gt;&gt;&gt; c
+Circuit([
+        Gate(name=H, qubits=[0])
+        Gate(name=H, qubits=[1])
+        Gate(name=H, qubits=[2])
+        Gate(name=H, qubits=[3])
+        Gate(name=H, qubits=[4])
+        Gate(name=H, qubits=[5])
+        Gate(name=H, qubits=[6])
+        Gate(name=H, qubits=[7])
+        Gate(name=H, qubits=[8])
+        Gate(name=H, qubits=[9])
+])
+&gt;&gt;&gt; c + [Gate('X')]
+Circuit([
+        Gate(name=H, qubits=[0])
+        Gate(name=H, qubits=[1])
+        Gate(name=H, qubits=[2])
+        Gate(name=H, qubits=[3])
+        Gate(name=H, qubits=[4])
+        Gate(name=H, qubits=[5])
+        Gate(name=H, qubits=[6])
+        Gate(name=H, qubits=[7])
+        Gate(name=H, qubits=[8])
+        Gate(name=H, qubits=[9])
+])
+&gt;&gt;&gt; c[5:2:-1]
+Circuit([
+        Gate(name=H, qubits=[5])
+        Gate(name=H, qubits=[4])
+        Gate(name=H, qubits=[3])
+])
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BaseCircuit(list):
+    &#34;&#34;&#34;
+    Class representing a circuit.
+
+    Attributes
+    ----------
+    gates: iter[Gate], optional
+        Gates to be added to `Circuit`.
+    copy: bool, optional
+        If `True`, every gate is copied using `deepcopy`.
+
+    Example
+    -------
+    &gt;&gt;&gt; c = Circuit(Gate(&#39;H&#39;, qubits=[q]) for q in range(10))
+    &gt;&gt;&gt; c
+    Circuit([
+            Gate(name=H, qubits=[0])
+            Gate(name=H, qubits=[1])
+            Gate(name=H, qubits=[2])
+            Gate(name=H, qubits=[3])
+            Gate(name=H, qubits=[4])
+            Gate(name=H, qubits=[5])
+            Gate(name=H, qubits=[6])
+            Gate(name=H, qubits=[7])
+            Gate(name=H, qubits=[8])
+            Gate(name=H, qubits=[9])
+    ])
+    &gt;&gt;&gt; c + [Gate(&#39;X&#39;)]
+    Circuit([
+            Gate(name=H, qubits=[0])
+            Gate(name=H, qubits=[1])
+            Gate(name=H, qubits=[2])
+            Gate(name=H, qubits=[3])
+            Gate(name=H, qubits=[4])
+            Gate(name=H, qubits=[5])
+            Gate(name=H, qubits=[6])
+            Gate(name=H, qubits=[7])
+            Gate(name=H, qubits=[8])
+            Gate(name=H, qubits=[9])
+    ])
+    &gt;&gt;&gt; c[5:2:-1]
+    Circuit([
+            Gate(name=H, qubits=[5])
+            Gate(name=H, qubits=[4])
+            Gate(name=H, qubits=[3])
+    ])
+    &#34;&#34;&#34;
+
+    def __init__(self, gates: iter[Gate] = None, copy: bool = False) -&gt; None:
+        from copy import deepcopy
+
+        # Initialize gates
+        gates = [] if gates is None else list(gates)
+
+        # Assign gates
+        super().__init__(map(deepcopy, gates) if copy else gates)
+
+    def __str__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Return string representation of `Circuit`.
+        &#34;&#34;&#34;
+
+        if len(self) &lt;= 10:
+            s = &#39;Circuit([\n&#39;
+            for gate in self[:-1]:
+                s += &#39;\t&#39; + str(gate) + &#39;,\n&#39;
+            s += &#39;\t&#39; + str(self[-1]) + &#39;\n&#39;
+            s += &#39;])&#39;
+        elif len(self) &gt; 10:
+            s = &#39;Circuit([\n&#39;
+            for gate in self[:4]:
+                s += &#39;\t&#39; + str(gate) + &#39;\n&#39;
+            s += &#39;\t...\n&#39;
+            for gate in self[-4:-1]:
+                s += &#39;\t&#39; + str(gate) + &#39;,\n&#39;
+            s += &#39;\t&#39; + str(self[-1]) + &#39;\n&#39;
+            s += &#39;])&#39;
+        else:
+            s = &#39;Circuit([])&#39;
+
+        return s
+
+    def __repr__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Return string representation of `Circuit`.
+        &#34;&#34;&#34;
+
+        return self.__str__()
+
+    def __add__(self, circuit: Circuit) -&gt; Circuit:
+        &#34;&#34;&#34;
+        Add `Circuit` to an existing `Circuit`, and return a new `Circuit`.
+        &#34;&#34;&#34;
+
+        # Return new circuit
+        return type(self)(list(self) + list(type(self)(circuit)))
+
+    def __getitem__(self, key: any) -&gt; {Gate, Circuit}:
+        &#34;&#34;&#34;
+        Get elements from `Circuit`.
+        &#34;&#34;&#34;
+        # Convert key to int
+        try:
+            key = int(key)
+        except:
+            pass
+
+        # Get item
+        _out = super().__getitem__(key)
+
+        # Convert to circuit if needed
+        return _out if isinstance(key, int) else type(self)(_out)
+
+    def __setitem__(self, key: any, values: {Gate, iter(Gate)}) -&gt; None:
+        &#34;&#34;&#34;
+        Set elements of `Circuit`
+        &#34;&#34;&#34;
+        # Convert key to int
+        try:
+            key = int(key)
+        except:
+            pass
+
+        # Check if key is integral
+        if isinstance(key, int):
+            key = slice(key, key + 1)
+            values = [values]
+
+        # Update
+        super().__setitem__(key, values)
+
+    def append(self, gate: Gate) -&gt; None:
+        &#34;&#34;&#34;
+        Append `Gate` to existing `Circuit`.
+
+        Parameters
+        ----------
+        gate: Gate
+            `Gate` to append.
+
+        Example
+        -------
+        &gt;&gt;&gt; c = Circuit()
+        &gt;&gt;&gt; c.append(Gate(&#39;H&#39;))
+        &gt;&gt;&gt; c
+        Circuit([
+                Gate(name=H)
+        ])
+        &#34;&#34;&#34;
+
+        # Append
+        super().extend(type(self)([gate]))
+
+    def extend(self, circuit: iter[Gate]) -&gt; None:
+        &#34;&#34;&#34;
+        Extend existing `Circuit`.
+
+        Parameters
+        ----------
+        circuit: iter[Gate]
+            Extend `Circuit` using `circuit`.
+
+        Example
+        -------
+        &gt;&gt;&gt; c = Circuit()
+        &gt;&gt;&gt; c.extend(Gate(&#39;X&#39;, qubits=[q]) for q in range(10))
+        Circuit([
+                Gate(name=X, qubits=[0])
+                Gate(name=X, qubits=[1])
+                Gate(name=X, qubits=[2])
+                Gate(name=X, qubits=[3])
+                Gate(name=X, qubits=[4])
+                Gate(name=X, qubits=[5])
+                Gate(name=X, qubits=[6])
+                Gate(name=X, qubits=[7])
+                Gate(name=X, qubits=[8])
+                Gate(name=X, qubits=[9])
+        ])
+        &#34;&#34;&#34;
+
+        # Extend
+        super().extend(type(self)(circuit))
+
+    def __neq__(self, circuit: iter[Gate]) -&gt; bool:
+        return not self.__eq__(circuit)
+
+    def __eq__(self, circuit: iter[Gate]) -&gt; bool:
+        &#34;&#34;&#34;
+        Two circuits are equivalent if they match gate by gate
+        &#34;&#34;&#34;
+        return isinstance(circuit, type(self)) and super().__eq__(circuit)
+
+    def all_tags(self) -&gt; list[dict]:
+        &#34;&#34;&#34;
+        Return a list of all tags in each `Gate`.
+
+        Returns
+        -------
+        list[dict]
+            List of all tags in each `Gate`.
+
+        Example
+        -------
+        &gt;&gt;&gt; Circuit(Gate(&#39;X&#39;, tags={q:q}) for q in range(10)).all_tags()
+        [{0: 0},
+         {1: 1},
+         {2: 2},
+         {3: 3},
+         {4: 4},
+         {5: 5},
+         {6: 6},
+         {7: 7},
+         {8: 8},
+         {9: 9}]
+        &#34;&#34;&#34;
+
+        return [
+            gate.tags for gate in self if gate.provides(&#39;tags&#39;) and gate.tags
+        ]
+
+    def _update_all_tags(self, *args, **kwargs) -&gt; None:
+        &#34;&#34;&#34;
+        Update all `Gate`s&#39; tags in `Circuit`.
+        &#34;&#34;&#34;
+
+        self.update_all_tags(*args, inplace=True, **kwargs)
+
+    def update_all_tags(self,
+                        *args,
+                        inplace: bool = False,
+                        **kwargs) -&gt; Circuit:
+        &#34;&#34;&#34;
+        Update all `Gate`s&#39; tags in `Circuit`. If `inplace` is `True`, `Circuit`
+        is modified in place.
+
+        Parameters
+        ----------
+        inplace: bool, optional
+            If `True`, `Circuit` is modified in place. Otherwise, a new
+            `Circuit` is returned.
+
+        Returns
+        -------
+        Circuit
+            `Circuit` with update tags in all `Gate`s. If `inplace` is `True`,
+            `Circuit` is modified in place.
+
+        Example
+        -------
+        &gt;&gt;&gt; c = Circuit(Gate(&#39;H&#39;, tags={q%4:q}) for q in range(10))
+        &gt;&gt;&gt; c
+        Circuit([
+                Gate(name=H, tags={0: 0})
+                Gate(name=H, tags={1: 1})
+                Gate(name=H, tags={2: 2})
+                Gate(name=H, tags={3: 3})
+                Gate(name=H, tags={0: 4})
+                Gate(name=H, tags={1: 5})
+                Gate(name=H, tags={2: 6})
+                Gate(name=H, tags={3: 7})
+                Gate(name=H, tags={0: 8})
+                Gate(name=H, tags={1: 9})
+        ])
+        &gt;&gt;&gt; c.update_all_tags({-1:&#39;x&#39;, &#39;42&#39;: 1.23})
+        Circuit([
+                Gate(name=H, tags={0: 0, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={1: 1, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={2: 2, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={3: 3, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={0: 4, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={1: 5, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={2: 6, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={3: 7, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={0: 8, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+                Gate(name=H, tags={1: 9, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+        ])
+        &#34;&#34;&#34;
+
+        if inplace:
+            for gate in self:
+                gate._update_tags(*args, **kwargs)
+            return self
+        else:
+            return type(self)(gate.update_tags(*args, inplace=False, **kwargs)
+                              for gate in self)
+
+    def _remove_all_tags(self, keys: iter[any]) -&gt; None:
+        &#34;&#34;&#34;
+        Remove all tags matching `keys` from all `Gate`s.
+        &#34;&#34;&#34;
+
+        self.remove_all_tags(keys, inplace=True)
+
+    def remove_all_tags(self,
+                        keys: iter[any],
+                        *,
+                        inplace: bool = False) -&gt; Circuit:
+        &#34;&#34;&#34;
+        Remove all tags matching `keys` from all `Gate`s. If `inplace` is
+        `True`, `Circuit` is modified in place.
+
+        Parameters
+        ----------
+        keys: iter[any]
+            Keys to remove from tags.
+        inplace: bool, optional
+            If `True`, `Circuit` is modified in place. Otherwise, a new
+            `Circuit` is returned.
+
+        Returns
+        -------
+        Circuit
+            `Circuit` with tags matching `keys` from all `Gate`s removed. If
+            `inplace` is `True`, `Circuit` is modified in place.
+
+        Example
+        -------
+        &gt;&gt;&gt; c = Circuit(Gate(&#39;H&#39;, tags={q%4:q}) for q in range(10))
+        &gt;&gt;&gt; c
+        Circuit([
+                Gate(name=H, tags={0: 0})
+                Gate(name=H, tags={1: 1})
+                Gate(name=H, tags={2: 2})
+                Gate(name=H, tags={3: 3})
+                Gate(name=H, tags={0: 4})
+                Gate(name=H, tags={1: 5})
+                Gate(name=H, tags={2: 6})
+                Gate(name=H, tags={3: 7})
+                Gate(name=H, tags={0: 8})
+                Gate(name=H, tags={1: 9})
+        ])
+        &gt;&gt;&gt; c.remove_all_tags([0, 3])
+        Circuit([
+                Gate(name=H)
+                Gate(name=H, tags={1: 1})
+                Gate(name=H, tags={2: 2})
+                Gate(name=H)
+                Gate(name=H)
+                Gate(name=H, tags={1: 5})
+                Gate(name=H, tags={2: 6})
+                Gate(name=H)
+                Gate(name=H)
+                Gate(name=H, tags={1: 9})
+        ])
+        &#34;&#34;&#34;
+
+        # Convert keys to set
+        keys = set(keys)
+
+        if inplace:
+            for gate in self:
+                gate._remove_tags(keys)
+            return self
+        else:
+            return type(self)(
+                gate.remove_tags(keys, inplace=False) for gate in self)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.list</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></li>
+<li><a title="hybridq.dm.circuit.circuit.Circuit" href="../dm/circuit/circuit.html#hybridq.dm.circuit.circuit.Circuit">Circuit</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="hybridq.circuit.circuit.BaseCircuit.all_tags"><code class="name flex">
+<span>def <span class="ident">all_tags</span></span>(<span>self) ‑> list[dict]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a list of all tags in each <code>Gate</code>.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list[dict]</code></dt>
+<dd>List of all tags in each <code>Gate</code>.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; Circuit(Gate('X', tags={q:q}) for q in range(10)).all_tags()
+[{0: 0},
+ {1: 1},
+ {2: 2},
+ {3: 3},
+ {4: 4},
+ {5: 5},
+ {6: 6},
+ {7: 7},
+ {8: 8},
+ {9: 9}]
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def all_tags(self) -&gt; list[dict]:
+    &#34;&#34;&#34;
+    Return a list of all tags in each `Gate`.
+
+    Returns
+    -------
+    list[dict]
+        List of all tags in each `Gate`.
+
+    Example
+    -------
+    &gt;&gt;&gt; Circuit(Gate(&#39;X&#39;, tags={q:q}) for q in range(10)).all_tags()
+    [{0: 0},
+     {1: 1},
+     {2: 2},
+     {3: 3},
+     {4: 4},
+     {5: 5},
+     {6: 6},
+     {7: 7},
+     {8: 8},
+     {9: 9}]
+    &#34;&#34;&#34;
+
+    return [
+        gate.tags for gate in self if gate.provides(&#39;tags&#39;) and gate.tags
+    ]</code></pre>
+</details>
+</dd>
+<dt id="hybridq.circuit.circuit.BaseCircuit.append"><code class="name flex">
+<span>def <span class="ident">append</span></span>(<span>self, gate: Gate) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Append <code>Gate</code> to existing <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>gate</code></strong> :&ensp;<code>Gate</code></dt>
+<dd><code>Gate</code> to append.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; c = Circuit()
+&gt;&gt;&gt; c.append(Gate('H'))
+&gt;&gt;&gt; c
+Circuit([
+        Gate(name=H)
+])
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def append(self, gate: Gate) -&gt; None:
+    &#34;&#34;&#34;
+    Append `Gate` to existing `Circuit`.
+
+    Parameters
+    ----------
+    gate: Gate
+        `Gate` to append.
+
+    Example
+    -------
+    &gt;&gt;&gt; c = Circuit()
+    &gt;&gt;&gt; c.append(Gate(&#39;H&#39;))
+    &gt;&gt;&gt; c
+    Circuit([
+            Gate(name=H)
+    ])
+    &#34;&#34;&#34;
+
+    # Append
+    super().extend(type(self)([gate]))</code></pre>
+</details>
+</dd>
+<dt id="hybridq.circuit.circuit.BaseCircuit.extend"><code class="name flex">
+<span>def <span class="ident">extend</span></span>(<span>self, circuit: iter[Gate]) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Extend existing <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>circuit</code></strong> :&ensp;<code>iter[Gate]</code></dt>
+<dd>Extend <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code> using <code>circuit</code>.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; c = Circuit()
+&gt;&gt;&gt; c.extend(Gate('X', qubits=[q]) for q in range(10))
+Circuit([
+        Gate(name=X, qubits=[0])
+        Gate(name=X, qubits=[1])
+        Gate(name=X, qubits=[2])
+        Gate(name=X, qubits=[3])
+        Gate(name=X, qubits=[4])
+        Gate(name=X, qubits=[5])
+        Gate(name=X, qubits=[6])
+        Gate(name=X, qubits=[7])
+        Gate(name=X, qubits=[8])
+        Gate(name=X, qubits=[9])
+])
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def extend(self, circuit: iter[Gate]) -&gt; None:
+    &#34;&#34;&#34;
+    Extend existing `Circuit`.
+
+    Parameters
+    ----------
+    circuit: iter[Gate]
+        Extend `Circuit` using `circuit`.
+
+    Example
+    -------
+    &gt;&gt;&gt; c = Circuit()
+    &gt;&gt;&gt; c.extend(Gate(&#39;X&#39;, qubits=[q]) for q in range(10))
+    Circuit([
+            Gate(name=X, qubits=[0])
+            Gate(name=X, qubits=[1])
+            Gate(name=X, qubits=[2])
+            Gate(name=X, qubits=[3])
+            Gate(name=X, qubits=[4])
+            Gate(name=X, qubits=[5])
+            Gate(name=X, qubits=[6])
+            Gate(name=X, qubits=[7])
+            Gate(name=X, qubits=[8])
+            Gate(name=X, qubits=[9])
+    ])
+    &#34;&#34;&#34;
+
+    # Extend
+    super().extend(type(self)(circuit))</code></pre>
+</details>
+</dd>
+<dt id="hybridq.circuit.circuit.BaseCircuit.remove_all_tags"><code class="name flex">
+<span>def <span class="ident">remove_all_tags</span></span>(<span>self, keys: iter[any], *, inplace: bool = False) ‑> <a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove all tags matching <code>keys</code> from all <code>Gate</code>s. If <code>inplace</code> is
+<code>True</code>, <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code> is modified in place.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>keys</code></strong> :&ensp;<code>iter[any]</code></dt>
+<dd>Keys to remove from tags.</dd>
+<dt><strong><code>inplace</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code> is modified in place. Otherwise, a new
+<code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code> is returned.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code></dt>
+<dd><code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code> with tags matching <code>keys</code> from all <code>Gate</code>s removed. If
+<code>inplace</code> is <code>True</code>, <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code> is modified in place.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; c = Circuit(Gate('H', tags={q%4:q}) for q in range(10))
+&gt;&gt;&gt; c
+Circuit([
+        Gate(name=H, tags={0: 0})
+        Gate(name=H, tags={1: 1})
+        Gate(name=H, tags={2: 2})
+        Gate(name=H, tags={3: 3})
+        Gate(name=H, tags={0: 4})
+        Gate(name=H, tags={1: 5})
+        Gate(name=H, tags={2: 6})
+        Gate(name=H, tags={3: 7})
+        Gate(name=H, tags={0: 8})
+        Gate(name=H, tags={1: 9})
+])
+&gt;&gt;&gt; c.remove_all_tags([0, 3])
+Circuit([
+        Gate(name=H)
+        Gate(name=H, tags={1: 1})
+        Gate(name=H, tags={2: 2})
+        Gate(name=H)
+        Gate(name=H)
+        Gate(name=H, tags={1: 5})
+        Gate(name=H, tags={2: 6})
+        Gate(name=H)
+        Gate(name=H)
+        Gate(name=H, tags={1: 9})
+])
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove_all_tags(self,
+                    keys: iter[any],
+                    *,
+                    inplace: bool = False) -&gt; Circuit:
+    &#34;&#34;&#34;
+    Remove all tags matching `keys` from all `Gate`s. If `inplace` is
+    `True`, `Circuit` is modified in place.
+
+    Parameters
+    ----------
+    keys: iter[any]
+        Keys to remove from tags.
+    inplace: bool, optional
+        If `True`, `Circuit` is modified in place. Otherwise, a new
+        `Circuit` is returned.
+
+    Returns
+    -------
+    Circuit
+        `Circuit` with tags matching `keys` from all `Gate`s removed. If
+        `inplace` is `True`, `Circuit` is modified in place.
+
+    Example
+    -------
+    &gt;&gt;&gt; c = Circuit(Gate(&#39;H&#39;, tags={q%4:q}) for q in range(10))
+    &gt;&gt;&gt; c
+    Circuit([
+            Gate(name=H, tags={0: 0})
+            Gate(name=H, tags={1: 1})
+            Gate(name=H, tags={2: 2})
+            Gate(name=H, tags={3: 3})
+            Gate(name=H, tags={0: 4})
+            Gate(name=H, tags={1: 5})
+            Gate(name=H, tags={2: 6})
+            Gate(name=H, tags={3: 7})
+            Gate(name=H, tags={0: 8})
+            Gate(name=H, tags={1: 9})
+    ])
+    &gt;&gt;&gt; c.remove_all_tags([0, 3])
+    Circuit([
+            Gate(name=H)
+            Gate(name=H, tags={1: 1})
+            Gate(name=H, tags={2: 2})
+            Gate(name=H)
+            Gate(name=H)
+            Gate(name=H, tags={1: 5})
+            Gate(name=H, tags={2: 6})
+            Gate(name=H)
+            Gate(name=H)
+            Gate(name=H, tags={1: 9})
+    ])
+    &#34;&#34;&#34;
+
+    # Convert keys to set
+    keys = set(keys)
+
+    if inplace:
+        for gate in self:
+            gate._remove_tags(keys)
+        return self
+    else:
+        return type(self)(
+            gate.remove_tags(keys, inplace=False) for gate in self)</code></pre>
+</details>
+</dd>
+<dt id="hybridq.circuit.circuit.BaseCircuit.update_all_tags"><code class="name flex">
+<span>def <span class="ident">update_all_tags</span></span>(<span>self, *args, inplace: bool = False, **kwargs) ‑> <a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Update all <code>Gate</code>s' tags in <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code>. If <code>inplace</code> is <code>True</code>, <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code>
+is modified in place.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>inplace</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code> is modified in place. Otherwise, a new
+<code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code> is returned.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code></dt>
+<dd><code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code> with update tags in all <code>Gate</code>s. If <code>inplace</code> is <code>True</code>,
+<code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code> is modified in place.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; c = Circuit(Gate('H', tags={q%4:q}) for q in range(10))
+&gt;&gt;&gt; c
+Circuit([
+        Gate(name=H, tags={0: 0})
+        Gate(name=H, tags={1: 1})
+        Gate(name=H, tags={2: 2})
+        Gate(name=H, tags={3: 3})
+        Gate(name=H, tags={0: 4})
+        Gate(name=H, tags={1: 5})
+        Gate(name=H, tags={2: 6})
+        Gate(name=H, tags={3: 7})
+        Gate(name=H, tags={0: 8})
+        Gate(name=H, tags={1: 9})
+])
+&gt;&gt;&gt; c.update_all_tags({-1:'x', '42': 1.23})
+Circuit([
+        Gate(name=H, tags={0: 0, -1: 'x', '42': 1.23})
+        Gate(name=H, tags={1: 1, -1: 'x', '42': 1.23})
+        Gate(name=H, tags={2: 2, -1: 'x', '42': 1.23})
+        Gate(name=H, tags={3: 3, -1: 'x', '42': 1.23})
+        Gate(name=H, tags={0: 4, -1: 'x', '42': 1.23})
+        Gate(name=H, tags={1: 5, -1: 'x', '42': 1.23})
+        Gate(name=H, tags={2: 6, -1: 'x', '42': 1.23})
+        Gate(name=H, tags={3: 7, -1: 'x', '42': 1.23})
+        Gate(name=H, tags={0: 8, -1: 'x', '42': 1.23})
+        Gate(name=H, tags={1: 9, -1: 'x', '42': 1.23})
+])
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_all_tags(self,
+                    *args,
+                    inplace: bool = False,
+                    **kwargs) -&gt; Circuit:
+    &#34;&#34;&#34;
+    Update all `Gate`s&#39; tags in `Circuit`. If `inplace` is `True`, `Circuit`
+    is modified in place.
+
+    Parameters
+    ----------
+    inplace: bool, optional
+        If `True`, `Circuit` is modified in place. Otherwise, a new
+        `Circuit` is returned.
+
+    Returns
+    -------
+    Circuit
+        `Circuit` with update tags in all `Gate`s. If `inplace` is `True`,
+        `Circuit` is modified in place.
+
+    Example
+    -------
+    &gt;&gt;&gt; c = Circuit(Gate(&#39;H&#39;, tags={q%4:q}) for q in range(10))
+    &gt;&gt;&gt; c
+    Circuit([
+            Gate(name=H, tags={0: 0})
+            Gate(name=H, tags={1: 1})
+            Gate(name=H, tags={2: 2})
+            Gate(name=H, tags={3: 3})
+            Gate(name=H, tags={0: 4})
+            Gate(name=H, tags={1: 5})
+            Gate(name=H, tags={2: 6})
+            Gate(name=H, tags={3: 7})
+            Gate(name=H, tags={0: 8})
+            Gate(name=H, tags={1: 9})
+    ])
+    &gt;&gt;&gt; c.update_all_tags({-1:&#39;x&#39;, &#39;42&#39;: 1.23})
+    Circuit([
+            Gate(name=H, tags={0: 0, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+            Gate(name=H, tags={1: 1, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+            Gate(name=H, tags={2: 2, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+            Gate(name=H, tags={3: 3, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+            Gate(name=H, tags={0: 4, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+            Gate(name=H, tags={1: 5, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+            Gate(name=H, tags={2: 6, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+            Gate(name=H, tags={3: 7, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+            Gate(name=H, tags={0: 8, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+            Gate(name=H, tags={1: 9, -1: &#39;x&#39;, &#39;42&#39;: 1.23})
+    ])
+    &#34;&#34;&#34;
+
+    if inplace:
+        for gate in self:
+            gate._update_tags(*args, **kwargs)
+        return self
+    else:
+        return type(self)(gate.update_tags(*args, inplace=False, **kwargs)
+                          for gate in self)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="hybridq.circuit.circuit.Circuit"><code class="flex name class">
+<span>class <span class="ident">Circuit</span></span>
+<span>(</span><span>gates: iter[Gate] = (), *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class representing a circuit.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>gates</code></strong> :&ensp;<code>iter[Gate]</code>, optional</dt>
+<dd>Gates to be added to <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code>.</dd>
+<dt><strong><code>copy</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, every gate is copied using <code>deepcopy</code>.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; c = Circuit(Gate('H', qubits=[q]) for q in range(10))
+&gt;&gt;&gt; c
+Circuit([
+        Gate(name=H, qubits=[0])
+        Gate(name=H, qubits=[1])
+        Gate(name=H, qubits=[2])
+        Gate(name=H, qubits=[3])
+        Gate(name=H, qubits=[4])
+        Gate(name=H, qubits=[5])
+        Gate(name=H, qubits=[6])
+        Gate(name=H, qubits=[7])
+        Gate(name=H, qubits=[8])
+        Gate(name=H, qubits=[9])
+])
+&gt;&gt;&gt; c + [Gate('X')]
+Circuit([
+        Gate(name=H, qubits=[0])
+        Gate(name=H, qubits=[1])
+        Gate(name=H, qubits=[2])
+        Gate(name=H, qubits=[3])
+        Gate(name=H, qubits=[4])
+        Gate(name=H, qubits=[5])
+        Gate(name=H, qubits=[6])
+        Gate(name=H, qubits=[7])
+        Gate(name=H, qubits=[8])
+        Gate(name=H, qubits=[9])
+])
+&gt;&gt;&gt; c[5:2:-1]
+Circuit([
+        Gate(name=H, qubits=[5])
+        Gate(name=H, qubits=[4])
+        Gate(name=H, qubits=[3])
+])
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Circuit(BaseCircuit):
+
+    @staticmethod
+    def __check_gate__(gate: Gate):
+        from hybridq.gate import BaseGate
+        if isinstance(gate, BaseGate):
+            return gate
+        else:
+            raise ValueError(f&#34;&#39;{type(gate).__name__}&#39; not supported.&#34;)
+
+    def __init__(self, gates: iter[Gate] = tuple(), *args, **kwargs) -&gt; None:
+        super().__init__(gates=map(self.__check_gate__, gates), **kwargs)
+
+    def all_qubits(self, *, ignore_missing_qubits: bool = False) -&gt; list[any]:
+        &#34;&#34;&#34;
+        Get all qubits in `Circuit`. It raises a `ValueError` if qubits in
+        `Gate` are missing, unless `ignore_missing_qubits` is `True`. The
+        returned qubits are always sorted using `hybridq.utils.sort` for
+        consistency.
+
+        Parameters
+        ----------
+        ignore_missing_qubits: bool, optional
+            If `True`, ignore gates without specified qubits. Otherwise, raise
+            `ValueError`.
+
+        Returns
+        -------
+        list[any]
+            Sorted list of all qubits in `Circuit`.
+
+        Example
+        -------
+        &gt;&gt;&gt; Circuit([Gate(&#39;H&#39;, qubits=[2]), Gate(&#39;X&#39;, qubits=[1])]).all_qubits()
+        [1, 2]
+        &gt;&gt;&gt; Circuit([Gate(&#39;H&#39;, qubits=[2]), Gate(&#39;X&#39;, qubits=[1]), Gate(&#39;H&#39;)]).all_qubits()
+        ValueError: Circuit contains virtual gates with no qubits.
+        &gt;&gt;&gt; Circuit([Gate(&#39;H&#39;, qubits=[2]), Gate(&#39;X&#39;, qubits=[1]), Gate(&#39;H&#39;)]).all_qubits(ignore_missing_qubits=True)
+        [1, 2]
+        &#34;&#34;&#34;
+        from hybridq.utils import sort
+
+        # Check if there are virtual gates with no qubits
+        if not ignore_missing_qubits and any(
+                not gate.provides(&#39;qubits&#39;) or gate.qubits is None
+                for gate in self
+                if gate.n_qubits):
+            raise ValueError(&#34;Circuit contains virtual gates with no qubits.&#34;)
+
+        # Return sorted qubits
+        return sort({
+            q for gate in self if gate.provides(&#39;qubits&#39;) and gate.qubits
+            for q in gate.qubits
+        })
+
+    def inv(self) -&gt; Circuit:
+        &#34;&#34;&#34;
+        Return the inverse circuit of `Circuit`.
+
+        Returns
+        -------
+        Circuit
+            Inverse of `Circuit`.
+
+        Example
+        -------
+        &gt;&gt;&gt; from numpy.random import random
+        &gt;&gt;&gt; from hybridq.circuit.utils import simplify
+        &gt;&gt;&gt; c = Circuit(Gate(&#39;RX&#39;, qubits=[q], params=[random()]) for q in range(10))
+        &gt;&gt;&gt; simplify(c + c.inv())
+        Circuit([
+        ])
+        &#34;&#34;&#34;
+
+        return type(self)(gate.inv() for gate in reversed(self))
+
+    def conj(self) -&gt; Circuit:
+        &#34;&#34;&#34;
+        Return the conjugate circuit of `Circuit`.
+
+        Returns
+        -------
+        Circuit
+            Conjugation of `Circuit`.
+        &#34;&#34;&#34;
+
+        return type(self)(gate.conj() for gate in self)
+
+    def T(self) -&gt; Circuit:
+        &#34;&#34;&#34;
+        Return the transposed circuit of `Circuit`.
+
+        Returns
+        -------
+        Circuit
+            Transposition of `Circuit`.
+        &#34;&#34;&#34;
+
+        return type(self)(gate.T() for gate in reversed(self))
+
+    def adj(self) -&gt; Circuit:
+        &#34;&#34;&#34;
+        Return the adjoint circuit of `Circuit`.
+
+        Returns
+        -------
+        Circuit
+            Adjoint of `Circuit`.
+        &#34;&#34;&#34;
+
+        return type(self)(gate.adj() for gate in reversed(self))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="hybridq.circuit.circuit.BaseCircuit" href="#hybridq.circuit.circuit.BaseCircuit">BaseCircuit</a></li>
+<li>builtins.list</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="hybridq.circuit.circuit.Circuit.T"><code class="name flex">
+<span>def <span class="ident">T</span></span>(<span>self) ‑> <a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the transposed circuit of <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code>.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code></dt>
+<dd>Transposition of <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def T(self) -&gt; Circuit:
+    &#34;&#34;&#34;
+    Return the transposed circuit of `Circuit`.
+
+    Returns
+    -------
+    Circuit
+        Transposition of `Circuit`.
+    &#34;&#34;&#34;
+
+    return type(self)(gate.T() for gate in reversed(self))</code></pre>
+</details>
+</dd>
+<dt id="hybridq.circuit.circuit.Circuit.adj"><code class="name flex">
+<span>def <span class="ident">adj</span></span>(<span>self) ‑> <a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the adjoint circuit of <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code>.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code></dt>
+<dd>Adjoint of <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def adj(self) -&gt; Circuit:
+    &#34;&#34;&#34;
+    Return the adjoint circuit of `Circuit`.
+
+    Returns
+    -------
+    Circuit
+        Adjoint of `Circuit`.
+    &#34;&#34;&#34;
+
+    return type(self)(gate.adj() for gate in reversed(self))</code></pre>
+</details>
+</dd>
+<dt id="hybridq.circuit.circuit.Circuit.all_qubits"><code class="name flex">
+<span>def <span class="ident">all_qubits</span></span>(<span>self, *, ignore_missing_qubits: bool = False) ‑> list[any]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get all qubits in <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code>. It raises a <code>ValueError</code> if qubits in
+<code>Gate</code> are missing, unless <code>ignore_missing_qubits</code> is <code>True</code>. The
+returned qubits are always sorted using <code>hybridq.utils.sort</code> for
+consistency.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ignore_missing_qubits</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, ignore gates without specified qubits. Otherwise, raise
+<code>ValueError</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list[any]</code></dt>
+<dd>Sorted list of all qubits in <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code>.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; Circuit([Gate('H', qubits=[2]), Gate('X', qubits=[1])]).all_qubits()
+[1, 2]
+&gt;&gt;&gt; Circuit([Gate('H', qubits=[2]), Gate('X', qubits=[1]), Gate('H')]).all_qubits()
+ValueError: Circuit contains virtual gates with no qubits.
+&gt;&gt;&gt; Circuit([Gate('H', qubits=[2]), Gate('X', qubits=[1]), Gate('H')]).all_qubits(ignore_missing_qubits=True)
+[1, 2]
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def all_qubits(self, *, ignore_missing_qubits: bool = False) -&gt; list[any]:
+    &#34;&#34;&#34;
+    Get all qubits in `Circuit`. It raises a `ValueError` if qubits in
+    `Gate` are missing, unless `ignore_missing_qubits` is `True`. The
+    returned qubits are always sorted using `hybridq.utils.sort` for
+    consistency.
+
+    Parameters
+    ----------
+    ignore_missing_qubits: bool, optional
+        If `True`, ignore gates without specified qubits. Otherwise, raise
+        `ValueError`.
+
+    Returns
+    -------
+    list[any]
+        Sorted list of all qubits in `Circuit`.
+
+    Example
+    -------
+    &gt;&gt;&gt; Circuit([Gate(&#39;H&#39;, qubits=[2]), Gate(&#39;X&#39;, qubits=[1])]).all_qubits()
+    [1, 2]
+    &gt;&gt;&gt; Circuit([Gate(&#39;H&#39;, qubits=[2]), Gate(&#39;X&#39;, qubits=[1]), Gate(&#39;H&#39;)]).all_qubits()
+    ValueError: Circuit contains virtual gates with no qubits.
+    &gt;&gt;&gt; Circuit([Gate(&#39;H&#39;, qubits=[2]), Gate(&#39;X&#39;, qubits=[1]), Gate(&#39;H&#39;)]).all_qubits(ignore_missing_qubits=True)
+    [1, 2]
+    &#34;&#34;&#34;
+    from hybridq.utils import sort
+
+    # Check if there are virtual gates with no qubits
+    if not ignore_missing_qubits and any(
+            not gate.provides(&#39;qubits&#39;) or gate.qubits is None
+            for gate in self
+            if gate.n_qubits):
+        raise ValueError(&#34;Circuit contains virtual gates with no qubits.&#34;)
+
+    # Return sorted qubits
+    return sort({
+        q for gate in self if gate.provides(&#39;qubits&#39;) and gate.qubits
+        for q in gate.qubits
+    })</code></pre>
+</details>
+</dd>
+<dt id="hybridq.circuit.circuit.Circuit.conj"><code class="name flex">
+<span>def <span class="ident">conj</span></span>(<span>self) ‑> <a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the conjugate circuit of <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code>.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code></dt>
+<dd>Conjugation of <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def conj(self) -&gt; Circuit:
+    &#34;&#34;&#34;
+    Return the conjugate circuit of `Circuit`.
+
+    Returns
+    -------
+    Circuit
+        Conjugation of `Circuit`.
+    &#34;&#34;&#34;
+
+    return type(self)(gate.conj() for gate in self)</code></pre>
+</details>
+</dd>
+<dt id="hybridq.circuit.circuit.Circuit.inv"><code class="name flex">
+<span>def <span class="ident">inv</span></span>(<span>self) ‑> <a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the inverse circuit of <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code>.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code></dt>
+<dd>Inverse of <code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code>.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from numpy.random import random
+&gt;&gt;&gt; from hybridq.circuit.utils import simplify
+&gt;&gt;&gt; c = Circuit(Gate('RX', qubits=[q], params=[random()]) for q in range(10))
+&gt;&gt;&gt; simplify(c + c.inv())
+Circuit([
+])
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def inv(self) -&gt; Circuit:
+    &#34;&#34;&#34;
+    Return the inverse circuit of `Circuit`.
+
+    Returns
+    -------
+    Circuit
+        Inverse of `Circuit`.
+
+    Example
+    -------
+    &gt;&gt;&gt; from numpy.random import random
+    &gt;&gt;&gt; from hybridq.circuit.utils import simplify
+    &gt;&gt;&gt; c = Circuit(Gate(&#39;RX&#39;, qubits=[q], params=[random()]) for q in range(10))
+    &gt;&gt;&gt; simplify(c + c.inv())
+    Circuit([
+    ])
+    &#34;&#34;&#34;
+
+    return type(self)(gate.inv() for gate in reversed(self))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="hybridq.circuit.circuit.BaseCircuit" href="#hybridq.circuit.circuit.BaseCircuit">BaseCircuit</a></b></code>:
+<ul class="hlist">
+<li><code><a title="hybridq.circuit.circuit.BaseCircuit.all_tags" href="#hybridq.circuit.circuit.BaseCircuit.all_tags">all_tags</a></code></li>
+<li><code><a title="hybridq.circuit.circuit.BaseCircuit.append" href="#hybridq.circuit.circuit.BaseCircuit.append">append</a></code></li>
+<li><code><a title="hybridq.circuit.circuit.BaseCircuit.extend" href="#hybridq.circuit.circuit.BaseCircuit.extend">extend</a></code></li>
+<li><code><a title="hybridq.circuit.circuit.BaseCircuit.remove_all_tags" href="#hybridq.circuit.circuit.BaseCircuit.remove_all_tags">remove_all_tags</a></code></li>
+<li><code><a title="hybridq.circuit.circuit.BaseCircuit.update_all_tags" href="#hybridq.circuit.circuit.BaseCircuit.update_all_tags">update_all_tags</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="hybridq.circuit" href="index.html">hybridq.circuit</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="hybridq.circuit.circuit.BaseCircuit" href="#hybridq.circuit.circuit.BaseCircuit">BaseCircuit</a></code></h4>
+<ul class="">
+<li><code><a title="hybridq.circuit.circuit.BaseCircuit.all_tags" href="#hybridq.circuit.circuit.BaseCircuit.all_tags">all_tags</a></code></li>
+<li><code><a title="hybridq.circuit.circuit.BaseCircuit.append" href="#hybridq.circuit.circuit.BaseCircuit.append">append</a></code></li>
+<li><code><a title="hybridq.circuit.circuit.BaseCircuit.extend" href="#hybridq.circuit.circuit.BaseCircuit.extend">extend</a></code></li>
+<li><code><a title="hybridq.circuit.circuit.BaseCircuit.remove_all_tags" href="#hybridq.circuit.circuit.BaseCircuit.remove_all_tags">remove_all_tags</a></code></li>
+<li><code><a title="hybridq.circuit.circuit.BaseCircuit.update_all_tags" href="#hybridq.circuit.circuit.BaseCircuit.update_all_tags">update_all_tags</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="hybridq.circuit.circuit.Circuit" href="#hybridq.circuit.circuit.Circuit">Circuit</a></code></h4>
+<ul class="">
+<li><code><a title="hybridq.circuit.circuit.Circuit.T" href="#hybridq.circuit.circuit.Circuit.T">T</a></code></li>
+<li><code><a title="hybridq.circuit.circuit.Circuit.adj" href="#hybridq.circuit.circuit.Circuit.adj">adj</a></code></li>
+<li><code><a title="hybridq.circuit.circuit.Circuit.all_qubits" href="#hybridq.circuit.circuit.Circuit.all_qubits">all_qubits</a></code></li>
+<li><code><a title="hybridq.circuit.circuit.Circuit.conj" href="#hybridq.circuit.circuit.Circuit.conj">conj</a></code></li>
+<li><code><a title="hybridq.circuit.circuit.Circuit.inv" href="#hybridq.circuit.circuit.Circuit.inv">inv</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

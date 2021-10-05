@@ -1,0 +1,11 @@
+.eggs/
+.ipynb_checkpoints/
+.*.swp
+__*__
+__*__.ipynb
+*.so
+*.x
+dask-worker-space/
+build/
+dist/
+hybridq.egg-info/

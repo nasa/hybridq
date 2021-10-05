@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>hybridq.base.base API documentation</title>
+<meta name="description" content="Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>hybridq.base.base</code></h1>
+</header>
+<section id="section-intro">
+<p>Author: Salvatore Mandra (salvatore.mandra@nasa.gov)</p>
+<p>Copyright © 2021, United States Government, as represented by the Administrator
+of the National Aeronautics and Space Administration. All rights reserved.</p>
+<p>The HybridQ: A Hybrid Simulator for Quantum Circuits platform is licensed under
+the Apache License, Version 2.0 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of the License at
+<a href="http://www.apache.org/licenses/LICENSE-2.0.">http://www.apache.org/licenses/LICENSE-2.0.</a></p>
+<p>Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Author: Salvatore Mandra (salvatore.mandra@nasa.gov)
+
+Copyright © 2021, United States Government, as represented by the Administrator
+of the National Aeronautics and Space Administration. All rights reserved.
+
+The HybridQ: A Hybrid Simulator for Quantum Circuits platform is licensed under
+the Apache License, Version 2.0 (the &#34;License&#34;); you may not use this file
+except in compliance with the License. You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+&#34;&#34;&#34;
+
+from __future__ import annotations
+from copy import deepcopy
+import dill as pickle
+import numpy as np
+
+
+def _split_names(names: {str, tuple[str, ...]}):
+    return tuple(&#39;&#39;.join(x.split()) for x in names.split(&#39;,&#39;)) if isinstance(
+        names, str) else tuple(map(str, names))
+
+
+def staticvars(staticvars: {str, tuple[str, ...]},
+               check: dict[str, any] = None,
+               transform: dict[str, any] = None,
+               **defaults):
+    &#34;&#34;&#34;
+    Decorator for `class`es to add static variables to them.
+    &#34;&#34;&#34;
+    from inspect import isbuiltin
+
+    # Get static vars
+    staticvars = _split_names(staticvars)
+
+    # Set defauls
+    check = {} if check is None else dict(check)
+    transform = {} if transform is None else dict(transform)
+
+    # Get decorator
+    def decorator(cls):
+        # If __init_subclass__ is already defined, store it
+        __cls_isc__ = None if isbuiltin(
+            cls.__init_subclass__) or cls.__init_subclass__.__qualname__ in [
+                &#39;staticvars.&lt;locals&gt;.decorator.&lt;locals&gt;.__isc__&#39;,
+                &#39;__Base__.__init_subclass__&#39;
+            ] else cls.__init_subclass__.__func__
+
+        # Generate __init_subclass__
+        def __isc__(subcls, **kwargs):
+            # Add all static variables
+            for k in staticvars:
+                # Add each static variable
+                if k in kwargs or k in defaults:
+                    # Get value (kwargs has precedence)
+                    v = kwargs[k] if k in kwargs else defaults[k]
+
+                    # Transform if needed
+                    if k in transform:
+                        v = transform[k](v)
+
+                    # Check if needed
+                    if k in check:
+                        # Get function and message
+                        _chk, _msg = (check[k],
+                                      f&#34;Check failed for &#39;{k}&#39;&#34;) if callable(
+                                          check[k]) else check[k]
+
+                        # Check
+                        if not _chk(v):
+                            raise ValueError(_msg)
+
+                    # Set static variable
+                    setattr(subcls, f&#39;_{subcls.__name__}__{k}&#39;, v)
+
+                    # Remove from kwargs
+                    if k in kwargs:
+                        del (kwargs[k])
+
+                # If not present, raise error
+                else:
+                    raise ValueError(f&#34;Static variable &#39;{k}&#39; must be provided.&#34;)
+
+            # If __isc__ was provided, call it
+            if __cls_isc__:
+                __cls_isc__(subcls, **kwargs)
+
+            # Otherwise, call super
+            else:
+                super(cls, subcls).__init_subclass__(**kwargs)
+
+        # Add to class
+        cls.__staticvars__ = staticvars
+        cls.__init_subclass__ = classmethod(__isc__)
+        return cls
+
+    return decorator
+
+
+def compare(staticvars: {str, tuple[str, ...]}, cmp: dict[str, any] = None):
+    # Split staticvars
+    staticvars = _split_names(staticvars)
+
+    # Get default cmp
+    cmp = {} if cmp is None else dict(cmp)
+
+    # If no &#39;cmp&#39; is provided for k in &#39;staticvars&#39;, add default
+    cmp.update(
+        (k, lambda x, y: x == y) for k in set(staticvars).difference(cmp))
+
+    # Get decorator
+    def decorator(cls):
+        # Generate comparing function
+        def __gen_compare__():
+            # Get comparison function
+            def __compare__(self, other):
+                # Check that all cmp&#39;s are satisfied
+                return isinstance(other, cls) and all(
+                    np.all(c(getattr(self, k), getattr(other, k)))
+                    for k, c in cmp.items())
+
+            # Return comparison function
+            return __compare__
+
+        # Assign compare
+        cls.__compare__ = __gen_compare__()
+
+        # Return class
+        return cls
+
+    # Return decorator
+    return decorator
+
+
+def requires(names: {str, tuple[str, ...]}):
+    &#34;&#34;&#34;
+    Add requires static variables.
+    &#34;&#34;&#34;
+
+    # Get decorator
+    def decorator(cls):
+        # Add requires
+        cls.__required__ = _split_names(names)
+
+        # Return class
+        return cls
+
+    # Return decorator
+    return decorator
+
+
+class __Base__:
+    &#34;&#34;&#34;
+    Basic features.
+    &#34;&#34;&#34;
+
+    ##################################### INITIALIZE ClASS #####################################
+
+    @classmethod
+    def __init_subclass__(cls: type, skip_requirements: bool = False, **kwargs):
+        # Get provided
+        pr = cls.__get_provided__()
+
+        # Get required
+        rq = cls.__get_required__()
+
+        # Check all required attributes are provided
+        if not skip_requirements:
+            d = set(rq).difference(pr)
+            if d:
+                raise AttributeError(&#34;The following required attributes are &#34;
+                                     f&#34;not provided: {tuple(d)}&#34;)
+
+        # Continue
+        super().__init_subclass__(**kwargs)
+
+    #################################### SET/GET ATTRIBUTES ####################################
+
+    @classmethod
+    def __get_staticvar__(cls: type, name: str, c: type = None) -&gt; any:
+        # If c is provided, check c only
+        if c:
+            # Get class
+            _c = next((_c for _c in cls.mro() if _c == c), None)
+
+            # If not found, raise error
+            if _c is None:
+                raise AttributeError(
+                    f&#34;type object &#39;{c.__name__}&#39; has no attribute &#39;{name}&#39;&#34;)
+
+            # Return variable
+            return getattr(_c, f&#39;_{c.__name__}__{name}&#39;)
+
+        # Otherwise, try every class
+        else:
+            # Find the first class which provides &#39;name&#39;
+            v = next((
+                x for x in (getattr(c, f&#39;_{c.__name__}__{name}&#39;, NotImplemented)
+                            for c in cls.mro()) if x is not NotImplemented),
+                     NotImplemented)
+
+            # If v is not found, raise error
+            if v is NotImplemented:
+                raise AttributeError(
+                    f&#34;type object &#39;{cls.__name__}&#39; has no attribute &#39;{name}&#39;&#34;)
+            else:
+                return v
+
+    @classmethod
+    def __has_staticvar__(cls: type, name: str, c: type = None) -&gt; bool:
+        # Try to get static variable
+        try:
+            cls.__get_staticvar__(name, c)
+
+        # If fails, return False
+        except AttributeError:
+            return False
+
+        # Otherwise, return True
+        else:
+            return True
+
+    @classmethod
+    def __get_staticvars__(cls: type,
+                           *,
+                           force: bool = False) -&gt; tuple[str, ...]:
+        # Get values
+        vs = None if force else getattr(cls, &#39;__all_staticvars__&#39;, None)
+
+        # If &#39;__all_staticvars__&#39; is present, return it
+        if vs is not None:
+            return vs
+
+        # Otherwise, recompute from scratch
+        else:
+            return tuple(
+                set(x for c in cls.mro()
+                    for x in getattr(c, &#39;__staticvars__&#39;, [])))
+
+    @classmethod
+    def __get_static_dict__(cls: type) -&gt; dict[str, any]:
+        # Return dictionary of static variables
+        return {k: cls.__get_staticvar__(k) for k in cls.__get_staticvars__()}
+
+    @property
+    def __static_dict__(self):
+        # Return dictionary of static variables
+        return self.__get_static_dict__()
+
+    @classmethod
+    def __getattr__(cls: type, name: str) -&gt; any:
+        # Try to retrieve a static variable
+        return cls.__get_staticvar__(name)
+
+    def __setattr__(self, name: str, value: any) -&gt; None:
+        # Check if name is among the static variables
+        if name in self.__get_staticvars__():
+            raise AttributeError(&#39;Cannot set static variable&#39;)
+        else:
+            super().__setattr__(name, value)
+
+    ###################################### SET/GET METHODS #####################################
+
+    @classmethod
+    def __get_methods__(cls, *, force: bool = False) -&gt; tuple[str, ...]:
+        # Get values
+        vs = None if force else getattr(cls, &#39;__all_methods__&#39;, None)
+
+        # If class provides &#39;__all_methods&#39;, just return it
+        if vs is not None:
+            return vs
+
+        # Otherwise, recompute all methods
+        else:
+            return tuple(
+                set(x for c in cls.mro()
+                    for x in getattr(c, &#39;__methods__&#39;, [])))
+
+    @classmethod
+    def __get_methods_dict__(cls) -&gt; dict[str, any]:
+        return {k: getattr(cls, k) for k in cls.__get_methods__()}
+
+    @property
+    def __methods_dict__(self) -&gt; dict[str, any]:
+        return type(self).__get_methods_dict__()
+
+    ############################################# MRO ##########################################
+
+    @classmethod
+    def __get_mro__(cls):
+        return tuple(
+            c for c in cls.mro() if not getattr(c, &#39;__virtual__&#39;, False))
+
+    ######################################## COPY/DEEPCOPY #####################################
+
+    def __copy__(self):
+        _new = type(self)()
+        _new.__dict__ = copy(self.__dict__)
+        return _new
+
+    def __deepcopy__(self, memo):
+        _new = type(self)()
+        _new.__dict__ = deepcopy(self.__dict__, memo)
+        return _new
+
+    ####################################### PROVIDED/REQUIRED #################################
+
+    @classmethod
+    def __get_provided__(cls, *, force: bool = False):
+        # Get values
+        vs = None if force else getattr(cls, &#39;__all_provided__&#39;, None)
+
+        # If &#39;__all_provided__&#39; is present, return it
+        if vs is not None:
+            return vs
+
+        # Otherwise, recompute it
+        else:
+            # Get all statics
+            st = cls.__get_staticvars__()
+
+            # Get all methods
+            mt = cls.__get_methods__()
+
+            # Get all provided
+            pr = tuple(x for c in cls.mro() for x in c.__dict__)
+
+            # Return everything
+            return tuple(set(st).union(mt + pr))
+
+    @classmethod
+    def __get_required__(cls, *, force: bool = False):
+        # Get values
+        vs = None if force else getattr(cls, &#39;__all_required__&#39;, None)
+
+        # If &#39;__all_required__&#39; is present, return it
+        if vs is not None:
+            return vs
+
+        # Otherwise, recompute it
+        else:
+            return tuple(
+                set(x for c in cls.mro()
+                    for x in getattr(c, &#39;__required__&#39;, [])))
+
+    ######################################## REQUIREMENTS ######################################
+
+    @classmethod
+    def __get_requirements__(cls):
+        return tuple(
+            {x for c in cls.mro() for x in getattr(c, &#39;__required__&#39;, [])})
+
+    ########################################## PROVIDES ########################################
+
+    def provides(self,
+                 method: {str, iter[str]},
+                 *,
+                 which: {all, any} = all) -&gt; bool:
+        # Split methods
+        method = _split_names(method)
+
+        # Check which
+        if which not in [all, any]:
+            raise ValueError(f&#34;&#39;which={which}&#39; not supported&#34;)
+
+        # Check
+        return which(
+            getattr(self, m, NotImplemented) is not NotImplemented
+            for m in method)
+
+    ##################################### METHODS FOR PICKLE ###################################
+
+    def __getstate__(self):
+        return pickle.dumps(self.__dict__)
+
+    def __setstate__(self, state):
+        self.__dict__ = pickle.loads(state)
+
+    @staticmethod
+    def __generate__(class_name: str, mro: list[type], staticvars, methods):
+        return generate(class_name=class_name,
+                        mro=mro,
+                        methods=dict(pickle.loads(methods)),
+                        **pickle.loads(staticvars))()
+
+    def __reduce__(self):
+        # Get class
+        cls = type(self)
+
+        # Return reduction
+        return (cls.__generate__, (cls.__name__, cls.__get_mro__(),
+                                   pickle.dumps(self.__static_dict__),
+                                   pickle.dumps(self.__methods_dict__)),
+                self.__getstate__())
+
+    #################################### STRING REPRESENTATION #################################
+
+    def __str__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Return string representation of Gate.
+        &#34;&#34;&#34;
+        # Get all elements to print
+        _all_collect = {
+            str(k): (int(x), str(v), int(p))
+            for c in reversed(type(self).mro()) for k, (
+                x, v,
+                p) in getattr(c, &#39;__print__&#39;, lambda self: {})(self).items()
+        }
+
+        # Print elements at the left of Gate()
+        _collect = {
+            k: (x, v) for k, (x, v, p) in _all_collect.items() if p == -1
+        }
+        _str = &#39;&#39;.join(
+            str(v)
+            for _, v in sorted(_collect.values(), key=lambda x: x[0])
+            if v)
+
+        # Print name
+        _str += f&#39;{type(self).__name__}&#39;
+
+        # Print elements between name and ()
+        _collect = {
+            k: (x, v) for k, (x, v, p) in _all_collect.items() if p == 2
+        }
+        _str += &#39;&#39;.join(
+            str(v)
+            for _, v in sorted(_collect.values(), key=lambda x: x[0])
+            if v)
+
+        # Print elements inside Gate()
+        _collect = {
+            k: (x, v) for k, (x, v, p) in _all_collect.items() if p == 0
+        }
+        _str += &#39;(&#39;
+        _str += &#39;, &#39;.join(
+            str(v)
+            for _, v in sorted(_collect.values(), key=lambda x: x[0])
+            if v)
+        _str += &#39;)&#39;
+
+        # Print elements at the right of Gate()
+        _collect = {
+            k: (x, v) for k, (x, v, p) in _all_collect.items() if p == 1
+        }
+        _str += &#39;&#39;.join(
+            str(v)
+            for _, v in sorted(_collect.values(), key=lambda x: x[0])
+            if v)
+
+        # Return string
+        return _str
+
+    def __repr__(self) -&gt; str:
+        &#34;&#34;&#34;
+        Return string representation of Gate.
+        &#34;&#34;&#34;
+
+        return self.__str__()
+
+    ######################################### COMPARISON #######################################
+
+    def __eq__(self, other) -&gt; bool:
+        return all(
+            getattr(cls, &#39;__compare__&#39;, lambda self, other: True)(self, other)
+            for cls in type(self).mro())
+
+
+def generate(class_name: str,
+             mro: iter[type],
+             methods: dict[str, any] = None,
+             **staticvars):
+    &#34;&#34;&#34;
+    Generate new `type`.
+
+    Parameters
+    ----------
+    class_name: str
+        Name of the new `type`. It must be a valid identified.
+    mro: iter[type]
+        A series of `type`s to derive from.
+    methods: dict[str, any]
+        Extra method to add to class.
+
+    Returns
+    -------
+    type
+        The new `type`.
+    &#34;&#34;&#34;
+    if not isinstance(class_name, str) or not class_name.isidentifier():
+        raise ValueError(&#34;&#39;class_name&#39; is not a valid identifier.&#34;)
+
+    # Get methods
+    methods = {} if methods is None else dict(methods)
+
+    # Add __Base__ if nor already included
+    mro = tuple(mro)
+    if __Base__ not in mro:
+        mro += (__Base__,)
+
+    # Get new_type
+    new_type = type(
+        class_name, mro, {
+            **methods, &#39;__methods__&#39;: tuple(methods),
+            &#39;__staticvars__&#39;: tuple(staticvars)
+        }, **staticvars)
+
+    # Add all static variables
+    new_type.__all_staticvars__ = new_type.__get_staticvars__(force=True)
+
+    # Add all methods
+    new_type.__all_methods__ = new_type.__get_methods__(force=True)
+
+    # Add all provided variables
+    new_type.__all_provided__ = new_type.__get_provided__(force=True)
+
+    # Add all required variables
+    new_type.__all_required__ = new_type.__get_required__(force=True)
+
+    # Add virtual flag
+    new_type.__virtual__ = True
+
+    # Return new_type
+    return new_type</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="hybridq.base.base.compare"><code class="name flex">
+<span>def <span class="ident">compare</span></span>(<span>staticvars: {str, tuple[str, ...]}, cmp: dict[str, any] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compare(staticvars: {str, tuple[str, ...]}, cmp: dict[str, any] = None):
+    # Split staticvars
+    staticvars = _split_names(staticvars)
+
+    # Get default cmp
+    cmp = {} if cmp is None else dict(cmp)
+
+    # If no &#39;cmp&#39; is provided for k in &#39;staticvars&#39;, add default
+    cmp.update(
+        (k, lambda x, y: x == y) for k in set(staticvars).difference(cmp))
+
+    # Get decorator
+    def decorator(cls):
+        # Generate comparing function
+        def __gen_compare__():
+            # Get comparison function
+            def __compare__(self, other):
+                # Check that all cmp&#39;s are satisfied
+                return isinstance(other, cls) and all(
+                    np.all(c(getattr(self, k), getattr(other, k)))
+                    for k, c in cmp.items())
+
+            # Return comparison function
+            return __compare__
+
+        # Assign compare
+        cls.__compare__ = __gen_compare__()
+
+        # Return class
+        return cls
+
+    # Return decorator
+    return decorator</code></pre>
+</details>
+</dd>
+<dt id="hybridq.base.base.generate"><code class="name flex">
+<span>def <span class="ident">generate</span></span>(<span>class_name: str, mro: iter[type], methods: dict[str, any] = None, **staticvars)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generate new <code>type</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>class_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Name of the new <code>type</code>. It must be a valid identified.</dd>
+<dt><strong><code>mro</code></strong> :&ensp;<code>iter[type]</code></dt>
+<dd>A series of <code>type</code>s to derive from.</dd>
+<dt><strong><code>methods</code></strong> :&ensp;<code>dict[str, any]</code></dt>
+<dd>Extra method to add to class.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>type</code></dt>
+<dd>The new <code>type</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate(class_name: str,
+             mro: iter[type],
+             methods: dict[str, any] = None,
+             **staticvars):
+    &#34;&#34;&#34;
+    Generate new `type`.
+
+    Parameters
+    ----------
+    class_name: str
+        Name of the new `type`. It must be a valid identified.
+    mro: iter[type]
+        A series of `type`s to derive from.
+    methods: dict[str, any]
+        Extra method to add to class.
+
+    Returns
+    -------
+    type
+        The new `type`.
+    &#34;&#34;&#34;
+    if not isinstance(class_name, str) or not class_name.isidentifier():
+        raise ValueError(&#34;&#39;class_name&#39; is not a valid identifier.&#34;)
+
+    # Get methods
+    methods = {} if methods is None else dict(methods)
+
+    # Add __Base__ if nor already included
+    mro = tuple(mro)
+    if __Base__ not in mro:
+        mro += (__Base__,)
+
+    # Get new_type
+    new_type = type(
+        class_name, mro, {
+            **methods, &#39;__methods__&#39;: tuple(methods),
+            &#39;__staticvars__&#39;: tuple(staticvars)
+        }, **staticvars)
+
+    # Add all static variables
+    new_type.__all_staticvars__ = new_type.__get_staticvars__(force=True)
+
+    # Add all methods
+    new_type.__all_methods__ = new_type.__get_methods__(force=True)
+
+    # Add all provided variables
+    new_type.__all_provided__ = new_type.__get_provided__(force=True)
+
+    # Add all required variables
+    new_type.__all_required__ = new_type.__get_required__(force=True)
+
+    # Add virtual flag
+    new_type.__virtual__ = True
+
+    # Return new_type
+    return new_type</code></pre>
+</details>
+</dd>
+<dt id="hybridq.base.base.requires"><code class="name flex">
+<span>def <span class="ident">requires</span></span>(<span>names: {str, tuple[str, ...]})</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add requires static variables.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def requires(names: {str, tuple[str, ...]}):
+    &#34;&#34;&#34;
+    Add requires static variables.
+    &#34;&#34;&#34;
+
+    # Get decorator
+    def decorator(cls):
+        # Add requires
+        cls.__required__ = _split_names(names)
+
+        # Return class
+        return cls
+
+    # Return decorator
+    return decorator</code></pre>
+</details>
+</dd>
+<dt id="hybridq.base.base.staticvars"><code class="name flex">
+<span>def <span class="ident">staticvars</span></span>(<span>staticvars: {str, tuple[str, ...]}, check: dict[str, any] = None, transform: dict[str, any] = None, **defaults)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Decorator for <code>class</code>es to add static variables to them.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def staticvars(staticvars: {str, tuple[str, ...]},
+               check: dict[str, any] = None,
+               transform: dict[str, any] = None,
+               **defaults):
+    &#34;&#34;&#34;
+    Decorator for `class`es to add static variables to them.
+    &#34;&#34;&#34;
+    from inspect import isbuiltin
+
+    # Get static vars
+    staticvars = _split_names(staticvars)
+
+    # Set defauls
+    check = {} if check is None else dict(check)
+    transform = {} if transform is None else dict(transform)
+
+    # Get decorator
+    def decorator(cls):
+        # If __init_subclass__ is already defined, store it
+        __cls_isc__ = None if isbuiltin(
+            cls.__init_subclass__) or cls.__init_subclass__.__qualname__ in [
+                &#39;staticvars.&lt;locals&gt;.decorator.&lt;locals&gt;.__isc__&#39;,
+                &#39;__Base__.__init_subclass__&#39;
+            ] else cls.__init_subclass__.__func__
+
+        # Generate __init_subclass__
+        def __isc__(subcls, **kwargs):
+            # Add all static variables
+            for k in staticvars:
+                # Add each static variable
+                if k in kwargs or k in defaults:
+                    # Get value (kwargs has precedence)
+                    v = kwargs[k] if k in kwargs else defaults[k]
+
+                    # Transform if needed
+                    if k in transform:
+                        v = transform[k](v)
+
+                    # Check if needed
+                    if k in check:
+                        # Get function and message
+                        _chk, _msg = (check[k],
+                                      f&#34;Check failed for &#39;{k}&#39;&#34;) if callable(
+                                          check[k]) else check[k]
+
+                        # Check
+                        if not _chk(v):
+                            raise ValueError(_msg)
+
+                    # Set static variable
+                    setattr(subcls, f&#39;_{subcls.__name__}__{k}&#39;, v)
+
+                    # Remove from kwargs
+                    if k in kwargs:
+                        del (kwargs[k])
+
+                # If not present, raise error
+                else:
+                    raise ValueError(f&#34;Static variable &#39;{k}&#39; must be provided.&#34;)
+
+            # If __isc__ was provided, call it
+            if __cls_isc__:
+                __cls_isc__(subcls, **kwargs)
+
+            # Otherwise, call super
+            else:
+                super(cls, subcls).__init_subclass__(**kwargs)
+
+        # Add to class
+        cls.__staticvars__ = staticvars
+        cls.__init_subclass__ = classmethod(__isc__)
+        return cls
+
+    return decorator</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="hybridq.base" href="index.html">hybridq.base</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="hybridq.base.base.compare" href="#hybridq.base.base.compare">compare</a></code></li>
+<li><code><a title="hybridq.base.base.generate" href="#hybridq.base.base.generate">generate</a></code></li>
+<li><code><a title="hybridq.base.base.requires" href="#hybridq.base.base.requires">requires</a></code></li>
+<li><code><a title="hybridq.base.base.staticvars" href="#hybridq.base.base.staticvars">staticvars</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,3397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>hybridq.gate.property API documentation</title>
+<meta name="description" content="Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>hybridq.gate.property</code></h1>
+</header>
+<section id="section-intro">
+<p>Author: Salvatore Mandra (salvatore.mandra@nasa.gov)</p>
+<p>Copyright © 2021, United States Government, as represented by the Administrator
+of the National Aeronautics and Space Administration. All rights reserved.</p>
+<p>The HybridQ: A Hybrid Simulator for Quantum Circuits platform is licensed under
+the Apache License, Version 2.0 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of the License at
+<a href="http://www.apache.org/licenses/LICENSE-2.0.">http://www.apache.org/licenses/LICENSE-2.0.</a></p>
+<p>Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Author: Salvatore Mandra (salvatore.mandra@nasa.gov)
+
+Copyright © 2021, United States Government, as represented by the Administrator
+of the National Aeronautics and Space Administration. All rights reserved.
+
+The HybridQ: A Hybrid Simulator for Quantum Circuits platform is licensed under
+the Apache License, Version 2.0 (the &#34;License&#34;); you may not use this file
+except in compliance with the License. You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+&#34;&#34;&#34;
+
+from __future__ import annotations
+from hybridq.base import __Base__, generate
+from hybridq.base import staticvars, compare, requires
+from hybridq.base.property import Tags as TagGate, Name as NameGate, Params, Tuple
+from scipy.linalg import expm, fractional_matrix_power as powm
+from hybridq.utils import isintegral, isnumber
+from copy import deepcopy
+from hybridq.utils import sort
+import numpy as np
+
+
+def _truncate_print(x):
+    if x is None:
+        return &#39;&#39;
+    else:
+        if len(x) &lt; 5:
+            return f&#39;{x}&#39;
+        else:
+            _str = &#39;(&#39; if isinstance(x, tuple) else &#39;[&#39;
+            _str += &#39;, &#39;.join(str(x) for x in x[:2])
+            _str += &#39;, ..., &#39;
+            _str += &#39;, &#39;.join(str(x) for x in x[-2:])
+            _str += &#39;)&#39; if isinstance(x, tuple) else &#39;]&#39;
+            return _str
+
+
+@compare(&#39;n_qubits,qubits&#39;)
+@staticvars(
+    &#39;n_qubits&#39;,
+    check=dict(n_qbits=(lambda n: n is any or (isintegral(n) and n &gt;= 0),
+                        &#34;&#39;n_qubits&#39; must be a non-negative integer&#34;)))
+class QubitGate(__Base__):
+    &#34;&#34;&#34;
+    Class representing a gate with qubits.
+
+    Attributes
+    ----------
+    qubits: iter[any], optional
+    &#34;&#34;&#34;
+
+    def __init__(self, qubits: iter[any] = None, **kwargs) -&gt; None:
+        # Call super
+        super().__init__(**kwargs)
+
+        # Set qubits
+        self._on(qubits)
+
+    @property
+    def qubits(self) -&gt; tuple[any, ...]:
+        return self.__qubits
+
+    def __print__(self) -&gt; dict[str, tuple[int, str, int]]:
+        return {
+            &#39;n_qubits&#39;:
+                (10, f&#34;n_qubits={self.n_qubits}&#34; if self.qubits is None else &#39;&#39;,
+                 0),
+            &#39;qubits&#39;:
+                (100, f&#34;qubits={_truncate_print(self.qubits)}&#34;
+                 if self.qubits is not None and self.n_qubits &gt; 0 else &#39;&#39;, 0),
+        }
+
+    def _on(self, qubits: iter[any]) -&gt; None:
+        &#34;&#34;&#34;
+        Set `qubits` to `QubitGate`.
+        &#34;&#34;&#34;
+
+        self.on(qubits, inplace=True)
+
+    def on(self,
+           qubits: iter[any] = None,
+           *,
+           inplace: bool = False) -&gt; QubitGate:
+        &#34;&#34;&#34;
+        Return `QubitGate` applied to `qubits`. If `inplace` is `True`,
+        `QubitGate` is modified in place.
+
+        Parameters
+        ----------
+        qubits: iter[any]
+            Qubits the new Gate will act on.
+        inplace: bool, optional
+            If `True`, `QubitGate` is modified in place. Otherwise, a new
+            `QubitGate` is returned.
+
+        Returns
+        -------
+        QubitGate
+            New `QubitGate` acting on `qubits`. If `inplace` is `True`,
+            `QubitGate` is modified in place.
+
+        Example
+        -------
+        &gt;&gt;&gt; QubitGate([1, 2]).qubits
+        [1, 2]
+        &gt;&gt;&gt; QubitGate().on([42]).qubits
+        [42]
+        &#34;&#34;&#34;
+
+        # Convert to tuple
+        qubits = None if qubits is None else tuple(qubits)
+
+        # Check that all qubits are hashable
+        if qubits and any(not getattr(q, &#39;__hash__&#39;, None) for q in qubits):
+            raise ValueError(&#34;Only hashable &#39;qubits&#39; are allowed.&#34;)
+
+        # Check that no qubits are repeated
+        if qubits is not None and len(qubits) != len(set(qubits)):
+            raise ValueError(&#34;Repeated qubits are not allowed.&#34;)
+
+        # Check lenght
+        if qubits is not None and len(qubits) != self.n_qubits:
+            raise ValueError(f&#34;Wrong number of &#39;qubits&#39; &#34;
+                             f&#34;(expected {self.n_qubits}, got {len(qubits)})&#34;)
+
+        # Make a copy if needed
+        if inplace:
+            _g = self
+        else:
+            _g = deepcopy(self)
+
+        # Set
+        _g.__qubits = qubits
+
+        # Return
+        return _g
+
+
+@compare(&#39;power&#39;)
+class PowerGate(__Base__):
+    &#34;&#34;&#34;
+    Class representing a gate that can be raised to a given power.
+
+    Attributes
+    ----------
+    power: any, optional
+    &#34;&#34;&#34;
+
+    def __init__(self, power: any = 1, **kwargs) -&gt; None:
+        # Call super
+        super().__init__(**kwargs)
+
+        # Assign power to object
+        self._set_power(power)
+
+    @property
+    def power(self) -&gt; any:
+        return self.__power
+
+    def __print__(self) -&gt; dict[str, tuple[int, str, int]]:
+        _power = &#39;&#39;
+        if self.power != 1:
+            if any(
+                    isinstance(self.power, t)
+                    for t in (int, float, np.integer, np.floating)):
+                _power = f&#34;**{np.round(self.power, 5)}&#34;
+            else:
+                _power = f&#34;**{self.power}&#34;
+        return {&#39;power&#39;: (0, f&#34;{_power}&#34;, 1)}
+
+    def _set_power(self, power: any) -&gt; None:
+        &#34;&#34;&#34;
+        Set `power` to `PowerGate`.
+        &#34;&#34;&#34;
+
+        self.set_power(power, inplace=True)
+
+    def set_power(self, power: any, *, inplace: bool = False) -&gt; PowerGate:
+        &#34;&#34;&#34;
+        Return `PowerGate` to the given `power`. If `inplace` is `True`,
+        `PowerGate` is modified in place.
+
+        Parameters
+        ----------
+        power: any
+            Power to elevate `PowerGate`.
+        inplace: bool, optional
+            If `True`, `PowerGate` is modified in place. Otherwise, a new
+            `PowerGate` is returned.
+
+        Returns
+        -------
+        PowerGate
+            New `PowerGate` to the given `power`. If `inplace` is `True`,
+            `PowerGate` is modified in place.
+
+        Example
+        -------
+        &gt;&gt;&gt; PowerGate(U=[[1, 0], [0, -1]]).matrix()
+        array([[ 1,  0],
+               [ 0, -1]])
+        &gt;&gt;&gt; PowerGate(U=[[1, 0], [0, -1]]).set_power(1.2345).matrix()
+        array([[ 1.        +0.j        ,  0.        +0.j        ],
+               [ 0.        +0.j        , -0.74068735-0.67184987j]])
+        &#34;&#34;&#34;
+
+        # Make a copy if needed
+        if inplace:
+            _g = self
+        else:
+            _g = deepcopy(self)
+
+        # Assign qubits
+        _g.__power = 1 if power is None else power
+
+        return _g
+
+    def __pow__(self, p: any) -&gt; PowerGate:
+        &#34;&#34;&#34;
+        Return `PowerGate`**p.
+        &#34;&#34;&#34;
+
+        return self.set_power(self.power * p, inplace=False)
+
+    def _inv(self) -&gt; None:
+        &#34;&#34;&#34;
+        Modify `PowerGate` to its inverse.
+        &#34;&#34;&#34;
+
+        self.inv(inplace=True)
+
+    def inv(self, *, inplace: bool = False) -&gt; PowerGate:
+        &#34;&#34;&#34;
+        Return inverse of `PowerGate`. If `inplace` is `True`, `PowerGate` is modified in place.
+
+        Parameters
+        ----------
+        inplace: bool, optional
+            If `True`, PowerGate is modified in place. Otherwise, a new
+            `PowerGate` is returned.
+
+        Returns
+        -------
+        PowerGate
+            Inverse of `PowerGate`. If `True`, `PowerGate` is modified in place.
+
+        Example
+        -------
+        &gt;&gt;&gt; g = PowerGate(U=[[1, 0], [0, np.exp(-0.23j)]])
+        &gt;&gt;&gt; g.matrix()
+        array([[1.       +0.j        , 0.       +0.j        ],
+               [0.       +0.j        , 0.9736664-0.22797752j]])
+        &gt;&gt;&gt; g.inv().matrix()
+        array([[1.       -0.j        , 0.       -0.j        ],
+               [0.       -0.j        , 0.9736664+0.22797752j]])
+        &gt;&gt;&gt; g.inv().matrix() @ g.matrix()
+        array([[1.+0.j, 0.+0.j],
+               [0.+0.j, 1.+0.j]])
+        &#34;&#34;&#34;
+
+        return self.set_power(self.power * -1, inplace=inplace)
+
+
+@compare(&#39;Matrix&#39;)
+@staticvars(&#39;Matrix&#39;, transform=dict(Matrix=lambda Matrix: np.asarray(Matrix)))
+class MatrixGate(__Base__):
+    &#34;&#34;&#34;
+    Class for gates that can be represented as a matrix.
+    &#34;&#34;&#34;
+
+    def __print__(self):
+        return {
+            &#39;M&#39;: (
+                400,
+                f&#39;M={type(self.Matrix).__module__}.{type(self.Matrix).__name__}(shape={self.Matrix.shape}, dtype={self.Matrix.dtype})&#39;,
+                0)
+        }
+
+
+@requires(&#39;Matrix,qubits,n_qubits&#39;)
+class PowerMatrixGate(PowerGate, __Base__):
+    &#34;&#34;&#34;
+    Class representing a single matrix gate.
+    &#34;&#34;&#34;
+
+    def __init__(self, *args, **kwargs):
+        # Initialize local variables
+        self.__conj = False
+        self.__T = False
+
+        # Continue
+        super().__init__(*args, **kwargs)
+
+    def __eq__(self, other: __Base__) -&gt; bool:
+        # Check if gates are conjugated
+        _c1 = self.is_conjugated()
+        _c2 = other.is_conjugated() if other.provides(
+            &#39;is_conjugated&#39;) else False
+
+        # Check if gates are transposed
+        _t1 = self.is_transposed()
+        _t2 = other.is_transposed() if other.provides(
+            &#39;is_transposed&#39;) else False
+
+        # If either the conjugation or the transposition is different, the
+        # gates differ
+        if _c1 != _c2 or _t1 != _t2:
+            return False
+
+        # Otherwise, keep going
+        else:
+            return super().__eq__(other)
+
+    def __print__(self):
+        return {
+            &#39;ct&#39;: (0, &#39;^+&#39; if self.__conj and self.__T else
+                   &#39;^T&#39; if self.__T else &#39;^*&#39; if self.__conj else &#39;&#39;, 2)
+        }
+
+    def _conj(self) -&gt; PowerMatrixGate:
+        self.conj(inplace=True)
+
+    def conj(self, *, inplace: bool = False) -&gt; PowerMatrixGate:
+        # Create a copy if needed
+        g = self if inplace else deepcopy(self)
+
+        # Change conjugation
+        g.__conj ^= True
+
+        # Return gate
+        return g
+
+    def _T(self) -&gt; PowerMatrixGate:
+        self.T(inplace=True)
+
+    def T(self, *, inplace: bool = False) -&gt; PowerMatrixGate:
+        # Create a copy if needed
+        g = self if inplace else deepcopy(self)
+
+        # Change transposition
+        g.__T ^= True
+
+        # Return gate
+        return g
+
+    def is_conjugated(self) -&gt; bool:
+        return self.__conj
+
+    def is_transposed(self) -&gt; bool:
+        return self.__T
+
+    def _adj(self) -&gt; PowerMatrixGate:
+        self.adj(inplace=True)
+
+    def adj(self, *, inplace: bool = False) -&gt; PowerMatrixGate:
+        # Create a copy if needed
+        g = self if inplace else deepcopy(self)
+
+        # Change transposition
+        g.__T ^= True
+
+        # Change conjugation
+        g.__conj ^= True
+
+        # Return gate
+        return g
+
+    def matrix(self, order: iter[any] = None) -&gt; np.ndarray:
+        &#34;&#34;&#34;
+        Return matrix representing `MatrixPowerGate`. If `order` is provided,
+        the given order of qubits is used to output its matrix.
+
+        Parameters
+        ----------
+        order: iter[any]
+            Order of qubits used to output the matrix.
+
+        Returns
+        -------
+        array_like
+            Matrix representing `MatrixPowerGate`.
+
+        Example
+        -------
+        &gt;&gt;&gt; g = PowerMatrixGate(qubits=[0, 1], U=[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+        array([[1, 0, 0, 0],
+               [0, 1, 0, 0],
+               [0, 0, 0, 1],
+               [0, 0, 1, 0]])
+
+        The order of qubits is `[1, 0]`. On the contrary:
+        &gt;&gt;&gt; g.on().matrix(order=[1, 0])
+        array([[1, 0, 0, 0],
+               [0, 0, 0, 1],
+               [0, 0, 1, 0],
+               [0, 1, 0, 0]])
+
+        outputs a matrix with the qubits order being if `[0, 1]`.
+        &#34;&#34;&#34;
+
+        # Get Unitary
+        _U = np.asarray(self.Matrix)
+
+        if order is not None:
+            # Covert order to list
+            order = list(order)
+
+            # Order is allowed only if gate.qubits are specified
+            if self.qubits is None or sort(order) != sort(self.qubits):
+                raise ValueError(
+                    &#34;&#39;order&#39; is not a permutation of &#39;gate.qubits&#39;.&#34;)
+
+        # Reorder matrix in case qubits are out-of-order
+        if order and order != self.qubits:
+            # Transpose
+            _U = np.reshape(
+                np.transpose(
+                    np.reshape(_U, (2,) * (2 * self.n_qubits)),
+                    [self.qubits.index(q) for q in order] +
+                    [self.n_qubits + self.qubits.index(q) for q in order]),
+                (2**self.n_qubits, 2**self.n_qubits))
+
+        # Apply power
+        if self.power != 1:
+            _U = powm(_U, float(self.power))
+
+        # Apply conjugation
+        if self.__conj:
+            _U = _U.conj()
+
+        # Apply transposition
+        if self.__T:
+            _U = _U.T
+
+        # Return matrix
+        return _U
+
+    def isclose(self, gate: Gate, atol: float = 1e-8) -&gt; bool:
+        &#34;&#34;&#34;
+        Determine if the matrix of `gate` is close within an absolute
+        tollerance. If the gates are acting on a different set of qubits,
+        `isclose` will return `False`.
+
+        Parameters
+        ----------
+        gate: PowerMatrixGate
+            Gate to compare with.
+        atol: float, optional
+            Absolute tollerance.
+
+        Returns
+        -------
+        bool
+            `True` if the two gates are close withing the given absolute
+            tollerance, otherwise `False`.
+
+        Example
+        -------
+        &gt;&gt;&gt; g1 = PowerMatrixGate(U = [[1, 2], [3, 4]])
+        &gt;&gt;&gt; g2 = PowerMatrixGate(U = [[4, 5], [3, 4]])
+        &gt;&gt;&gt; g1.isclose(g1)
+        True
+        &gt;&gt;&gt; g1.isclose(g2)
+        False
+        &gt;&gt;&gt; g1.on([3]).isclose(g1)
+        False
+        &gt;&gt;&gt; g1.on([3]).isclose(g1.on([3])
+        True
+        &#34;&#34;&#34;
+
+        if not (self.qubits is None) ^ (gate.qubits is None):
+
+            # The gates differ if they act on a different set of qubits
+            if self.qubits is not None and sort(self.qubits) != sort(
+                    gate.qubits):
+                return False
+
+            # Get unitaries
+            _U1 = self.matrix(order=self.qubits if self.qubits else None)
+            _U2 = gate.matrix(order=self.qubits if self.qubits else None)
+
+            # If either matrix does not exist, the two gates differ
+            return np.allclose(_U1, _U2, atol=atol)
+
+        else:
+
+            return False
+
+    def commutes_with(self, gate: PowerMatrixGate, atol: float = 1e-7) -&gt; bool:
+        &#34;&#34;&#34;
+        Return `True` if the calling gate commutes with `gate`.
+
+        Parameters
+        ----------
+        gate: PowerMatrixGate
+            Gate to check commutation with.
+        atol: float
+            Absolute tollerance.
+
+        Returns
+        -------
+        bool
+            `True` if the calling gate commutes with `gate`, otherwise `False`.
+        &#34;&#34;&#34;
+        from string import ascii_lowercase as alc, ascii_uppercase as auc
+
+        # Check both gates have qubits
+        if self.qubits is None or gate.qubits is None:
+            raise ValueError(&#34;Cannot check commutation between virtual gates.&#34;)
+
+        # Get shared qubits
+        shared_qubits = sort(set(self.qubits).intersection(gate.qubits))
+
+        # If no qubits are shared, the gates definitely commute
+        if not shared_qubits:
+            return True
+
+        # Rename
+        g1, g2 = self, gate
+
+        # Get all qubits
+        q12 = tuple(sort(set(g1.qubits + g2.qubits)))
+
+        # Get number of qubits
+        n12 = len(q12)
+
+        # Get unitaries
+        U1 = np.reshape(g1.matrix(), (2,) * 2 * g1.n_qubits)
+        U2 = np.reshape(g2.matrix(), (2,) * 2 * g2.n_qubits)
+
+        # Define how to multiply matrices
+        def _mul(w1, w2):
+            # Get qubits and unitaries
+            q1, U1 = w1
+            q2, U2 = w2
+
+            # Get number of qubits
+            n1 = len(q1)
+            n2 = len(q2)
+
+            # Construct map
+            _map = &#39;&#39;
+            _map += &#39;&#39;.join(alc[q12.index(q)] for q in q1)
+            _map += &#39;&#39;.join(auc[-shared_qubits.index(q) -
+                                1 if q in shared_qubits else q12.index(q)]
+                            for q in q1)
+            _map += &#39;,&#39;
+            _map += &#39;&#39;.join(auc[-shared_qubits.index(q) -
+                                1] if q in shared_qubits else alc[q12.index(q)]
+                            for q in q2)
+            _map += &#39;&#39;.join(auc[q12.index(q)] for q in q2)
+            _map += &#39;-&gt;&#39;
+            _map += &#39;&#39;.join(alc[x] for x in range(n12))
+            _map += &#39;&#39;.join(auc[x] for x in range(n12))
+
+            # Multiply map
+            return np.einsum(_map, U1, U2)
+
+        # Compute products
+        P1 = _mul((g1.qubits, U1), (g2.qubits, U2))
+        P2 = _mul((g2.qubits, U2), (g1.qubits, U1))
+
+        # Check if the same
+        return np.allclose(P1, P2, atol=1e-5)
+
+
+class UnitaryGate(PowerMatrixGate, skip_requirements=True):
+
+    def set_power(self, power: any, *, inplace: bool = False) -&gt; UnitaryGate:
+        # If power is negative, just apply the absolute value and apply conj
+        # and T as well.
+        if isnumber(power) and power &lt; 0:
+            if power != -1:
+                self = PowerMatrixGate.set_power(self, -power, inplace=inplace)
+            self = self.adj(inplace=inplace)
+
+        # Apply power
+        else:
+            self = PowerMatrixGate.set_power(self, power, inplace=inplace)
+
+        return self
+
+    def unitary(self, *args, **kwargs) -&gt; np.ndarray:
+        &#34;&#34;&#34;
+        Alias for `self.matrix`.
+        &#34;&#34;&#34;
+        from hybridq.utils import DeprecationWarning
+        from warnings import warn
+
+        # Warn that `self.matrix` should be used instead of `self.unitary`
+        warn(&#34;Since &#39;0.7.0&#39;, &#39;self.matrix&#39; should be used instead &#34;
+             &#34;of the less general &#39;self.unitary&#39;&#34;)
+
+        # Call self.matrix
+        return self.matrix(*args, **kwargs)
+
+
+class SelfAdjointUnitaryGate(UnitaryGate, skip_requirements=True):
+
+    def conj(self, *, inplace: bool = False) -&gt; SelfAdjointUnitaryGate:
+        &#34;&#34;&#34;
+        Apply conjugation to self.matrix().
+        &#34;&#34;&#34;
+        if self.power == 1 and not self.is_conjugated() and self.is_transposed(
+        ):
+            return PowerMatrixGate.T(self, inplace=inplace)
+        else:
+            return PowerMatrixGate.conj(self, inplace=inplace)
+
+    def T(self, *, inplace: bool = False) -&gt; SelfAdjointUnitaryGate:
+        &#34;&#34;&#34;
+        Apply transposition to self.matrix().
+        &#34;&#34;&#34;
+        if self.power == 1 and self.is_conjugated(
+        ) and not self.is_transposed():
+            return PowerMatrixGate.conj(self, inplace=inplace)
+        else:
+            return PowerMatrixGate.T(self, inplace=inplace)
+
+    def adj(self, *, inplace: bool = False) -&gt; SelfAdjointUnitaryGate:
+        &#34;&#34;&#34;
+        Apply adjunction to self.matrix().
+        &#34;&#34;&#34;
+        if self.power == 1:
+            return self if inplace else deepcopy(self)
+        else:
+            return PowerMatrixGate.adj(self, inplace=inplace)
+
+
+@compare(&#39;Matrix_gen&#39;,
+         cmp=dict(Matrix_gen=lambda x, y: x.__code__ == y.__code__))
+@staticvars(&#39;Matrix_gen&#39;,
+            check=dict(Matrix_gen=(lambda Matrix_gen: callable(Matrix_gen),
+                                   &#34;&#39;Matrix_gen&#39; must be callable&#34;)))
+class ParamGate(Params, n_params=any):
+    &#34;&#34;&#34;
+    Class representing a gate with qubits.
+    &#34;&#34;&#34;
+
+    def __init_subclass__(cls, **kwargs):
+        # Bind Matrix_gen to cls
+        cls.Matrix_gen = cls.__get_staticvar__(&#39;Matrix_gen&#39;)
+
+        # Continue
+        super().__init_subclass__(**kwargs)
+
+    def __setattr__(self, name, value):
+        if name == &#39;Matrix_gen&#39;:
+            raise AttributeError(&#34;Cannot set &#39;Matrix_gen&#39;&#34;)
+        else:
+            super().__setattr__(name, value)
+
+    @property
+    def Matrix(self) -&gt; np.ndarray:
+        if self.params is None:
+            raise ValueError(&#34;&#39;params&#39; must be provided.&#34;)
+        return np.asarray(self.Matrix_gen(*self.params))
+
+
+@staticvars(&#39;RMatrix&#39;,
+            transform=dict(RMatrix=lambda RMatrix: np.asarray(RMatrix)))
+class RotationGate(
+        ParamGate,
+        PowerGate,
+        __Base__,
+        n_params=1,
+        Matrix_gen=lambda self, r: expm(-1j * float(r) * self.RMatrix / 2)):
+    &#34;&#34;&#34;
+    Gate with form U = exp(-1j * r / 2 * O), with O an
+    arbitrary matrix.
+    &#34;&#34;&#34;
+
+    def __init_subclass__(cls, n_params=None, Matrix_gen=None, **kwargs):
+        # Initialize everything
+        super().__init_subclass__(n_params=cls._RotationGate__n_params,
+                                  Matrix_gen=cls._RotationGate__Matrix_gen,
+                                  **kwargs)
+
+    def __print__(self) -&gt; dict[str, tuple[int, str, int]]:
+        _params = &#39;&#39;
+        if self.params:
+            if any(
+                    isinstance(self.params[0], t)
+                    for t in (int, float, np.floating, np.integer)):
+                _params = f&#39;φ={np.round(self.params[0]/np.pi, 5)}π&#39;
+            else:
+                _params = f&#39;φ={self.params[0]}&#39;
+
+        return {&#39;params&#39;: (101, _params, 0)}
+
+    def set_params(self,
+                   params: iter[any],
+                   *,
+                   inplace: bool = False) -&gt; RotationGate:
+        try:
+            # Update parameters multiplying them by self.power
+            _g = ParamGate.set_params(
+                self, [(p * self.power) % (4 * np.pi) for p in params],
+                inplace=inplace)
+
+            # Set power to 1
+            _g = PowerGate.set_power(_g, 1, inplace=inplace)
+
+            # Return gate
+            return _g
+        except:
+            return ParamGate.set_params(self, params, inplace=inplace)
+
+    def set_power(self, power: any, *, inplace: bool = False) -&gt; RotationGate:
+        try:
+            return self.set_params([p * power for p in self.params],
+                                   inplace=inplace)
+        except:
+            return PowerGate.set_power(self, power, inplace=inplace)
+
+
+class CliffordGate(__Base__):
+    pass
+
+
+@compare(&#39;apply&#39;, cmp=dict(apply=lambda x, y: x.__code__ == y.__code__))
+@staticvars(&#39;apply&#39;,
+            check=dict(apply=(lambda f: callable(f), &#34;&#39;f&#39; must be callable&#34;)))
+class FunctionalGate(QubitGate, __Base__, n_qubits=any):
+    &#34;&#34;&#34;
+    `FunctionalGate` to manipulate state.
+    &#34;&#34;&#34;
+
+    def __init_subclass__(cls, **kwargs):
+        # Bind apply to cls
+        cls.apply = cls.__get_staticvar__(&#39;apply&#39;)
+
+        # Continue
+        super().__init_subclass__(**kwargs)
+
+    def __setattr__(self, name, value):
+        if name == &#39;apply&#39;:
+            raise AttributeError(&#34;Cannot set &#39;apply&#39;&#34;)
+        else:
+            super().__setattr__(name, value)
+
+    def __call__(self, psi: np.ndarray, order: iter[any], **kwargs):
+        # Check qubits are specified
+        if self.qubits is None:
+            raise ValueError(&#34;&#39;qubits&#39; must be specified.&#34;)
+
+        # Convert order to tuple
+        order = tuple(order)
+
+        # Check qubits
+        if any(q not in order for q in self.qubits):
+            raise ValueError(
+                &#34;&#39;FunctionalGate&#39; is expecting qubits not in &#39;order&#39;.&#34;)
+
+        # Apply transformation (it should return new_psi, new_order)
+        return self.apply(psi, order, **kwargs)
+
+
+class BaseTupleGate(TagGate, Tuple):
+    &#34;&#34;&#34;
+    Gate defined as a tuple of gates.
+    &#34;&#34;&#34;
+
+    def __init__(self, elements=tuple(), tags=None, **kwargs):
+        # Catch elements first, then tags
+        super().__init__(elements=elements, tags=tags, **kwargs)
+
+    @property
+    def qubits(self) -&gt; tuple[any, ...]:
+        from hybridq.utils import sort
+
+        # Get all qubits
+        _qubits = tuple(
+            g.qubits if g.provides(&#39;qubits&#39;) else None for g in self)
+
+        # If any None is present, return None
+        if any(q is None for q in _qubits):
+            return None
+
+        # Flatten list and remove duplicates
+        else:
+            return tuple(sort(set(y for x in _qubits for y in x)))
+
+    @property
+    def n_qubits(self) -&gt; int:
+        return len(self.qubits)
+
+    def __add__(self, gate: BaseTupleGate) -&gt; BaseTupleGate:
+        # Get left and right tags
+        l_tags = self.tags
+        r_tags = gate.tags
+
+        # Get common keys
+        ckeys = set(l_tags).intersection(r_tags)
+
+        # Create new tags
+        tags = {}
+        tags.update({
+            (str(k) + &#39;_x&#39; if k in ckeys else k): v for k, v in l_tags.items()
+        })
+        tags.update({
+            (str(k) + &#39;_y&#39; if k in ckeys else k): v for k, v in r_tags.items()
+        })
+
+        # Get new gate
+        gate = Tuple.__add__(self, gate)
+
+        # Update tags and return
+        return gate.update_tags(tags, inplace=True)
+
+
+def _gate_transform(gates):
+    # Get gates
+    try:
+        l_gates, r_gates = gates
+        l_gates = BaseTupleGate(l_gates)
+        r_gates = BaseTupleGate(r_gates)
+    except:
+        raise ValueError(&#34;&#39;gates&#39; must be a pair of lists of &#39;Gate&#39;s&#34;)
+
+    # Return gates
+    return (l_gates, r_gates)
+
+
+def _s_transform(s):
+    # Get np.array. If s == None, set to 1
+    s = np.array(1) if s is None else np.asarray(s)
+
+    # If scalar or vector, just return
+    if s.ndim &lt;= 1:
+        return s
+
+    # If diagonal, just return the diagonal
+    elif s.ndim == 2:
+        return _s_transform(np.diag(s)) if np.allclose(s, np.diag(
+            np.diag(s))) else s
+
+    # Raise an implementation error
+    else:
+        raise NotImplementedError
+
+
+@compare(&#39;gates,s&#39;)
+@staticvars(&#39;gates,s&#39;,
+            transform=dict(gates=_gate_transform, s=_s_transform),
+            check=dict(s=(lambda s: s is None or 0 &lt;= s.ndim &lt;= 2,
+                          &#34;&#39;s&#39; cannot have more than two dimensions.&#34;)))
+class SchmidtGate(__Base__):
+
+    def __init_subclass__(cls, **kwargs):
+        # Get gates and s
+        l_gates, r_gates = cls.__get_staticvar__(&#39;gates&#39;)
+        s = cls.__get_staticvar__(&#39;s&#39;)
+
+        # Get number of gates
+        nl = len(l_gates)
+        nr = len(r_gates)
+
+        # Initialize error
+        _err = False
+
+        # If s is scalar, skip control
+        if s.ndim == 0:
+            pass
+
+        # s is a vector
+        elif s.ndim == 1:
+            if s.shape[0] != nl or (nr and nr != nl):
+                _err = True
+
+        # s is a matrix
+        elif s.ndim == 2:
+            if s.shape[0] != nl or s.shape[1] != (nr if nr else nl):
+                _err = True
+
+        # No other ndim are supported
+        else:
+            _err = True
+
+        # Raise if there is any error
+        if _err:
+            raise ValueError(&#34;&#39;s&#39; must be consistent with number of &#39;gates&#39;&#34;)
+
+        # Continue
+        super().__init_subclass__(**kwargs)
+
+    def __print__(self):
+        return {
+            &#39;gates&#39;:
+                (200,
+                 f&#39;gates={self.gates if len(self.gates[1]) else self.gates[0]}&#39;,
+                 0),
+            &#39;s&#39;: (
+                400, f&#39;s={self.s}&#39; if self.s.ndim == 0 else
+                f&#39;s={type(self.s).__module__}.{type(self.s).__name__}(shape={self.s.shape}, dtype={self.s.dtype})&#39;,
+                0)
+        }
+
+    @property
+    def Matrix(self):
+        &#34;&#34;&#34;
+        Construct Matrix representing the Map. Order of qubits for `Matrix`
+        will be `SchmidtGate.gates[0].qubits + SchmidtGate.gates[1].qubits`.
+        &#34;&#34;&#34;
+        from hybridq.gate import TupleGate, MatrixGate, NamedGate
+        from hybridq.utils import sort
+
+        # Get left and right gates
+        l_gates, r_gates = self.gates
+
+        # Convert to MatrixGate (to speedup calculation)
+        l_gates = TupleGate(
+            MatrixGate(U=g.matrix(), qubits=g.qubits) for g in l_gates)
+        r_gates = TupleGate(
+            MatrixGate(U=g.matrix(), qubits=g.qubits) for g in r_gates)
+
+        # Get left and right qubits
+        l_qubits, r_qubits = l_gates.qubits, r_gates.qubits
+
+        # Cannot build map if qubits are not specified
+        if not (l_qubits and r_qubits):
+            raise ValueError(
+                &#34;Cannot build &#39;Matrix&#39; if &#39;qubits&#39; are not specified.&#34;)
+
+        # Get number of qubits
+        nl, nr = len(l_qubits), len(r_qubits)
+
+        # Get s
+        s = self.s
+
+        def _merge(l_g, r_g, c):
+            from hybridq.gate.utils import merge
+
+            # Left qubits
+            l_q = tuple((0, q) for q in l_g.qubits)
+
+            # Right qubits
+            r_q = tuple((1, q) for q in r_g.qubits)
+
+            # Get qubits missing in left gate
+            m_q = tuple((0, q) for q in l_qubits if q not in l_g.qubits)
+
+            # Get qubits missing in right gate
+            m_q += tuple((1, q) for q in r_qubits if q not in r_g.qubits)
+
+            # Merge gates
+            map_gate = merge(l_g.on(l_q), r_g.on(r_q), NamedGate(&#39;I&#39;,
+                                                                 qubits=m_q))
+
+            # Get right order (all left qubits first, then all right qubits)
+            order = [(0, q) for q in l_qubits] + [(1, q) for q in r_qubits]
+
+            # Return right matrix
+            return c * map_gate.matrix(order=order)
+
+        # Get \sum_i X_i L_i R_i
+        if s.ndim == 0:
+            # Return Matrix
+            return np.sum(
+                [_merge(l_g, r_g, s) for l_g, r_g in zip(l_gates, r_gates)],
+                axis=0)
+
+        elif s.ndim == 1:
+            # Return Matrix
+            return np.sum([
+                _merge(l_g, r_g, c) for c, l_g, r_g in zip(s, l_gates, r_gates)
+            ],
+                          axis=0)
+
+        # Get \sum_ij s_ij L_i R_j
+        elif s.ndim == 2:
+            # Return Matrix
+            return np.sum([
+                _merge(l_gates[i], r_gates[j], s[i, j])
+                for i in range(len(s))
+                for j in range(len(s))
+            ],
+                          axis=0)
+
+        else:
+            raise NotImplementedError
+
+
+@requires(&#39;sample&#39;)
+@staticvars(&#39;gates&#39;, transform=dict(gates=lambda gates: BaseTupleGate(gates)))
+class StochasticGate(__Base__):
+    pass
+
+
+@compare(&#39;gate,c_qubits&#39;)
+@staticvars(
+    &#39;gate,c_qubits&#39;,
+    transform=dict(c_qubits=lambda c_qubits: tuple(c_qubits)),
+    check=dict(
+        gate=(lambda gate: isinstance(gate, __Base__) and gate.n_qubits &gt; 0,
+              f&#34;Not a valid &#39;gate&#39;.&#34;)))
+class ControlledGate(__Base__):
+
+    def __init_subclass__(cls, **kwargs):
+        # Get gate and controlling qubits
+        gate = cls.__get_staticvar__(&#39;gate&#39;)
+        c_qubits = cls.__get_staticvar__(&#39;c_qubits&#39;)
+
+        # Check gate provides qubits and n_qubits
+        if any(not hasattr(gate, w) for w in (&#39;qubits&#39;, &#39;n_qubits&#39;)):
+            raise ValueError(f&#34;&#39;{type(gate).__name__}&#39; must &#34;
+                             &#34;provide &#39;qubits&#39; and &#39;n_qubits&#39;.&#34;)
+
+        # Few checks
+        if gate.n_qubits == 0 or gate.qubits is None:
+            raise ValueError(&#34;&#39;gate&#39; must provide qubits.&#34;)
+        if len(c_qubits) == 0:
+            raise ValueError(&#34;&#39;c_qubits&#39; must non empty.&#34;)
+        if len(set(c_qubits)) != len(c_qubits):
+            raise ValueError(&#34;&#39;c_qubits&#39; cannot have repeated qubits.&#34;)
+        if set(c_qubits).intersection(gate.qubits):
+            raise ValueError(
+                &#34;Controlled and controlling qubits must be different.&#34;)
+
+        # Continue
+        super().__init_subclass__(**kwargs)
+
+    @property
+    def n_qubits(self):
+        return len(self.qubits)
+
+    @property
+    def qubits(self):
+        return tuple(self.c_qubits) + tuple(self.gate.qubits)
+
+    def __print__(self):
+        return {
+            &#39;n_qubits&#39;: (10, f&#34;n_qubits={self.n_qubits}&#34;, 0),
+            &#39;c_qubits&#39;: (99, f&#34;c_qubits={_truncate_print(self.c_qubits)}&#34;, 0),
+            &#39;qubits&#39;: (100, f&#34;qubits={_truncate_print(self.qubits)}&#34;, 0),
+            &#39;gate&#39;: (101, f&#39;gate={self.gate}&#39;, 0),
+        }</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="hybridq.gate.property.BaseTupleGate"><code class="flex name class">
+<span>class <span class="ident">BaseTupleGate</span></span>
+<span>(</span><span>elements=(), tags=None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Gate defined as a tuple of gates.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BaseTupleGate(TagGate, Tuple):
+    &#34;&#34;&#34;
+    Gate defined as a tuple of gates.
+    &#34;&#34;&#34;
+
+    def __init__(self, elements=tuple(), tags=None, **kwargs):
+        # Catch elements first, then tags
+        super().__init__(elements=elements, tags=tags, **kwargs)
+
+    @property
+    def qubits(self) -&gt; tuple[any, ...]:
+        from hybridq.utils import sort
+
+        # Get all qubits
+        _qubits = tuple(
+            g.qubits if g.provides(&#39;qubits&#39;) else None for g in self)
+
+        # If any None is present, return None
+        if any(q is None for q in _qubits):
+            return None
+
+        # Flatten list and remove duplicates
+        else:
+            return tuple(sort(set(y for x in _qubits for y in x)))
+
+    @property
+    def n_qubits(self) -&gt; int:
+        return len(self.qubits)
+
+    def __add__(self, gate: BaseTupleGate) -&gt; BaseTupleGate:
+        # Get left and right tags
+        l_tags = self.tags
+        r_tags = gate.tags
+
+        # Get common keys
+        ckeys = set(l_tags).intersection(r_tags)
+
+        # Create new tags
+        tags = {}
+        tags.update({
+            (str(k) + &#39;_x&#39; if k in ckeys else k): v for k, v in l_tags.items()
+        })
+        tags.update({
+            (str(k) + &#39;_y&#39; if k in ckeys else k): v for k, v in r_tags.items()
+        })
+
+        # Get new gate
+        gate = Tuple.__add__(self, gate)
+
+        # Update tags and return
+        return gate.update_tags(tags, inplace=True)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="hybridq.base.property.Tags" href="../base/property.html#hybridq.base.property.Tags">Tags</a></li>
+<li><a title="hybridq.base.property.Tuple" href="../base/property.html#hybridq.base.property.Tuple">Tuple</a></li>
+<li>hybridq.base.base.__Base__</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="hybridq.gate.property.BaseTupleGate.n_qubits"><code class="name">var <span class="ident">n_qubits</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def n_qubits(self) -&gt; int:
+    return len(self.qubits)</code></pre>
+</details>
+</dd>
+<dt id="hybridq.gate.property.BaseTupleGate.qubits"><code class="name">var <span class="ident">qubits</span> : tuple[any, ...]</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def qubits(self) -&gt; tuple[any, ...]:
+    from hybridq.utils import sort
+
+    # Get all qubits
+    _qubits = tuple(
+        g.qubits if g.provides(&#39;qubits&#39;) else None for g in self)
+
+    # If any None is present, return None
+    if any(q is None for q in _qubits):
+        return None
+
+    # Flatten list and remove duplicates
+    else:
+        return tuple(sort(set(y for x in _qubits for y in x)))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="hybridq.base.property.Tags" href="../base/property.html#hybridq.base.property.Tags">Tags</a></b></code>:
+<ul class="hlist">
+<li><code><a title="hybridq.base.property.Tags.remove_tag" href="../base/property.html#hybridq.base.property.Tags.remove_tag">remove_tag</a></code></li>
+<li><code><a title="hybridq.base.property.Tags.remove_tags" href="../base/property.html#hybridq.base.property.Tags.remove_tags">remove_tags</a></code></li>
+<li><code><a title="hybridq.base.property.Tags.set_tags" href="../base/property.html#hybridq.base.property.Tags.set_tags">set_tags</a></code></li>
+<li><code><a title="hybridq.base.property.Tags.update_tags" href="../base/property.html#hybridq.base.property.Tags.update_tags">update_tags</a></code></li>
+</ul>
+</li>
+<li><code><b><a title="hybridq.base.property.Tuple" href="../base/property.html#hybridq.base.property.Tuple">Tuple</a></b></code>:
+<ul class="hlist">
+<li><code><a title="hybridq.base.property.Tuple.flatten" href="../base/property.html#hybridq.base.property.Tuple.flatten">flatten</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="hybridq.gate.property.CliffordGate"><code class="flex name class">
+<span>class <span class="ident">CliffordGate</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Basic features.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CliffordGate(__Base__):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>hybridq.base.base.__Base__</li>
+</ul>
+</dd>
+<dt id="hybridq.gate.property.ControlledGate"><code class="flex name class">
+<span>class <span class="ident">ControlledGate</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Basic features.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ControlledGate(__Base__):
+
+    def __init_subclass__(cls, **kwargs):
+        # Get gate and controlling qubits
+        gate = cls.__get_staticvar__(&#39;gate&#39;)
+        c_qubits = cls.__get_staticvar__(&#39;c_qubits&#39;)
+
+        # Check gate provides qubits and n_qubits
+        if any(not hasattr(gate, w) for w in (&#39;qubits&#39;, &#39;n_qubits&#39;)):
+            raise ValueError(f&#34;&#39;{type(gate).__name__}&#39; must &#34;
+                             &#34;provide &#39;qubits&#39; and &#39;n_qubits&#39;.&#34;)
+
+        # Few checks
+        if gate.n_qubits == 0 or gate.qubits is None:
+            raise ValueError(&#34;&#39;gate&#39; must provide qubits.&#34;)
+        if len(c_qubits) == 0:
+            raise ValueError(&#34;&#39;c_qubits&#39; must non empty.&#34;)
+        if len(set(c_qubits)) != len(c_qubits):
+            raise ValueError(&#34;&#39;c_qubits&#39; cannot have repeated qubits.&#34;)
+        if set(c_qubits).intersection(gate.qubits):
+            raise ValueError(
+                &#34;Controlled and controlling qubits must be different.&#34;)
+
+        # Continue
+        super().__init_subclass__(**kwargs)
+
+    @property
+    def n_qubits(self):
+        return len(self.qubits)
+
+    @property
+    def qubits(self):
+        return tuple(self.c_qubits) + tuple(self.gate.qubits)
+
+    def __print__(self):
+        return {
+            &#39;n_qubits&#39;: (10, f&#34;n_qubits={self.n_qubits}&#34;, 0),
+            &#39;c_qubits&#39;: (99, f&#34;c_qubits={_truncate_print(self.c_qubits)}&#34;, 0),
+            &#39;qubits&#39;: (100, f&#34;qubits={_truncate_print(self.qubits)}&#34;, 0),
+            &#39;gate&#39;: (101, f&#39;gate={self.gate}&#39;, 0),
+        }</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>hybridq.base.base.__Base__</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="hybridq.gate.property.ControlledGate.n_qubits"><code class="name">var <span class="ident">n_qubits</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def n_qubits(self):
+    return len(self.qubits)</code></pre>
+</details>
+</dd>
+<dt id="hybridq.gate.property.ControlledGate.qubits"><code class="name">var <span class="ident">qubits</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def qubits(self):
+    return tuple(self.c_qubits) + tuple(self.gate.qubits)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="hybridq.gate.property.FunctionalGate"><code class="flex name class">
+<span>class <span class="ident">FunctionalGate</span></span>
+<span>(</span><span>qubits: iter[any] = None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><code><a title="hybridq.gate.property.FunctionalGate" href="#hybridq.gate.property.FunctionalGate">FunctionalGate</a></code> to manipulate state.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FunctionalGate(QubitGate, __Base__, n_qubits=any):
+    &#34;&#34;&#34;
+    `FunctionalGate` to manipulate state.
+    &#34;&#34;&#34;
+
+    def __init_subclass__(cls, **kwargs):
+        # Bind apply to cls
+        cls.apply = cls.__get_staticvar__(&#39;apply&#39;)
+
+        # Continue
+        super().__init_subclass__(**kwargs)
+
+    def __setattr__(self, name, value):
+        if name == &#39;apply&#39;:
+            raise AttributeError(&#34;Cannot set &#39;apply&#39;&#34;)
+        else:
+            super().__setattr__(name, value)
+
+    def __call__(self, psi: np.ndarray, order: iter[any], **kwargs):
+        # Check qubits are specified
+        if self.qubits is None:
+            raise ValueError(&#34;&#39;qubits&#39; must be specified.&#34;)
+
+        # Convert order to tuple
+        order = tuple(order)
+
+        # Check qubits
+        if any(q not in order for q in self.qubits):
+            raise ValueError(
+                &#34;&#39;FunctionalGate&#39; is expecting qubits not in &#39;order&#39;.&#34;)
+
+        # Apply transformation (it should return new_psi, new_order)
+        return self.apply(psi, order, **kwargs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="hybridq.gate.property.QubitGate" href="#hybridq.gate.property.QubitGate">QubitGate</a></li>
+<li>hybridq.base.base.__Base__</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="hybridq.extras.gate.gate.MessageGate" href="../extras/gate/gate.html#hybridq.extras.gate.gate.MessageGate">MessageGate</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="hybridq.gate.property.QubitGate" href="#hybridq.gate.property.QubitGate">QubitGate</a></b></code>:
+<ul class="hlist">
+<li><code><a title="hybridq.gate.property.QubitGate.on" href="#hybridq.gate.property.QubitGate.on">on</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="hybridq.gate.property.MatrixGate"><code class="flex name class">
+<span>class <span class="ident">MatrixGate</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class for gates that can be represented as a matrix.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MatrixGate(__Base__):
+    &#34;&#34;&#34;
+    Class for gates that can be represented as a matrix.
+    &#34;&#34;&#34;
+
+    def __print__(self):
+        return {
+            &#39;M&#39;: (
+                400,
+                f&#39;M={type(self.Matrix).__module__}.{type(self.Matrix).__name__}(shape={self.Matrix.shape}, dtype={self.Matrix.dtype})&#39;,
+                0)
+        }</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>hybridq.base.base.__Base__</li>
+</ul>
+</dd>
+<dt id="hybridq.gate.property.ParamGate"><code class="flex name class">
+<span>class <span class="ident">ParamGate</span></span>
+<span>(</span><span>params: iter[any] = None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class representing a gate with qubits.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ParamGate(Params, n_params=any):
+    &#34;&#34;&#34;
+    Class representing a gate with qubits.
+    &#34;&#34;&#34;
+
+    def __init_subclass__(cls, **kwargs):
+        # Bind Matrix_gen to cls
+        cls.Matrix_gen = cls.__get_staticvar__(&#39;Matrix_gen&#39;)
+
+        # Continue
+        super().__init_subclass__(**kwargs)
+
+    def __setattr__(self, name, value):
+        if name == &#39;Matrix_gen&#39;:
+            raise AttributeError(&#34;Cannot set &#39;Matrix_gen&#39;&#34;)
+        else:
+            super().__setattr__(name, value)
+
+    @property
+    def Matrix(self) -&gt; np.ndarray:
+        if self.params is None:
+            raise ValueError(&#34;&#39;params&#39; must be provided.&#34;)
+        return np.asarray(self.Matrix_gen(*self.params))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="hybridq.base.property.Params" href="../base/property.html#hybridq.base.property.Params">Params</a></li>
+<li>hybridq.base.base.__Base__</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="hybridq.gate.property.RotationGate" href="#hybridq.gate.property.RotationGate">RotationGate</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="hybridq.gate.property.ParamGate.Matrix"><code class="name">var <span class="ident">Matrix</span> : numpy.ndarray</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def Matrix(self) -&gt; np.ndarray:
+    if self.params is None:
+        raise ValueError(&#34;&#39;params&#39; must be provided.&#34;)
+    return np.asarray(self.Matrix_gen(*self.params))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="hybridq.base.property.Params" href="../base/property.html#hybridq.base.property.Params">Params</a></b></code>:
+<ul class="hlist">
+<li><code><a title="hybridq.base.property.Params.set_params" href="../base/property.html#hybridq.base.property.Params.set_params">set_params</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="hybridq.gate.property.PowerGate"><code class="flex name class">
+<span>class <span class="ident">PowerGate</span></span>
+<span>(</span><span>power: any = 1, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class representing a gate that can be raised to a given power.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>power</code></strong> :&ensp;<code>any</code>, optional</dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PowerGate(__Base__):
+    &#34;&#34;&#34;
+    Class representing a gate that can be raised to a given power.
+
+    Attributes
+    ----------
+    power: any, optional
+    &#34;&#34;&#34;
+
+    def __init__(self, power: any = 1, **kwargs) -&gt; None:
+        # Call super
+        super().__init__(**kwargs)
+
+        # Assign power to object
+        self._set_power(power)
+
+    @property
+    def power(self) -&gt; any:
+        return self.__power
+
+    def __print__(self) -&gt; dict[str, tuple[int, str, int]]:
+        _power = &#39;&#39;
+        if self.power != 1:
+            if any(
+                    isinstance(self.power, t)
+                    for t in (int, float, np.integer, np.floating)):
+                _power = f&#34;**{np.round(self.power, 5)}&#34;
+            else:
+                _power = f&#34;**{self.power}&#34;
+        return {&#39;power&#39;: (0, f&#34;{_power}&#34;, 1)}
+
+    def _set_power(self, power: any) -&gt; None:
+        &#34;&#34;&#34;
+        Set `power` to `PowerGate`.
+        &#34;&#34;&#34;
+
+        self.set_power(power, inplace=True)
+
+    def set_power(self, power: any, *, inplace: bool = False) -&gt; PowerGate:
+        &#34;&#34;&#34;
+        Return `PowerGate` to the given `power`. If `inplace` is `True`,
+        `PowerGate` is modified in place.
+
+        Parameters
+        ----------
+        power: any
+            Power to elevate `PowerGate`.
+        inplace: bool, optional
+            If `True`, `PowerGate` is modified in place. Otherwise, a new
+            `PowerGate` is returned.
+
+        Returns
+        -------
+        PowerGate
+            New `PowerGate` to the given `power`. If `inplace` is `True`,
+            `PowerGate` is modified in place.
+
+        Example
+        -------
+        &gt;&gt;&gt; PowerGate(U=[[1, 0], [0, -1]]).matrix()
+        array([[ 1,  0],
+               [ 0, -1]])
+        &gt;&gt;&gt; PowerGate(U=[[1, 0], [0, -1]]).set_power(1.2345).matrix()
+        array([[ 1.        +0.j        ,  0.        +0.j        ],
+               [ 0.        +0.j        , -0.74068735-0.67184987j]])
+        &#34;&#34;&#34;
+
+        # Make a copy if needed
+        if inplace:
+            _g = self
+        else:
+            _g = deepcopy(self)
+
+        # Assign qubits
+        _g.__power = 1 if power is None else power
+
+        return _g
+
+    def __pow__(self, p: any) -&gt; PowerGate:
+        &#34;&#34;&#34;
+        Return `PowerGate`**p.
+        &#34;&#34;&#34;
+
+        return self.set_power(self.power * p, inplace=False)
+
+    def _inv(self) -&gt; None:
+        &#34;&#34;&#34;
+        Modify `PowerGate` to its inverse.
+        &#34;&#34;&#34;
+
+        self.inv(inplace=True)
+
+    def inv(self, *, inplace: bool = False) -&gt; PowerGate:
+        &#34;&#34;&#34;
+        Return inverse of `PowerGate`. If `inplace` is `True`, `PowerGate` is modified in place.
+
+        Parameters
+        ----------
+        inplace: bool, optional
+            If `True`, PowerGate is modified in place. Otherwise, a new
+            `PowerGate` is returned.
+
+        Returns
+        -------
+        PowerGate
+            Inverse of `PowerGate`. If `True`, `PowerGate` is modified in place.
+
+        Example
+        -------
+        &gt;&gt;&gt; g = PowerGate(U=[[1, 0], [0, np.exp(-0.23j)]])
+        &gt;&gt;&gt; g.matrix()
+        array([[1.       +0.j        , 0.       +0.j        ],
+               [0.       +0.j        , 0.9736664-0.22797752j]])
+        &gt;&gt;&gt; g.inv().matrix()
+        array([[1.       -0.j        , 0.       -0.j        ],
+               [0.       -0.j        , 0.9736664+0.22797752j]])
+        &gt;&gt;&gt; g.inv().matrix() @ g.matrix()
+        array([[1.+0.j, 0.+0.j],
+               [0.+0.j, 1.+0.j]])
+        &#34;&#34;&#34;
+
+        return self.set_power(self.power * -1, inplace=inplace)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>hybridq.base.base.__Base__</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="hybridq.gate.property.PowerMatrixGate" href="#hybridq.gate.property.PowerMatrixGate">PowerMatrixGate</a></li>
+<li><a title="hybridq.gate.property.RotationGate" href="#hybridq.gate.property.RotationGate">RotationGate</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="hybridq.gate.property.PowerGate.power"><code class="name">var <span class="ident">power</span> : <built-in function any></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def power(self) -&gt; any:
+    return self.__power</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="hybridq.gate.property.PowerGate.inv"><code class="name flex">
+<span>def <span class="ident">inv</span></span>(<span>self, *, inplace: bool = False) ‑> <a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return inverse of <code><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></code>. If <code>inplace</code> is <code>True</code>, <code><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></code> is modified in place.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>inplace</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, PowerGate is modified in place. Otherwise, a new
+<code><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></code> is returned.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></code></dt>
+<dd>Inverse of <code><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></code>. If <code>True</code>, <code><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></code> is modified in place.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; g = PowerGate(U=[[1, 0], [0, np.exp(-0.23j)]])
+&gt;&gt;&gt; g.matrix()
+array([[1.       +0.j        , 0.       +0.j        ],
+       [0.       +0.j        , 0.9736664-0.22797752j]])
+&gt;&gt;&gt; g.inv().matrix()
+array([[1.       -0.j        , 0.       -0.j        ],
+       [0.       -0.j        , 0.9736664+0.22797752j]])
+&gt;&gt;&gt; g.inv().matrix() @ g.matrix()
+array([[1.+0.j, 0.+0.j],
+       [0.+0.j, 1.+0.j]])
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def inv(self, *, inplace: bool = False) -&gt; PowerGate:
+    &#34;&#34;&#34;
+    Return inverse of `PowerGate`. If `inplace` is `True`, `PowerGate` is modified in place.
+
+    Parameters
+    ----------
+    inplace: bool, optional
+        If `True`, PowerGate is modified in place. Otherwise, a new
+        `PowerGate` is returned.
+
+    Returns
+    -------
+    PowerGate
+        Inverse of `PowerGate`. If `True`, `PowerGate` is modified in place.
+
+    Example
+    -------
+    &gt;&gt;&gt; g = PowerGate(U=[[1, 0], [0, np.exp(-0.23j)]])
+    &gt;&gt;&gt; g.matrix()
+    array([[1.       +0.j        , 0.       +0.j        ],
+           [0.       +0.j        , 0.9736664-0.22797752j]])
+    &gt;&gt;&gt; g.inv().matrix()
+    array([[1.       -0.j        , 0.       -0.j        ],
+           [0.       -0.j        , 0.9736664+0.22797752j]])
+    &gt;&gt;&gt; g.inv().matrix() @ g.matrix()
+    array([[1.+0.j, 0.+0.j],
+           [0.+0.j, 1.+0.j]])
+    &#34;&#34;&#34;
+
+    return self.set_power(self.power * -1, inplace=inplace)</code></pre>
+</details>
+</dd>
+<dt id="hybridq.gate.property.PowerGate.set_power"><code class="name flex">
+<span>def <span class="ident">set_power</span></span>(<span>self, power: any, *, inplace: bool = False) ‑> <a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return <code><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></code> to the given <code>power</code>. If <code>inplace</code> is <code>True</code>,
+<code><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></code> is modified in place.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>power</code></strong> :&ensp;<code>any</code></dt>
+<dd>Power to elevate <code><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></code>.</dd>
+<dt><strong><code>inplace</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, <code><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></code> is modified in place. Otherwise, a new
+<code><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></code> is returned.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></code></dt>
+<dd>New <code><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></code> to the given <code>power</code>. If <code>inplace</code> is <code>True</code>,
+<code><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></code> is modified in place.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; PowerGate(U=[[1, 0], [0, -1]]).matrix()
+array([[ 1,  0],
+       [ 0, -1]])
+&gt;&gt;&gt; PowerGate(U=[[1, 0], [0, -1]]).set_power(1.2345).matrix()
+array([[ 1.        +0.j        ,  0.        +0.j        ],
+       [ 0.        +0.j        , -0.74068735-0.67184987j]])
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_power(self, power: any, *, inplace: bool = False) -&gt; PowerGate:
+    &#34;&#34;&#34;
+    Return `PowerGate` to the given `power`. If `inplace` is `True`,
+    `PowerGate` is modified in place.
+
+    Parameters
+    ----------
+    power: any
+        Power to elevate `PowerGate`.
+    inplace: bool, optional
+        If `True`, `PowerGate` is modified in place. Otherwise, a new
+        `PowerGate` is returned.
+
+    Returns
+    -------
+    PowerGate
+        New `PowerGate` to the given `power`. If `inplace` is `True`,
+        `PowerGate` is modified in place.
+
+    Example
+    -------
+    &gt;&gt;&gt; PowerGate(U=[[1, 0], [0, -1]]).matrix()
+    array([[ 1,  0],
+           [ 0, -1]])
+    &gt;&gt;&gt; PowerGate(U=[[1, 0], [0, -1]]).set_power(1.2345).matrix()
+    array([[ 1.        +0.j        ,  0.        +0.j        ],
+           [ 0.        +0.j        , -0.74068735-0.67184987j]])
+    &#34;&#34;&#34;
+
+    # Make a copy if needed
+    if inplace:
+        _g = self
+    else:
+        _g = deepcopy(self)
+
+    # Assign qubits
+    _g.__power = 1 if power is None else power
+
+    return _g</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="hybridq.gate.property.PowerMatrixGate"><code class="flex name class">
+<span>class <span class="ident">PowerMatrixGate</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class representing a single matrix gate.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PowerMatrixGate(PowerGate, __Base__):
+    &#34;&#34;&#34;
+    Class representing a single matrix gate.
+    &#34;&#34;&#34;
+
+    def __init__(self, *args, **kwargs):
+        # Initialize local variables
+        self.__conj = False
+        self.__T = False
+
+        # Continue
+        super().__init__(*args, **kwargs)
+
+    def __eq__(self, other: __Base__) -&gt; bool:
+        # Check if gates are conjugated
+        _c1 = self.is_conjugated()
+        _c2 = other.is_conjugated() if other.provides(
+            &#39;is_conjugated&#39;) else False
+
+        # Check if gates are transposed
+        _t1 = self.is_transposed()
+        _t2 = other.is_transposed() if other.provides(
+            &#39;is_transposed&#39;) else False
+
+        # If either the conjugation or the transposition is different, the
+        # gates differ
+        if _c1 != _c2 or _t1 != _t2:
+            return False
+
+        # Otherwise, keep going
+        else:
+            return super().__eq__(other)
+
+    def __print__(self):
+        return {
+            &#39;ct&#39;: (0, &#39;^+&#39; if self.__conj and self.__T else
+                   &#39;^T&#39; if self.__T else &#39;^*&#39; if self.__conj else &#39;&#39;, 2)
+        }
+
+    def _conj(self) -&gt; PowerMatrixGate:
+        self.conj(inplace=True)
+
+    def conj(self, *, inplace: bool = False) -&gt; PowerMatrixGate:
+        # Create a copy if needed
+        g = self if inplace else deepcopy(self)
+
+        # Change conjugation
+        g.__conj ^= True
+
+        # Return gate
+        return g
+
+    def _T(self) -&gt; PowerMatrixGate:
+        self.T(inplace=True)
+
+    def T(self, *, inplace: bool = False) -&gt; PowerMatrixGate:
+        # Create a copy if needed
+        g = self if inplace else deepcopy(self)
+
+        # Change transposition
+        g.__T ^= True
+
+        # Return gate
+        return g
+
+    def is_conjugated(self) -&gt; bool:
+        return self.__conj
+
+    def is_transposed(self) -&gt; bool:
+        return self.__T
+
+    def _adj(self) -&gt; PowerMatrixGate:
+        self.adj(inplace=True)
+
+    def adj(self, *, inplace: bool = False) -&gt; PowerMatrixGate:
+        # Create a copy if needed
+        g = self if inplace else deepcopy(self)
+
+        # Change transposition
+        g.__T ^= True
+
+        # Change conjugation
+        g.__conj ^= True
+
+        # Return gate
+        return g
+
+    def matrix(self, order: iter[any] = None) -&gt; np.ndarray:
+        &#34;&#34;&#34;
+        Return matrix representing `MatrixPowerGate`. If `order` is provided,
+        the given order of qubits is used to output its matrix.
+
+        Parameters
+        ----------
+        order: iter[any]
+            Order of qubits used to output the matrix.
+
+        Returns
+        -------
+        array_like
+            Matrix representing `MatrixPowerGate`.
+
+        Example
+        -------
+        &gt;&gt;&gt; g = PowerMatrixGate(qubits=[0, 1], U=[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+        array([[1, 0, 0, 0],
+               [0, 1, 0, 0],
+               [0, 0, 0, 1],
+               [0, 0, 1, 0]])
+
+        The order of qubits is `[1, 0]`. On the contrary:
+        &gt;&gt;&gt; g.on().matrix(order=[1, 0])
+        array([[1, 0, 0, 0],
+               [0, 0, 0, 1],
+               [0, 0, 1, 0],
+               [0, 1, 0, 0]])
+
+        outputs a matrix with the qubits order being if `[0, 1]`.
+        &#34;&#34;&#34;
+
+        # Get Unitary
+        _U = np.asarray(self.Matrix)
+
+        if order is not None:
+            # Covert order to list
+            order = list(order)
+
+            # Order is allowed only if gate.qubits are specified
+            if self.qubits is None or sort(order) != sort(self.qubits):
+                raise ValueError(
+                    &#34;&#39;order&#39; is not a permutation of &#39;gate.qubits&#39;.&#34;)
+
+        # Reorder matrix in case qubits are out-of-order
+        if order and order != self.qubits:
+            # Transpose
+            _U = np.reshape(
+                np.transpose(
+                    np.reshape(_U, (2,) * (2 * self.n_qubits)),
+                    [self.qubits.index(q) for q in order] +
+                    [self.n_qubits + self.qubits.index(q) for q in order]),
+                (2**self.n_qubits, 2**self.n_qubits))
+
+        # Apply power
+        if self.power != 1:
+            _U = powm(_U, float(self.power))
+
+        # Apply conjugation
+        if self.__conj:
+            _U = _U.conj()
+
+        # Apply transposition
+        if self.__T:
+            _U = _U.T
+
+        # Return matrix
+        return _U
+
+    def isclose(self, gate: Gate, atol: float = 1e-8) -&gt; bool:
+        &#34;&#34;&#34;
+        Determine if the matrix of `gate` is close within an absolute
+        tollerance. If the gates are acting on a different set of qubits,
+        `isclose` will return `False`.
+
+        Parameters
+        ----------
+        gate: PowerMatrixGate
+            Gate to compare with.
+        atol: float, optional
+            Absolute tollerance.
+
+        Returns
+        -------
+        bool
+            `True` if the two gates are close withing the given absolute
+            tollerance, otherwise `False`.
+
+        Example
+        -------
+        &gt;&gt;&gt; g1 = PowerMatrixGate(U = [[1, 2], [3, 4]])
+        &gt;&gt;&gt; g2 = PowerMatrixGate(U = [[4, 5], [3, 4]])
+        &gt;&gt;&gt; g1.isclose(g1)
+        True
+        &gt;&gt;&gt; g1.isclose(g2)
+        False
+        &gt;&gt;&gt; g1.on([3]).isclose(g1)
+        False
+        &gt;&gt;&gt; g1.on([3]).isclose(g1.on([3])
+        True
+        &#34;&#34;&#34;
+
+        if not (self.qubits is None) ^ (gate.qubits is None):
+
+            # The gates differ if they act on a different set of qubits
+            if self.qubits is not None and sort(self.qubits) != sort(
+                    gate.qubits):
+                return False
+
+            # Get unitaries
+            _U1 = self.matrix(order=self.qubits if self.qubits else None)
+            _U2 = gate.matrix(order=self.qubits if self.qubits else None)
+
+            # If either matrix does not exist, the two gates differ
+            return np.allclose(_U1, _U2, atol=atol)
+
+        else:
+
+            return False
+
+    def commutes_with(self, gate: PowerMatrixGate, atol: float = 1e-7) -&gt; bool:
+        &#34;&#34;&#34;
+        Return `True` if the calling gate commutes with `gate`.
+
+        Parameters
+        ----------
+        gate: PowerMatrixGate
+            Gate to check commutation with.
+        atol: float
+            Absolute tollerance.
+
+        Returns
+        -------
+        bool
+            `True` if the calling gate commutes with `gate`, otherwise `False`.
+        &#34;&#34;&#34;
+        from string import ascii_lowercase as alc, ascii_uppercase as auc
+
+        # Check both gates have qubits
+        if self.qubits is None or gate.qubits is None:
+            raise ValueError(&#34;Cannot check commutation between virtual gates.&#34;)
+
+        # Get shared qubits
+        shared_qubits = sort(set(self.qubits).intersection(gate.qubits))
+
+        # If no qubits are shared, the gates definitely commute
+        if not shared_qubits:
+            return True
+
+        # Rename
+        g1, g2 = self, gate
+
+        # Get all qubits
+        q12 = tuple(sort(set(g1.qubits + g2.qubits)))
+
+        # Get number of qubits
+        n12 = len(q12)
+
+        # Get unitaries
+        U1 = np.reshape(g1.matrix(), (2,) * 2 * g1.n_qubits)
+        U2 = np.reshape(g2.matrix(), (2,) * 2 * g2.n_qubits)
+
+        # Define how to multiply matrices
+        def _mul(w1, w2):
+            # Get qubits and unitaries
+            q1, U1 = w1
+            q2, U2 = w2
+
+            # Get number of qubits
+            n1 = len(q1)
+            n2 = len(q2)
+
+            # Construct map
+            _map = &#39;&#39;
+            _map += &#39;&#39;.join(alc[q12.index(q)] for q in q1)
+            _map += &#39;&#39;.join(auc[-shared_qubits.index(q) -
+                                1 if q in shared_qubits else q12.index(q)]
+                            for q in q1)
+            _map += &#39;,&#39;
+            _map += &#39;&#39;.join(auc[-shared_qubits.index(q) -
+                                1] if q in shared_qubits else alc[q12.index(q)]
+                            for q in q2)
+            _map += &#39;&#39;.join(auc[q12.index(q)] for q in q2)
+            _map += &#39;-&gt;&#39;
+            _map += &#39;&#39;.join(alc[x] for x in range(n12))
+            _map += &#39;&#39;.join(auc[x] for x in range(n12))
+
+            # Multiply map
+            return np.einsum(_map, U1, U2)
+
+        # Compute products
+        P1 = _mul((g1.qubits, U1), (g2.qubits, U2))
+        P2 = _mul((g2.qubits, U2), (g1.qubits, U1))
+
+        # Check if the same
+        return np.allclose(P1, P2, atol=1e-5)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></li>
+<li>hybridq.base.base.__Base__</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="hybridq.gate.property.UnitaryGate" href="#hybridq.gate.property.UnitaryGate">UnitaryGate</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="hybridq.gate.property.PowerMatrixGate.T"><code class="name flex">
+<span>def <span class="ident">T</span></span>(<span>self, *, inplace: bool = False) ‑> <a title="hybridq.gate.property.PowerMatrixGate" href="#hybridq.gate.property.PowerMatrixGate">PowerMatrixGate</a></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def T(self, *, inplace: bool = False) -&gt; PowerMatrixGate:
+    # Create a copy if needed
+    g = self if inplace else deepcopy(self)
+
+    # Change transposition
+    g.__T ^= True
+
+    # Return gate
+    return g</code></pre>
+</details>
+</dd>
+<dt id="hybridq.gate.property.PowerMatrixGate.adj"><code class="name flex">
+<span>def <span class="ident">adj</span></span>(<span>self, *, inplace: bool = False) ‑> <a title="hybridq.gate.property.PowerMatrixGate" href="#hybridq.gate.property.PowerMatrixGate">PowerMatrixGate</a></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def adj(self, *, inplace: bool = False) -&gt; PowerMatrixGate:
+    # Create a copy if needed
+    g = self if inplace else deepcopy(self)
+
+    # Change transposition
+    g.__T ^= True
+
+    # Change conjugation
+    g.__conj ^= True
+
+    # Return gate
+    return g</code></pre>
+</details>
+</dd>
+<dt id="hybridq.gate.property.PowerMatrixGate.commutes_with"><code class="name flex">
+<span>def <span class="ident">commutes_with</span></span>(<span>self, gate: <a title="hybridq.gate.property.PowerMatrixGate" href="#hybridq.gate.property.PowerMatrixGate">PowerMatrixGate</a>, atol: float = 1e-07) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return <code>True</code> if the calling gate commutes with <code>gate</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>gate</code></strong> :&ensp;<code><a title="hybridq.gate.property.PowerMatrixGate" href="#hybridq.gate.property.PowerMatrixGate">PowerMatrixGate</a></code></dt>
+<dd>Gate to check commutation with.</dd>
+<dt><strong><code>atol</code></strong> :&ensp;<code>float</code></dt>
+<dd>Absolute tollerance.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd><code>True</code> if the calling gate commutes with <code>gate</code>, otherwise <code>False</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def commutes_with(self, gate: PowerMatrixGate, atol: float = 1e-7) -&gt; bool:
+    &#34;&#34;&#34;
+    Return `True` if the calling gate commutes with `gate`.
+
+    Parameters
+    ----------
+    gate: PowerMatrixGate
+        Gate to check commutation with.
+    atol: float
+        Absolute tollerance.
+
+    Returns
+    -------
+    bool
+        `True` if the calling gate commutes with `gate`, otherwise `False`.
+    &#34;&#34;&#34;
+    from string import ascii_lowercase as alc, ascii_uppercase as auc
+
+    # Check both gates have qubits
+    if self.qubits is None or gate.qubits is None:
+        raise ValueError(&#34;Cannot check commutation between virtual gates.&#34;)
+
+    # Get shared qubits
+    shared_qubits = sort(set(self.qubits).intersection(gate.qubits))
+
+    # If no qubits are shared, the gates definitely commute
+    if not shared_qubits:
+        return True
+
+    # Rename
+    g1, g2 = self, gate
+
+    # Get all qubits
+    q12 = tuple(sort(set(g1.qubits + g2.qubits)))
+
+    # Get number of qubits
+    n12 = len(q12)
+
+    # Get unitaries
+    U1 = np.reshape(g1.matrix(), (2,) * 2 * g1.n_qubits)
+    U2 = np.reshape(g2.matrix(), (2,) * 2 * g2.n_qubits)
+
+    # Define how to multiply matrices
+    def _mul(w1, w2):
+        # Get qubits and unitaries
+        q1, U1 = w1
+        q2, U2 = w2
+
+        # Get number of qubits
+        n1 = len(q1)
+        n2 = len(q2)
+
+        # Construct map
+        _map = &#39;&#39;
+        _map += &#39;&#39;.join(alc[q12.index(q)] for q in q1)
+        _map += &#39;&#39;.join(auc[-shared_qubits.index(q) -
+                            1 if q in shared_qubits else q12.index(q)]
+                        for q in q1)
+        _map += &#39;,&#39;
+        _map += &#39;&#39;.join(auc[-shared_qubits.index(q) -
+                            1] if q in shared_qubits else alc[q12.index(q)]
+                        for q in q2)
+        _map += &#39;&#39;.join(auc[q12.index(q)] for q in q2)
+        _map += &#39;-&gt;&#39;
+        _map += &#39;&#39;.join(alc[x] for x in range(n12))
+        _map += &#39;&#39;.join(auc[x] for x in range(n12))
+
+        # Multiply map
+        return np.einsum(_map, U1, U2)
+
+    # Compute products
+    P1 = _mul((g1.qubits, U1), (g2.qubits, U2))
+    P2 = _mul((g2.qubits, U2), (g1.qubits, U1))
+
+    # Check if the same
+    return np.allclose(P1, P2, atol=1e-5)</code></pre>
+</details>
+</dd>
+<dt id="hybridq.gate.property.PowerMatrixGate.conj"><code class="name flex">
+<span>def <span class="ident">conj</span></span>(<span>self, *, inplace: bool = False) ‑> <a title="hybridq.gate.property.PowerMatrixGate" href="#hybridq.gate.property.PowerMatrixGate">PowerMatrixGate</a></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def conj(self, *, inplace: bool = False) -&gt; PowerMatrixGate:
+    # Create a copy if needed
+    g = self if inplace else deepcopy(self)
+
+    # Change conjugation
+    g.__conj ^= True
+
+    # Return gate
+    return g</code></pre>
+</details>
+</dd>
+<dt id="hybridq.gate.property.PowerMatrixGate.is_conjugated"><code class="name flex">
+<span>def <span class="ident">is_conjugated</span></span>(<span>self) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_conjugated(self) -&gt; bool:
+    return self.__conj</code></pre>
+</details>
+</dd>
+<dt id="hybridq.gate.property.PowerMatrixGate.is_transposed"><code class="name flex">
+<span>def <span class="ident">is_transposed</span></span>(<span>self) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_transposed(self) -&gt; bool:
+    return self.__T</code></pre>
+</details>
+</dd>
+<dt id="hybridq.gate.property.PowerMatrixGate.isclose"><code class="name flex">
+<span>def <span class="ident">isclose</span></span>(<span>self, gate: Gate, atol: float = 1e-08) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Determine if the matrix of <code>gate</code> is close within an absolute
+tollerance. If the gates are acting on a different set of qubits,
+<code>isclose</code> will return <code>False</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>gate</code></strong> :&ensp;<code><a title="hybridq.gate.property.PowerMatrixGate" href="#hybridq.gate.property.PowerMatrixGate">PowerMatrixGate</a></code></dt>
+<dd>Gate to compare with.</dd>
+<dt><strong><code>atol</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Absolute tollerance.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd><code>True</code> if the two gates are close withing the given absolute
+tollerance, otherwise <code>False</code>.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; g1 = PowerMatrixGate(U = [[1, 2], [3, 4]])
+&gt;&gt;&gt; g2 = PowerMatrixGate(U = [[4, 5], [3, 4]])
+&gt;&gt;&gt; g1.isclose(g1)
+True
+&gt;&gt;&gt; g1.isclose(g2)
+False
+&gt;&gt;&gt; g1.on([3]).isclose(g1)
+False
+&gt;&gt;&gt; g1.on([3]).isclose(g1.on([3])
+True
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isclose(self, gate: Gate, atol: float = 1e-8) -&gt; bool:
+    &#34;&#34;&#34;
+    Determine if the matrix of `gate` is close within an absolute
+    tollerance. If the gates are acting on a different set of qubits,
+    `isclose` will return `False`.
+
+    Parameters
+    ----------
+    gate: PowerMatrixGate
+        Gate to compare with.
+    atol: float, optional
+        Absolute tollerance.
+
+    Returns
+    -------
+    bool
+        `True` if the two gates are close withing the given absolute
+        tollerance, otherwise `False`.
+
+    Example
+    -------
+    &gt;&gt;&gt; g1 = PowerMatrixGate(U = [[1, 2], [3, 4]])
+    &gt;&gt;&gt; g2 = PowerMatrixGate(U = [[4, 5], [3, 4]])
+    &gt;&gt;&gt; g1.isclose(g1)
+    True
+    &gt;&gt;&gt; g1.isclose(g2)
+    False
+    &gt;&gt;&gt; g1.on([3]).isclose(g1)
+    False
+    &gt;&gt;&gt; g1.on([3]).isclose(g1.on([3])
+    True
+    &#34;&#34;&#34;
+
+    if not (self.qubits is None) ^ (gate.qubits is None):
+
+        # The gates differ if they act on a different set of qubits
+        if self.qubits is not None and sort(self.qubits) != sort(
+                gate.qubits):
+            return False
+
+        # Get unitaries
+        _U1 = self.matrix(order=self.qubits if self.qubits else None)
+        _U2 = gate.matrix(order=self.qubits if self.qubits else None)
+
+        # If either matrix does not exist, the two gates differ
+        return np.allclose(_U1, _U2, atol=atol)
+
+    else:
+
+        return False</code></pre>
+</details>
+</dd>
+<dt id="hybridq.gate.property.PowerMatrixGate.matrix"><code class="name flex">
+<span>def <span class="ident">matrix</span></span>(<span>self, order: iter[any] = None) ‑> np.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return matrix representing <code>MatrixPowerGate</code>. If <code>order</code> is provided,
+the given order of qubits is used to output its matrix.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>order</code></strong> :&ensp;<code>iter[any]</code></dt>
+<dd>Order of qubits used to output the matrix.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>array_like</code></dt>
+<dd>Matrix representing <code>MatrixPowerGate</code>.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; g = PowerMatrixGate(qubits=[0, 1], U=[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+array([[1, 0, 0, 0],
+       [0, 1, 0, 0],
+       [0, 0, 0, 1],
+       [0, 0, 1, 0]])
+</code></pre>
+<p>The order of qubits is <code>[1, 0]</code>. On the contrary:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; g.on().matrix(order=[1, 0])
+array([[1, 0, 0, 0],
+       [0, 0, 0, 1],
+       [0, 0, 1, 0],
+       [0, 1, 0, 0]])
+</code></pre>
+<p>outputs a matrix with the qubits order being if <code>[0, 1]</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def matrix(self, order: iter[any] = None) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    Return matrix representing `MatrixPowerGate`. If `order` is provided,
+    the given order of qubits is used to output its matrix.
+
+    Parameters
+    ----------
+    order: iter[any]
+        Order of qubits used to output the matrix.
+
+    Returns
+    -------
+    array_like
+        Matrix representing `MatrixPowerGate`.
+
+    Example
+    -------
+    &gt;&gt;&gt; g = PowerMatrixGate(qubits=[0, 1], U=[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+    array([[1, 0, 0, 0],
+           [0, 1, 0, 0],
+           [0, 0, 0, 1],
+           [0, 0, 1, 0]])
+
+    The order of qubits is `[1, 0]`. On the contrary:
+    &gt;&gt;&gt; g.on().matrix(order=[1, 0])
+    array([[1, 0, 0, 0],
+           [0, 0, 0, 1],
+           [0, 0, 1, 0],
+           [0, 1, 0, 0]])
+
+    outputs a matrix with the qubits order being if `[0, 1]`.
+    &#34;&#34;&#34;
+
+    # Get Unitary
+    _U = np.asarray(self.Matrix)
+
+    if order is not None:
+        # Covert order to list
+        order = list(order)
+
+        # Order is allowed only if gate.qubits are specified
+        if self.qubits is None or sort(order) != sort(self.qubits):
+            raise ValueError(
+                &#34;&#39;order&#39; is not a permutation of &#39;gate.qubits&#39;.&#34;)
+
+    # Reorder matrix in case qubits are out-of-order
+    if order and order != self.qubits:
+        # Transpose
+        _U = np.reshape(
+            np.transpose(
+                np.reshape(_U, (2,) * (2 * self.n_qubits)),
+                [self.qubits.index(q) for q in order] +
+                [self.n_qubits + self.qubits.index(q) for q in order]),
+            (2**self.n_qubits, 2**self.n_qubits))
+
+    # Apply power
+    if self.power != 1:
+        _U = powm(_U, float(self.power))
+
+    # Apply conjugation
+    if self.__conj:
+        _U = _U.conj()
+
+    # Apply transposition
+    if self.__T:
+        _U = _U.T
+
+    # Return matrix
+    return _U</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></b></code>:
+<ul class="hlist">
+<li><code><a title="hybridq.gate.property.PowerGate.inv" href="#hybridq.gate.property.PowerGate.inv">inv</a></code></li>
+<li><code><a title="hybridq.gate.property.PowerGate.set_power" href="#hybridq.gate.property.PowerGate.set_power">set_power</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="hybridq.gate.property.QubitGate"><code class="flex name class">
+<span>class <span class="ident">QubitGate</span></span>
+<span>(</span><span>qubits: iter[any] = None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class representing a gate with qubits.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>qubits</code></strong> :&ensp;<code>iter[any]</code>, optional</dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class QubitGate(__Base__):
+    &#34;&#34;&#34;
+    Class representing a gate with qubits.
+
+    Attributes
+    ----------
+    qubits: iter[any], optional
+    &#34;&#34;&#34;
+
+    def __init__(self, qubits: iter[any] = None, **kwargs) -&gt; None:
+        # Call super
+        super().__init__(**kwargs)
+
+        # Set qubits
+        self._on(qubits)
+
+    @property
+    def qubits(self) -&gt; tuple[any, ...]:
+        return self.__qubits
+
+    def __print__(self) -&gt; dict[str, tuple[int, str, int]]:
+        return {
+            &#39;n_qubits&#39;:
+                (10, f&#34;n_qubits={self.n_qubits}&#34; if self.qubits is None else &#39;&#39;,
+                 0),
+            &#39;qubits&#39;:
+                (100, f&#34;qubits={_truncate_print(self.qubits)}&#34;
+                 if self.qubits is not None and self.n_qubits &gt; 0 else &#39;&#39;, 0),
+        }
+
+    def _on(self, qubits: iter[any]) -&gt; None:
+        &#34;&#34;&#34;
+        Set `qubits` to `QubitGate`.
+        &#34;&#34;&#34;
+
+        self.on(qubits, inplace=True)
+
+    def on(self,
+           qubits: iter[any] = None,
+           *,
+           inplace: bool = False) -&gt; QubitGate:
+        &#34;&#34;&#34;
+        Return `QubitGate` applied to `qubits`. If `inplace` is `True`,
+        `QubitGate` is modified in place.
+
+        Parameters
+        ----------
+        qubits: iter[any]
+            Qubits the new Gate will act on.
+        inplace: bool, optional
+            If `True`, `QubitGate` is modified in place. Otherwise, a new
+            `QubitGate` is returned.
+
+        Returns
+        -------
+        QubitGate
+            New `QubitGate` acting on `qubits`. If `inplace` is `True`,
+            `QubitGate` is modified in place.
+
+        Example
+        -------
+        &gt;&gt;&gt; QubitGate([1, 2]).qubits
+        [1, 2]
+        &gt;&gt;&gt; QubitGate().on([42]).qubits
+        [42]
+        &#34;&#34;&#34;
+
+        # Convert to tuple
+        qubits = None if qubits is None else tuple(qubits)
+
+        # Check that all qubits are hashable
+        if qubits and any(not getattr(q, &#39;__hash__&#39;, None) for q in qubits):
+            raise ValueError(&#34;Only hashable &#39;qubits&#39; are allowed.&#34;)
+
+        # Check that no qubits are repeated
+        if qubits is not None and len(qubits) != len(set(qubits)):
+            raise ValueError(&#34;Repeated qubits are not allowed.&#34;)
+
+        # Check lenght
+        if qubits is not None and len(qubits) != self.n_qubits:
+            raise ValueError(f&#34;Wrong number of &#39;qubits&#39; &#34;
+                             f&#34;(expected {self.n_qubits}, got {len(qubits)})&#34;)
+
+        # Make a copy if needed
+        if inplace:
+            _g = self
+        else:
+            _g = deepcopy(self)
+
+        # Set
+        _g.__qubits = qubits
+
+        # Return
+        return _g</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>hybridq.base.base.__Base__</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="hybridq.gate.property.FunctionalGate" href="#hybridq.gate.property.FunctionalGate">FunctionalGate</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="hybridq.gate.property.QubitGate.qubits"><code class="name">var <span class="ident">qubits</span> : tuple[any, ...]</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def qubits(self) -&gt; tuple[any, ...]:
+    return self.__qubits</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="hybridq.gate.property.QubitGate.on"><code class="name flex">
+<span>def <span class="ident">on</span></span>(<span>self, qubits: iter[any] = None, *, inplace: bool = False) ‑> <a title="hybridq.gate.property.QubitGate" href="#hybridq.gate.property.QubitGate">QubitGate</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return <code><a title="hybridq.gate.property.QubitGate" href="#hybridq.gate.property.QubitGate">QubitGate</a></code> applied to <code>qubits</code>. If <code>inplace</code> is <code>True</code>,
+<code><a title="hybridq.gate.property.QubitGate" href="#hybridq.gate.property.QubitGate">QubitGate</a></code> is modified in place.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>qubits</code></strong> :&ensp;<code>iter[any]</code></dt>
+<dd>Qubits the new Gate will act on.</dd>
+<dt><strong><code>inplace</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, <code><a title="hybridq.gate.property.QubitGate" href="#hybridq.gate.property.QubitGate">QubitGate</a></code> is modified in place. Otherwise, a new
+<code><a title="hybridq.gate.property.QubitGate" href="#hybridq.gate.property.QubitGate">QubitGate</a></code> is returned.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="hybridq.gate.property.QubitGate" href="#hybridq.gate.property.QubitGate">QubitGate</a></code></dt>
+<dd>New <code><a title="hybridq.gate.property.QubitGate" href="#hybridq.gate.property.QubitGate">QubitGate</a></code> acting on <code>qubits</code>. If <code>inplace</code> is <code>True</code>,
+<code><a title="hybridq.gate.property.QubitGate" href="#hybridq.gate.property.QubitGate">QubitGate</a></code> is modified in place.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; QubitGate([1, 2]).qubits
+[1, 2]
+&gt;&gt;&gt; QubitGate().on([42]).qubits
+[42]
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on(self,
+       qubits: iter[any] = None,
+       *,
+       inplace: bool = False) -&gt; QubitGate:
+    &#34;&#34;&#34;
+    Return `QubitGate` applied to `qubits`. If `inplace` is `True`,
+    `QubitGate` is modified in place.
+
+    Parameters
+    ----------
+    qubits: iter[any]
+        Qubits the new Gate will act on.
+    inplace: bool, optional
+        If `True`, `QubitGate` is modified in place. Otherwise, a new
+        `QubitGate` is returned.
+
+    Returns
+    -------
+    QubitGate
+        New `QubitGate` acting on `qubits`. If `inplace` is `True`,
+        `QubitGate` is modified in place.
+
+    Example
+    -------
+    &gt;&gt;&gt; QubitGate([1, 2]).qubits
+    [1, 2]
+    &gt;&gt;&gt; QubitGate().on([42]).qubits
+    [42]
+    &#34;&#34;&#34;
+
+    # Convert to tuple
+    qubits = None if qubits is None else tuple(qubits)
+
+    # Check that all qubits are hashable
+    if qubits and any(not getattr(q, &#39;__hash__&#39;, None) for q in qubits):
+        raise ValueError(&#34;Only hashable &#39;qubits&#39; are allowed.&#34;)
+
+    # Check that no qubits are repeated
+    if qubits is not None and len(qubits) != len(set(qubits)):
+        raise ValueError(&#34;Repeated qubits are not allowed.&#34;)
+
+    # Check lenght
+    if qubits is not None and len(qubits) != self.n_qubits:
+        raise ValueError(f&#34;Wrong number of &#39;qubits&#39; &#34;
+                         f&#34;(expected {self.n_qubits}, got {len(qubits)})&#34;)
+
+    # Make a copy if needed
+    if inplace:
+        _g = self
+    else:
+        _g = deepcopy(self)
+
+    # Set
+    _g.__qubits = qubits
+
+    # Return
+    return _g</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="hybridq.gate.property.RotationGate"><code class="flex name class">
+<span>class <span class="ident">RotationGate</span></span>
+<span>(</span><span>params: iter[any] = None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Gate with form U = exp(-1j * r / 2 * O), with O an
+arbitrary matrix.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RotationGate(
+        ParamGate,
+        PowerGate,
+        __Base__,
+        n_params=1,
+        Matrix_gen=lambda self, r: expm(-1j * float(r) * self.RMatrix / 2)):
+    &#34;&#34;&#34;
+    Gate with form U = exp(-1j * r / 2 * O), with O an
+    arbitrary matrix.
+    &#34;&#34;&#34;
+
+    def __init_subclass__(cls, n_params=None, Matrix_gen=None, **kwargs):
+        # Initialize everything
+        super().__init_subclass__(n_params=cls._RotationGate__n_params,
+                                  Matrix_gen=cls._RotationGate__Matrix_gen,
+                                  **kwargs)
+
+    def __print__(self) -&gt; dict[str, tuple[int, str, int]]:
+        _params = &#39;&#39;
+        if self.params:
+            if any(
+                    isinstance(self.params[0], t)
+                    for t in (int, float, np.floating, np.integer)):
+                _params = f&#39;φ={np.round(self.params[0]/np.pi, 5)}π&#39;
+            else:
+                _params = f&#39;φ={self.params[0]}&#39;
+
+        return {&#39;params&#39;: (101, _params, 0)}
+
+    def set_params(self,
+                   params: iter[any],
+                   *,
+                   inplace: bool = False) -&gt; RotationGate:
+        try:
+            # Update parameters multiplying them by self.power
+            _g = ParamGate.set_params(
+                self, [(p * self.power) % (4 * np.pi) for p in params],
+                inplace=inplace)
+
+            # Set power to 1
+            _g = PowerGate.set_power(_g, 1, inplace=inplace)
+
+            # Return gate
+            return _g
+        except:
+            return ParamGate.set_params(self, params, inplace=inplace)
+
+    def set_power(self, power: any, *, inplace: bool = False) -&gt; RotationGate:
+        try:
+            return self.set_params([p * power for p in self.params],
+                                   inplace=inplace)
+        except:
+            return PowerGate.set_power(self, power, inplace=inplace)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="hybridq.gate.property.ParamGate" href="#hybridq.gate.property.ParamGate">ParamGate</a></li>
+<li><a title="hybridq.base.property.Params" href="../base/property.html#hybridq.base.property.Params">Params</a></li>
+<li><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></li>
+<li>hybridq.base.base.__Base__</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="hybridq.gate.property.RotationGate.Matrix_gen"><code class="name flex">
+<span>def <span class="ident">Matrix_gen</span></span>(<span>self, r)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">Matrix_gen=lambda self, r: expm(-1j * float(r) * self.RMatrix / 2)):</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="hybridq.gate.property.ParamGate" href="#hybridq.gate.property.ParamGate">ParamGate</a></b></code>:
+<ul class="hlist">
+<li><code><a title="hybridq.gate.property.ParamGate.set_params" href="../base/property.html#hybridq.base.property.Params.set_params">set_params</a></code></li>
+</ul>
+</li>
+<li><code><b><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></b></code>:
+<ul class="hlist">
+<li><code><a title="hybridq.gate.property.PowerGate.inv" href="#hybridq.gate.property.PowerGate.inv">inv</a></code></li>
+<li><code><a title="hybridq.gate.property.PowerGate.set_power" href="#hybridq.gate.property.PowerGate.set_power">set_power</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="hybridq.gate.property.SchmidtGate"><code class="flex name class">
+<span>class <span class="ident">SchmidtGate</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Basic features.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SchmidtGate(__Base__):
+
+    def __init_subclass__(cls, **kwargs):
+        # Get gates and s
+        l_gates, r_gates = cls.__get_staticvar__(&#39;gates&#39;)
+        s = cls.__get_staticvar__(&#39;s&#39;)
+
+        # Get number of gates
+        nl = len(l_gates)
+        nr = len(r_gates)
+
+        # Initialize error
+        _err = False
+
+        # If s is scalar, skip control
+        if s.ndim == 0:
+            pass
+
+        # s is a vector
+        elif s.ndim == 1:
+            if s.shape[0] != nl or (nr and nr != nl):
+                _err = True
+
+        # s is a matrix
+        elif s.ndim == 2:
+            if s.shape[0] != nl or s.shape[1] != (nr if nr else nl):
+                _err = True
+
+        # No other ndim are supported
+        else:
+            _err = True
+
+        # Raise if there is any error
+        if _err:
+            raise ValueError(&#34;&#39;s&#39; must be consistent with number of &#39;gates&#39;&#34;)
+
+        # Continue
+        super().__init_subclass__(**kwargs)
+
+    def __print__(self):
+        return {
+            &#39;gates&#39;:
+                (200,
+                 f&#39;gates={self.gates if len(self.gates[1]) else self.gates[0]}&#39;,
+                 0),
+            &#39;s&#39;: (
+                400, f&#39;s={self.s}&#39; if self.s.ndim == 0 else
+                f&#39;s={type(self.s).__module__}.{type(self.s).__name__}(shape={self.s.shape}, dtype={self.s.dtype})&#39;,
+                0)
+        }
+
+    @property
+    def Matrix(self):
+        &#34;&#34;&#34;
+        Construct Matrix representing the Map. Order of qubits for `Matrix`
+        will be `SchmidtGate.gates[0].qubits + SchmidtGate.gates[1].qubits`.
+        &#34;&#34;&#34;
+        from hybridq.gate import TupleGate, MatrixGate, NamedGate
+        from hybridq.utils import sort
+
+        # Get left and right gates
+        l_gates, r_gates = self.gates
+
+        # Convert to MatrixGate (to speedup calculation)
+        l_gates = TupleGate(
+            MatrixGate(U=g.matrix(), qubits=g.qubits) for g in l_gates)
+        r_gates = TupleGate(
+            MatrixGate(U=g.matrix(), qubits=g.qubits) for g in r_gates)
+
+        # Get left and right qubits
+        l_qubits, r_qubits = l_gates.qubits, r_gates.qubits
+
+        # Cannot build map if qubits are not specified
+        if not (l_qubits and r_qubits):
+            raise ValueError(
+                &#34;Cannot build &#39;Matrix&#39; if &#39;qubits&#39; are not specified.&#34;)
+
+        # Get number of qubits
+        nl, nr = len(l_qubits), len(r_qubits)
+
+        # Get s
+        s = self.s
+
+        def _merge(l_g, r_g, c):
+            from hybridq.gate.utils import merge
+
+            # Left qubits
+            l_q = tuple((0, q) for q in l_g.qubits)
+
+            # Right qubits
+            r_q = tuple((1, q) for q in r_g.qubits)
+
+            # Get qubits missing in left gate
+            m_q = tuple((0, q) for q in l_qubits if q not in l_g.qubits)
+
+            # Get qubits missing in right gate
+            m_q += tuple((1, q) for q in r_qubits if q not in r_g.qubits)
+
+            # Merge gates
+            map_gate = merge(l_g.on(l_q), r_g.on(r_q), NamedGate(&#39;I&#39;,
+                                                                 qubits=m_q))
+
+            # Get right order (all left qubits first, then all right qubits)
+            order = [(0, q) for q in l_qubits] + [(1, q) for q in r_qubits]
+
+            # Return right matrix
+            return c * map_gate.matrix(order=order)
+
+        # Get \sum_i X_i L_i R_i
+        if s.ndim == 0:
+            # Return Matrix
+            return np.sum(
+                [_merge(l_g, r_g, s) for l_g, r_g in zip(l_gates, r_gates)],
+                axis=0)
+
+        elif s.ndim == 1:
+            # Return Matrix
+            return np.sum([
+                _merge(l_g, r_g, c) for c, l_g, r_g in zip(s, l_gates, r_gates)
+            ],
+                          axis=0)
+
+        # Get \sum_ij s_ij L_i R_j
+        elif s.ndim == 2:
+            # Return Matrix
+            return np.sum([
+                _merge(l_gates[i], r_gates[j], s[i, j])
+                for i in range(len(s))
+                for j in range(len(s))
+            ],
+                          axis=0)
+
+        else:
+            raise NotImplementedError</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>hybridq.base.base.__Base__</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="hybridq.gate.property.SchmidtGate.Matrix"><code class="name">var <span class="ident">Matrix</span></code></dt>
+<dd>
+<div class="desc"><p>Construct Matrix representing the Map. Order of qubits for <code>Matrix</code>
+will be <code>SchmidtGate.gates[0].qubits + SchmidtGate.gates[1].qubits</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def Matrix(self):
+    &#34;&#34;&#34;
+    Construct Matrix representing the Map. Order of qubits for `Matrix`
+    will be `SchmidtGate.gates[0].qubits + SchmidtGate.gates[1].qubits`.
+    &#34;&#34;&#34;
+    from hybridq.gate import TupleGate, MatrixGate, NamedGate
+    from hybridq.utils import sort
+
+    # Get left and right gates
+    l_gates, r_gates = self.gates
+
+    # Convert to MatrixGate (to speedup calculation)
+    l_gates = TupleGate(
+        MatrixGate(U=g.matrix(), qubits=g.qubits) for g in l_gates)
+    r_gates = TupleGate(
+        MatrixGate(U=g.matrix(), qubits=g.qubits) for g in r_gates)
+
+    # Get left and right qubits
+    l_qubits, r_qubits = l_gates.qubits, r_gates.qubits
+
+    # Cannot build map if qubits are not specified
+    if not (l_qubits and r_qubits):
+        raise ValueError(
+            &#34;Cannot build &#39;Matrix&#39; if &#39;qubits&#39; are not specified.&#34;)
+
+    # Get number of qubits
+    nl, nr = len(l_qubits), len(r_qubits)
+
+    # Get s
+    s = self.s
+
+    def _merge(l_g, r_g, c):
+        from hybridq.gate.utils import merge
+
+        # Left qubits
+        l_q = tuple((0, q) for q in l_g.qubits)
+
+        # Right qubits
+        r_q = tuple((1, q) for q in r_g.qubits)
+
+        # Get qubits missing in left gate
+        m_q = tuple((0, q) for q in l_qubits if q not in l_g.qubits)
+
+        # Get qubits missing in right gate
+        m_q += tuple((1, q) for q in r_qubits if q not in r_g.qubits)
+
+        # Merge gates
+        map_gate = merge(l_g.on(l_q), r_g.on(r_q), NamedGate(&#39;I&#39;,
+                                                             qubits=m_q))
+
+        # Get right order (all left qubits first, then all right qubits)
+        order = [(0, q) for q in l_qubits] + [(1, q) for q in r_qubits]
+
+        # Return right matrix
+        return c * map_gate.matrix(order=order)
+
+    # Get \sum_i X_i L_i R_i
+    if s.ndim == 0:
+        # Return Matrix
+        return np.sum(
+            [_merge(l_g, r_g, s) for l_g, r_g in zip(l_gates, r_gates)],
+            axis=0)
+
+    elif s.ndim == 1:
+        # Return Matrix
+        return np.sum([
+            _merge(l_g, r_g, c) for c, l_g, r_g in zip(s, l_gates, r_gates)
+        ],
+                      axis=0)
+
+    # Get \sum_ij s_ij L_i R_j
+    elif s.ndim == 2:
+        # Return Matrix
+        return np.sum([
+            _merge(l_gates[i], r_gates[j], s[i, j])
+            for i in range(len(s))
+            for j in range(len(s))
+        ],
+                      axis=0)
+
+    else:
+        raise NotImplementedError</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="hybridq.gate.property.SelfAdjointUnitaryGate"><code class="flex name class">
+<span>class <span class="ident">SelfAdjointUnitaryGate</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class representing a single matrix gate.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SelfAdjointUnitaryGate(UnitaryGate, skip_requirements=True):
+
+    def conj(self, *, inplace: bool = False) -&gt; SelfAdjointUnitaryGate:
+        &#34;&#34;&#34;
+        Apply conjugation to self.matrix().
+        &#34;&#34;&#34;
+        if self.power == 1 and not self.is_conjugated() and self.is_transposed(
+        ):
+            return PowerMatrixGate.T(self, inplace=inplace)
+        else:
+            return PowerMatrixGate.conj(self, inplace=inplace)
+
+    def T(self, *, inplace: bool = False) -&gt; SelfAdjointUnitaryGate:
+        &#34;&#34;&#34;
+        Apply transposition to self.matrix().
+        &#34;&#34;&#34;
+        if self.power == 1 and self.is_conjugated(
+        ) and not self.is_transposed():
+            return PowerMatrixGate.conj(self, inplace=inplace)
+        else:
+            return PowerMatrixGate.T(self, inplace=inplace)
+
+    def adj(self, *, inplace: bool = False) -&gt; SelfAdjointUnitaryGate:
+        &#34;&#34;&#34;
+        Apply adjunction to self.matrix().
+        &#34;&#34;&#34;
+        if self.power == 1:
+            return self if inplace else deepcopy(self)
+        else:
+            return PowerMatrixGate.adj(self, inplace=inplace)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="hybridq.gate.property.UnitaryGate" href="#hybridq.gate.property.UnitaryGate">UnitaryGate</a></li>
+<li><a title="hybridq.gate.property.PowerMatrixGate" href="#hybridq.gate.property.PowerMatrixGate">PowerMatrixGate</a></li>
+<li><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></li>
+<li>hybridq.base.base.__Base__</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="hybridq.gate.property.SelfAdjointUnitaryGate.T"><code class="name flex">
+<span>def <span class="ident">T</span></span>(<span>self, *, inplace: bool = False) ‑> <a title="hybridq.gate.property.SelfAdjointUnitaryGate" href="#hybridq.gate.property.SelfAdjointUnitaryGate">SelfAdjointUnitaryGate</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Apply transposition to self.matrix().</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def T(self, *, inplace: bool = False) -&gt; SelfAdjointUnitaryGate:
+    &#34;&#34;&#34;
+    Apply transposition to self.matrix().
+    &#34;&#34;&#34;
+    if self.power == 1 and self.is_conjugated(
+    ) and not self.is_transposed():
+        return PowerMatrixGate.conj(self, inplace=inplace)
+    else:
+        return PowerMatrixGate.T(self, inplace=inplace)</code></pre>
+</details>
+</dd>
+<dt id="hybridq.gate.property.SelfAdjointUnitaryGate.adj"><code class="name flex">
+<span>def <span class="ident">adj</span></span>(<span>self, *, inplace: bool = False) ‑> <a title="hybridq.gate.property.SelfAdjointUnitaryGate" href="#hybridq.gate.property.SelfAdjointUnitaryGate">SelfAdjointUnitaryGate</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Apply adjunction to self.matrix().</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def adj(self, *, inplace: bool = False) -&gt; SelfAdjointUnitaryGate:
+    &#34;&#34;&#34;
+    Apply adjunction to self.matrix().
+    &#34;&#34;&#34;
+    if self.power == 1:
+        return self if inplace else deepcopy(self)
+    else:
+        return PowerMatrixGate.adj(self, inplace=inplace)</code></pre>
+</details>
+</dd>
+<dt id="hybridq.gate.property.SelfAdjointUnitaryGate.conj"><code class="name flex">
+<span>def <span class="ident">conj</span></span>(<span>self, *, inplace: bool = False) ‑> <a title="hybridq.gate.property.SelfAdjointUnitaryGate" href="#hybridq.gate.property.SelfAdjointUnitaryGate">SelfAdjointUnitaryGate</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Apply conjugation to self.matrix().</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def conj(self, *, inplace: bool = False) -&gt; SelfAdjointUnitaryGate:
+    &#34;&#34;&#34;
+    Apply conjugation to self.matrix().
+    &#34;&#34;&#34;
+    if self.power == 1 and not self.is_conjugated() and self.is_transposed(
+    ):
+        return PowerMatrixGate.T(self, inplace=inplace)
+    else:
+        return PowerMatrixGate.conj(self, inplace=inplace)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="hybridq.gate.property.UnitaryGate" href="#hybridq.gate.property.UnitaryGate">UnitaryGate</a></b></code>:
+<ul class="hlist">
+<li><code><a title="hybridq.gate.property.UnitaryGate.commutes_with" href="#hybridq.gate.property.PowerMatrixGate.commutes_with">commutes_with</a></code></li>
+<li><code><a title="hybridq.gate.property.UnitaryGate.inv" href="#hybridq.gate.property.PowerGate.inv">inv</a></code></li>
+<li><code><a title="hybridq.gate.property.UnitaryGate.isclose" href="#hybridq.gate.property.PowerMatrixGate.isclose">isclose</a></code></li>
+<li><code><a title="hybridq.gate.property.UnitaryGate.matrix" href="#hybridq.gate.property.PowerMatrixGate.matrix">matrix</a></code></li>
+<li><code><a title="hybridq.gate.property.UnitaryGate.set_power" href="#hybridq.gate.property.PowerGate.set_power">set_power</a></code></li>
+<li><code><a title="hybridq.gate.property.UnitaryGate.unitary" href="#hybridq.gate.property.UnitaryGate.unitary">unitary</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="hybridq.gate.property.StochasticGate"><code class="flex name class">
+<span>class <span class="ident">StochasticGate</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Basic features.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class StochasticGate(__Base__):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>hybridq.base.base.__Base__</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li>hybridq.gate.gate._StochasticGate</li>
+</ul>
+</dd>
+<dt id="hybridq.gate.property.UnitaryGate"><code class="flex name class">
+<span>class <span class="ident">UnitaryGate</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class representing a single matrix gate.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class UnitaryGate(PowerMatrixGate, skip_requirements=True):
+
+    def set_power(self, power: any, *, inplace: bool = False) -&gt; UnitaryGate:
+        # If power is negative, just apply the absolute value and apply conj
+        # and T as well.
+        if isnumber(power) and power &lt; 0:
+            if power != -1:
+                self = PowerMatrixGate.set_power(self, -power, inplace=inplace)
+            self = self.adj(inplace=inplace)
+
+        # Apply power
+        else:
+            self = PowerMatrixGate.set_power(self, power, inplace=inplace)
+
+        return self
+
+    def unitary(self, *args, **kwargs) -&gt; np.ndarray:
+        &#34;&#34;&#34;
+        Alias for `self.matrix`.
+        &#34;&#34;&#34;
+        from hybridq.utils import DeprecationWarning
+        from warnings import warn
+
+        # Warn that `self.matrix` should be used instead of `self.unitary`
+        warn(&#34;Since &#39;0.7.0&#39;, &#39;self.matrix&#39; should be used instead &#34;
+             &#34;of the less general &#39;self.unitary&#39;&#34;)
+
+        # Call self.matrix
+        return self.matrix(*args, **kwargs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="hybridq.gate.property.PowerMatrixGate" href="#hybridq.gate.property.PowerMatrixGate">PowerMatrixGate</a></li>
+<li><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></li>
+<li>hybridq.base.base.__Base__</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="hybridq.gate.property.SelfAdjointUnitaryGate" href="#hybridq.gate.property.SelfAdjointUnitaryGate">SelfAdjointUnitaryGate</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="hybridq.gate.property.UnitaryGate.unitary"><code class="name flex">
+<span>def <span class="ident">unitary</span></span>(<span>self, *args, **kwargs) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Alias for <code>self.matrix</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def unitary(self, *args, **kwargs) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    Alias for `self.matrix`.
+    &#34;&#34;&#34;
+    from hybridq.utils import DeprecationWarning
+    from warnings import warn
+
+    # Warn that `self.matrix` should be used instead of `self.unitary`
+    warn(&#34;Since &#39;0.7.0&#39;, &#39;self.matrix&#39; should be used instead &#34;
+         &#34;of the less general &#39;self.unitary&#39;&#34;)
+
+    # Call self.matrix
+    return self.matrix(*args, **kwargs)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="hybridq.gate.property.PowerMatrixGate" href="#hybridq.gate.property.PowerMatrixGate">PowerMatrixGate</a></b></code>:
+<ul class="hlist">
+<li><code><a title="hybridq.gate.property.PowerMatrixGate.commutes_with" href="#hybridq.gate.property.PowerMatrixGate.commutes_with">commutes_with</a></code></li>
+<li><code><a title="hybridq.gate.property.PowerMatrixGate.inv" href="#hybridq.gate.property.PowerGate.inv">inv</a></code></li>
+<li><code><a title="hybridq.gate.property.PowerMatrixGate.isclose" href="#hybridq.gate.property.PowerMatrixGate.isclose">isclose</a></code></li>
+<li><code><a title="hybridq.gate.property.PowerMatrixGate.matrix" href="#hybridq.gate.property.PowerMatrixGate.matrix">matrix</a></code></li>
+<li><code><a title="hybridq.gate.property.PowerMatrixGate.set_power" href="#hybridq.gate.property.PowerGate.set_power">set_power</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="hybridq.gate" href="index.html">hybridq.gate</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="hybridq.gate.property.BaseTupleGate" href="#hybridq.gate.property.BaseTupleGate">BaseTupleGate</a></code></h4>
+<ul class="">
+<li><code><a title="hybridq.gate.property.BaseTupleGate.n_qubits" href="#hybridq.gate.property.BaseTupleGate.n_qubits">n_qubits</a></code></li>
+<li><code><a title="hybridq.gate.property.BaseTupleGate.qubits" href="#hybridq.gate.property.BaseTupleGate.qubits">qubits</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="hybridq.gate.property.CliffordGate" href="#hybridq.gate.property.CliffordGate">CliffordGate</a></code></h4>
+</li>
+<li>
+<h4><code><a title="hybridq.gate.property.ControlledGate" href="#hybridq.gate.property.ControlledGate">ControlledGate</a></code></h4>
+<ul class="">
+<li><code><a title="hybridq.gate.property.ControlledGate.n_qubits" href="#hybridq.gate.property.ControlledGate.n_qubits">n_qubits</a></code></li>
+<li><code><a title="hybridq.gate.property.ControlledGate.qubits" href="#hybridq.gate.property.ControlledGate.qubits">qubits</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="hybridq.gate.property.FunctionalGate" href="#hybridq.gate.property.FunctionalGate">FunctionalGate</a></code></h4>
+</li>
+<li>
+<h4><code><a title="hybridq.gate.property.MatrixGate" href="#hybridq.gate.property.MatrixGate">MatrixGate</a></code></h4>
+</li>
+<li>
+<h4><code><a title="hybridq.gate.property.ParamGate" href="#hybridq.gate.property.ParamGate">ParamGate</a></code></h4>
+<ul class="">
+<li><code><a title="hybridq.gate.property.ParamGate.Matrix" href="#hybridq.gate.property.ParamGate.Matrix">Matrix</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="hybridq.gate.property.PowerGate" href="#hybridq.gate.property.PowerGate">PowerGate</a></code></h4>
+<ul class="">
+<li><code><a title="hybridq.gate.property.PowerGate.inv" href="#hybridq.gate.property.PowerGate.inv">inv</a></code></li>
+<li><code><a title="hybridq.gate.property.PowerGate.power" href="#hybridq.gate.property.PowerGate.power">power</a></code></li>
+<li><code><a title="hybridq.gate.property.PowerGate.set_power" href="#hybridq.gate.property.PowerGate.set_power">set_power</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="hybridq.gate.property.PowerMatrixGate" href="#hybridq.gate.property.PowerMatrixGate">PowerMatrixGate</a></code></h4>
+<ul class="two-column">
+<li><code><a title="hybridq.gate.property.PowerMatrixGate.T" href="#hybridq.gate.property.PowerMatrixGate.T">T</a></code></li>
+<li><code><a title="hybridq.gate.property.PowerMatrixGate.adj" href="#hybridq.gate.property.PowerMatrixGate.adj">adj</a></code></li>
+<li><code><a title="hybridq.gate.property.PowerMatrixGate.commutes_with" href="#hybridq.gate.property.PowerMatrixGate.commutes_with">commutes_with</a></code></li>
+<li><code><a title="hybridq.gate.property.PowerMatrixGate.conj" href="#hybridq.gate.property.PowerMatrixGate.conj">conj</a></code></li>
+<li><code><a title="hybridq.gate.property.PowerMatrixGate.is_conjugated" href="#hybridq.gate.property.PowerMatrixGate.is_conjugated">is_conjugated</a></code></li>
+<li><code><a title="hybridq.gate.property.PowerMatrixGate.is_transposed" href="#hybridq.gate.property.PowerMatrixGate.is_transposed">is_transposed</a></code></li>
+<li><code><a title="hybridq.gate.property.PowerMatrixGate.isclose" href="#hybridq.gate.property.PowerMatrixGate.isclose">isclose</a></code></li>
+<li><code><a title="hybridq.gate.property.PowerMatrixGate.matrix" href="#hybridq.gate.property.PowerMatrixGate.matrix">matrix</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="hybridq.gate.property.QubitGate" href="#hybridq.gate.property.QubitGate">QubitGate</a></code></h4>
+<ul class="">
+<li><code><a title="hybridq.gate.property.QubitGate.on" href="#hybridq.gate.property.QubitGate.on">on</a></code></li>
+<li><code><a title="hybridq.gate.property.QubitGate.qubits" href="#hybridq.gate.property.QubitGate.qubits">qubits</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="hybridq.gate.property.RotationGate" href="#hybridq.gate.property.RotationGate">RotationGate</a></code></h4>
+<ul class="">
+<li><code><a title="hybridq.gate.property.RotationGate.Matrix_gen" href="#hybridq.gate.property.RotationGate.Matrix_gen">Matrix_gen</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="hybridq.gate.property.SchmidtGate" href="#hybridq.gate.property.SchmidtGate">SchmidtGate</a></code></h4>
+<ul class="">
+<li><code><a title="hybridq.gate.property.SchmidtGate.Matrix" href="#hybridq.gate.property.SchmidtGate.Matrix">Matrix</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="hybridq.gate.property.SelfAdjointUnitaryGate" href="#hybridq.gate.property.SelfAdjointUnitaryGate">SelfAdjointUnitaryGate</a></code></h4>
+<ul class="">
+<li><code><a title="hybridq.gate.property.SelfAdjointUnitaryGate.T" href="#hybridq.gate.property.SelfAdjointUnitaryGate.T">T</a></code></li>
+<li><code><a title="hybridq.gate.property.SelfAdjointUnitaryGate.adj" href="#hybridq.gate.property.SelfAdjointUnitaryGate.adj">adj</a></code></li>
+<li><code><a title="hybridq.gate.property.SelfAdjointUnitaryGate.conj" href="#hybridq.gate.property.SelfAdjointUnitaryGate.conj">conj</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="hybridq.gate.property.StochasticGate" href="#hybridq.gate.property.StochasticGate">StochasticGate</a></code></h4>
+</li>
+<li>
+<h4><code><a title="hybridq.gate.property.UnitaryGate" href="#hybridq.gate.property.UnitaryGate">UnitaryGate</a></code></h4>
+<ul class="">
+<li><code><a title="hybridq.gate.property.UnitaryGate.unitary" href="#hybridq.gate.property.UnitaryGate.unitary">unitary</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>
