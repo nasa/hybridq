@@ -29,6 +29,11 @@ For technical documentation on how to use **HybridQ**, see [hybridq/docs](hybrid
 
 **HybridQ** can be installed by either using `pip`:
 ```
+pip install hybridq
+```
+directly from the `GitHub` repository (to locally compile **HybridQ** C++
+libraries):
+```
 pip install git+https://github.com/nasa/hybridq
 ```
 using a `zip` file:
