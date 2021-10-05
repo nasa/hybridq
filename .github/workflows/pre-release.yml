@@ -94,10 +94,8 @@ jobs:
 
       - name: Create package for MacOS
         run: |
-          sed 's|from __future__ import annotations|from __future__ import annotations; from warnings import warn; warn("""The C++ simulator for this package has been compiled for a general x86-64 architecture without multi-threading support. For a better performance, try `pip install -U git+https://github.com/nasa/hybridq`.""")|' hybridq/circuit/simulation/simulation.py > __temp.py
-          mv -f __temp.py hybridq/circuit/simulation/simulation.py
-          CXX="clang++ -mmacosx-version-min=10.9" ARCH=x86-64 pip wheel . -v --no-dependencies -w packages/
-          mv packages/hybridq-0.5.1-py3-none-any.whl packages/hybridq-$(python setup.py --version)-cp37-cp37m-macosx_10_9_x86_64.whl
+          CXX="clang++ -mmacosx-version-min=10.9" ARCH=core-avx2 pip wheel . -v --no-dependencies -w packages/
+          mv packages/hybridq-*-py3-none-any.whl packages/hybridq-$(python setup.py --version)-cp37-cp37m-macosx_10_9_x86_64.whl
 
       - name: Add package to repository
         run: |
