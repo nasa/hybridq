@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations under the License.
 
 # Get all tests names
-TEST_NAMES=$(cat tests/tests.py | egrep 'def test_[[:alpha:]]*__' | sed -e 's/__.*//g' -e 's/.*def //' | sort | uniq)
+TEST_NAMES=$(cat tests/tests.py | grep ^'def test' | sed -e 's/def test_//g' -e 's/__.*//g' | sort -g | uniq)
 
 # For each test, generate yml
 for name in $TEST_NAMES; do

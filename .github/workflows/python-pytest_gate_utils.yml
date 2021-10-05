@@ -1,4 +1,4 @@
-name: Python PyTest - test_cliffords
+name: Python PyTest - gate_utils
 
 on:
   push:
@@ -25,4 +25,4 @@ jobs:
       - name: Run tests
         run: |
           docker run --rm hybridq -c 'pip install pytest-random-order && \
-            pytest -sv --random-order -k 'test_cliffords__' /opt/hybridq/tests/tests.py'
+            pytest -sv --random-order -k 'gate_utils__' /opt/hybridq/tests/tests.py'
