@@ -58,6 +58,9 @@ class Circuit(BaseCircuit):
         tuple[list[any], list[any]]
             Sorted list of all qubits in `Circuit`.
         """
+        # If Circuit has not qubits, return empty list
+        if not len(self):
+            return []
 
         # Define flatten
         def _unique_flatten(l):

@@ -81,7 +81,7 @@ class BaseCircuit(list):
         Return string representation of `Circuit`.
         """
 
-        if len(self) <= 10:
+        if 0 < len(self) <= 10:
             s = 'Circuit([\n'
             for gate in self[:-1]:
                 s += '\t' + str(gate) + ',\n'
@@ -420,6 +420,9 @@ class Circuit(BaseCircuit):
         >>> Circuit([Gate('H', qubits=[2]), Gate('X', qubits=[1]), Gate('H')]).all_qubits(ignore_missing_qubits=True)
         [1, 2]
         """
+        # If Circuit has not qubits, return empty list
+        if not len(self):
+            return []
 
         # Define flatten
         def _unique_flatten(l):
