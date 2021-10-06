@@ -17,7 +17,54 @@ specific language governing permissions and limitations under the License.
 
 from __future__ import annotations
 from hybridq.base import generate, staticvars, compare, requires, __Base__
+from hybridq.base.property import Tuple
 import numpy as np
+
+
+class BaseTupleSuperGate(Tuple):
+    """
+    Gate defined as a tuple of gates.
+    """
+
+    @property
+    def qubits(self) -> tuple[tuple[any, ...], tuple[any, ...]]:
+        from hybridq.gate import BaseGate
+
+        # Define flatten
+        def _unique_flatten(l):
+            from hybridq.utils import sort
+            return tuple(sort(set(y for x in l for y in x)))
+
+        # Get qubits
+        def _get_qubits(gate):
+            if isinstance(gate, BaseGate):
+                # Get qubits
+                qubits = gate.qubits
+                return (qubits, qubits)
+            else:
+                return gate.qubits
+
+        # Split in left and right qubits
+        _lq, _rq = [
+            tuple(x)
+            for x in zip(*(_get_qubits(g) if g.provides('qubits') else (None,
+                                                                        None)
+                           for g in self))
+        ]
+
+        # If any none is present, set to None
+        _lq = None if any(q is None for q in _lq) else _unique_flatten(_lq)
+        _rq = None if any(q is None for q in _rq) else _unique_flatten(_rq)
+
+        # Return qubits
+        return (_lq, _rq)
+
+    @property
+    def n_qubits(self) -> int:
+        # Get left and right qubits
+        _lq, _rq = self.qubits
+        return None if _lq is None else len(_lq), None if _rq is None else len(
+            _rq)
 
 
 @requires('qubits,Matrix')
