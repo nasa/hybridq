@@ -60,7 +60,7 @@ class Circuit(BaseCircuit):
         """
         # If Circuit has not qubits, return empty list
         if not len(self):
-            return []
+            return ([], [])
 
         # Define flatten
         def _unique_flatten(l):
@@ -76,13 +76,17 @@ class Circuit(BaseCircuit):
             else:
                 return gate.qubits
 
+        # Get all qubits
+        _qubits = tuple(
+            _get_qubits(g) if g.provides('qubits') else (None, None)
+            for g in self)
+
+        # If empty, return empty tuple
+        if not len(_qubits):
+            return tuple()
+
         # Split in left and right qubits
-        _lq, _rq = [
-            tuple(x)
-            for x in zip(*(_get_qubits(g) if g.provides('qubits') else (None,
-                                                                        None)
-                           for g in self))
-        ]
+        _lq, _rq = [tuple(x) for x in zip(*_qubits)]
 
         # Check if there are virtual gates with no qubits
         if not ignore_missing_qubits and any(

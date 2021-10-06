@@ -23,7 +23,7 @@ jobs:
       - name: Update documentation
         run: |
           docker run -v $(pwd)/docs:/opt/hybridq/docs --rm hybridq -c '\
-            curl -L https://github.com/jgm/pandoc/releases/download/2.13/pandoc-2.13-linux-amd64.tar.gz | tar xvzf - -C /opt/ && \
+            curl -L https://github.com/jgm/pandoc/releases/download/2.14.2/pandoc-2.14.2-linux-amd64.tar.gz | tar xvzf - -C /opt/ && \
             export PATH=/opt/pandoc-2.13/bin/:$PATH && \
             yum install -y texlive-latex-bin \
                            texlive-xetex-bin \

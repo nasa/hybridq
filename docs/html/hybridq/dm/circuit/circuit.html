@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>hybridq.dm.circuit.circuit API documentation</title>
 <meta name="description" content="Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -64,7 +64,11 @@ class Circuit(BaseCircuit):
 
     @staticmethod
     def __check_gate__(gate: Gate):
-        if any(isinstance(gate, t) for t in (BaseGate, BaseSuperGate)):
+        from hybridq.dm.gate import TupleSuperGate
+        from hybridq.base.property import Tuple
+        if isinstance(gate, tuple) or isinstance(gate, Tuple):
+            return TupleSuperGate(map(Circuit.__check_gate__, gate))
+        elif any(isinstance(gate, t) for t in (BaseGate, BaseSuperGate)):
             return gate
         else:
             raise ValueError(f&#34;&#39;type(gate).__name__&#39; not supported.&#34;)
@@ -76,38 +80,64 @@ class Circuit(BaseCircuit):
             self,
             *,
             ignore_missing_qubits: bool = False) -&gt; tuple[list[any], list[any]]:
-        from hybridq.utils import sort
+        &#34;&#34;&#34;
+        Get all qubits in `Circuit`. It raises a `ValueError` if qubits in
+        `Gate` are missing, unless `ignore_missing_qubits` is `True`. The
+        returned qubits are always sorted using `hybridq.utils.sort` for
+        consistency.
+
+        Parameters
+        ----------
+        ignore_missing_qubits: bool, optional
+            If `True`, ignore gates without specified qubits. Otherwise, raise
+            `ValueError`.
+
+        Returns
+        -------
+        tuple[list[any], list[any]]
+            Sorted list of all qubits in `Circuit`.
+        &#34;&#34;&#34;
+        # If Circuit has not qubits, return empty list
+        if not len(self):
+            return ([], [])
+
+        # Define flatten
+        def _unique_flatten(l):
+            from hybridq.utils import sort
+            return sort(set(y for x in l for y in x))
+
+        # Get qubits
+        def _get_qubits(gate):
+            if isinstance(gate, BaseGate):
+                # Get qubits
+                qubits = gate.qubits
+                return (qubits, qubits)
+            else:
+                return gate.qubits
+
+        # Get all qubits
+        _qubits = tuple(
+            _get_qubits(g) if g.provides(&#39;qubits&#39;) else (None, None)
+            for g in self)
+
+        # If empty, return empty tuple
+        if not len(_qubits):
+            return tuple()
+
+        # Split in left and right qubits
+        _lq, _rq = [tuple(x) for x in zip(*_qubits)]
 
         # Check if there are virtual gates with no qubits
         if not ignore_missing_qubits and any(
-                not gate.provides(&#39;qubits&#39;) or gate.qubits is None
-                for gate in self
-                if gate.n_qubits):
+                q1 is None or q2 is None for q1, q2 in zip(_lq, _rq)):
             raise ValueError(&#34;Circuit contains virtual gates with no qubits.&#34;)
 
-        # Initialize qubits
-        l_qubits = []
-        r_qubits = []
-
-        # For all gates ...
-        for gate in self:
-            if gate.provides(&#39;qubits&#39;) and gate.qubits:
-                qubits = gate.qubits
-                if isinstance(gate, BaseGate):
-                    l_qubits += qubits
-                    r_qubits += qubits
-                elif isinstance(gate, BaseSuperGate):
-                    l_qubits += qubits[0]
-                    r_qubits += qubits[1]
-                else:
-                    raise ValueError(f&#34;{type(gate).__name__} is not supported&#34;)
-
-        # Sort qubits
-        l_qubits = sort(set(l_qubits))
-        r_qubits = sort(set(r_qubits))
+        # Flatten qubits and remove None&#39;s
+        _lq = _unique_flatten(q for q in _lq if q is not None)
+        _rq = _unique_flatten(q for q in _rq if q is not None)
 
         # Return qubits
-        return (l_qubits, r_qubits)</code></pre>
+        return (_lq, _rq)</code></pre>
 </details>
 </section>
 <section>
@@ -175,7 +205,11 @@ Circuit([
 
     @staticmethod
     def __check_gate__(gate: Gate):
-        if any(isinstance(gate, t) for t in (BaseGate, BaseSuperGate)):
+        from hybridq.dm.gate import TupleSuperGate
+        from hybridq.base.property import Tuple
+        if isinstance(gate, tuple) or isinstance(gate, Tuple):
+            return TupleSuperGate(map(Circuit.__check_gate__, gate))
+        elif any(isinstance(gate, t) for t in (BaseGate, BaseSuperGate)):
             return gate
         else:
             raise ValueError(f&#34;&#39;type(gate).__name__&#39; not supported.&#34;)
@@ -187,38 +221,64 @@ Circuit([
             self,
             *,
             ignore_missing_qubits: bool = False) -&gt; tuple[list[any], list[any]]:
-        from hybridq.utils import sort
+        &#34;&#34;&#34;
+        Get all qubits in `Circuit`. It raises a `ValueError` if qubits in
+        `Gate` are missing, unless `ignore_missing_qubits` is `True`. The
+        returned qubits are always sorted using `hybridq.utils.sort` for
+        consistency.
+
+        Parameters
+        ----------
+        ignore_missing_qubits: bool, optional
+            If `True`, ignore gates without specified qubits. Otherwise, raise
+            `ValueError`.
+
+        Returns
+        -------
+        tuple[list[any], list[any]]
+            Sorted list of all qubits in `Circuit`.
+        &#34;&#34;&#34;
+        # If Circuit has not qubits, return empty list
+        if not len(self):
+            return ([], [])
+
+        # Define flatten
+        def _unique_flatten(l):
+            from hybridq.utils import sort
+            return sort(set(y for x in l for y in x))
+
+        # Get qubits
+        def _get_qubits(gate):
+            if isinstance(gate, BaseGate):
+                # Get qubits
+                qubits = gate.qubits
+                return (qubits, qubits)
+            else:
+                return gate.qubits
+
+        # Get all qubits
+        _qubits = tuple(
+            _get_qubits(g) if g.provides(&#39;qubits&#39;) else (None, None)
+            for g in self)
+
+        # If empty, return empty tuple
+        if not len(_qubits):
+            return tuple()
+
+        # Split in left and right qubits
+        _lq, _rq = [tuple(x) for x in zip(*_qubits)]
 
         # Check if there are virtual gates with no qubits
         if not ignore_missing_qubits and any(
-                not gate.provides(&#39;qubits&#39;) or gate.qubits is None
-                for gate in self
-                if gate.n_qubits):
+                q1 is None or q2 is None for q1, q2 in zip(_lq, _rq)):
             raise ValueError(&#34;Circuit contains virtual gates with no qubits.&#34;)
 
-        # Initialize qubits
-        l_qubits = []
-        r_qubits = []
-
-        # For all gates ...
-        for gate in self:
-            if gate.provides(&#39;qubits&#39;) and gate.qubits:
-                qubits = gate.qubits
-                if isinstance(gate, BaseGate):
-                    l_qubits += qubits
-                    r_qubits += qubits
-                elif isinstance(gate, BaseSuperGate):
-                    l_qubits += qubits[0]
-                    r_qubits += qubits[1]
-                else:
-                    raise ValueError(f&#34;{type(gate).__name__} is not supported&#34;)
-
-        # Sort qubits
-        l_qubits = sort(set(l_qubits))
-        r_qubits = sort(set(r_qubits))
+        # Flatten qubits and remove None&#39;s
+        _lq = _unique_flatten(q for q in _lq if q is not None)
+        _rq = _unique_flatten(q for q in _rq if q is not None)
 
         # Return qubits
-        return (l_qubits, r_qubits)</code></pre>
+        return (_lq, _rq)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -231,7 +291,21 @@ Circuit([
 <span>def <span class="ident">all_qubits</span></span>(<span>self, *, ignore_missing_qubits: bool = False) ‑> tuple[list[any], list[any]]</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Get all qubits in <code><a title="hybridq.dm.circuit.circuit.Circuit" href="#hybridq.dm.circuit.circuit.Circuit">Circuit</a></code>. It raises a <code>ValueError</code> if qubits in
+<code>Gate</code> are missing, unless <code>ignore_missing_qubits</code> is <code>True</code>. The
+returned qubits are always sorted using <code>hybridq.utils.sort</code> for
+consistency.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ignore_missing_qubits</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, ignore gates without specified qubits. Otherwise, raise
+<code>ValueError</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>tuple[list[any], list[any]]</code></dt>
+<dd>Sorted list of all qubits in <code><a title="hybridq.dm.circuit.circuit.Circuit" href="#hybridq.dm.circuit.circuit.Circuit">Circuit</a></code>.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -240,38 +314,64 @@ Circuit([
         self,
         *,
         ignore_missing_qubits: bool = False) -&gt; tuple[list[any], list[any]]:
-    from hybridq.utils import sort
+    &#34;&#34;&#34;
+    Get all qubits in `Circuit`. It raises a `ValueError` if qubits in
+    `Gate` are missing, unless `ignore_missing_qubits` is `True`. The
+    returned qubits are always sorted using `hybridq.utils.sort` for
+    consistency.
+
+    Parameters
+    ----------
+    ignore_missing_qubits: bool, optional
+        If `True`, ignore gates without specified qubits. Otherwise, raise
+        `ValueError`.
+
+    Returns
+    -------
+    tuple[list[any], list[any]]
+        Sorted list of all qubits in `Circuit`.
+    &#34;&#34;&#34;
+    # If Circuit has not qubits, return empty list
+    if not len(self):
+        return ([], [])
+
+    # Define flatten
+    def _unique_flatten(l):
+        from hybridq.utils import sort
+        return sort(set(y for x in l for y in x))
+
+    # Get qubits
+    def _get_qubits(gate):
+        if isinstance(gate, BaseGate):
+            # Get qubits
+            qubits = gate.qubits
+            return (qubits, qubits)
+        else:
+            return gate.qubits
+
+    # Get all qubits
+    _qubits = tuple(
+        _get_qubits(g) if g.provides(&#39;qubits&#39;) else (None, None)
+        for g in self)
+
+    # If empty, return empty tuple
+    if not len(_qubits):
+        return tuple()
+
+    # Split in left and right qubits
+    _lq, _rq = [tuple(x) for x in zip(*_qubits)]
 
     # Check if there are virtual gates with no qubits
     if not ignore_missing_qubits and any(
-            not gate.provides(&#39;qubits&#39;) or gate.qubits is None
-            for gate in self
-            if gate.n_qubits):
+            q1 is None or q2 is None for q1, q2 in zip(_lq, _rq)):
         raise ValueError(&#34;Circuit contains virtual gates with no qubits.&#34;)
 
-    # Initialize qubits
-    l_qubits = []
-    r_qubits = []
-
-    # For all gates ...
-    for gate in self:
-        if gate.provides(&#39;qubits&#39;) and gate.qubits:
-            qubits = gate.qubits
-            if isinstance(gate, BaseGate):
-                l_qubits += qubits
-                r_qubits += qubits
-            elif isinstance(gate, BaseSuperGate):
-                l_qubits += qubits[0]
-                r_qubits += qubits[1]
-            else:
-                raise ValueError(f&#34;{type(gate).__name__} is not supported&#34;)
-
-    # Sort qubits
-    l_qubits = sort(set(l_qubits))
-    r_qubits = sort(set(r_qubits))
+    # Flatten qubits and remove None&#39;s
+    _lq = _unique_flatten(q for q in _lq if q is not None)
+    _rq = _unique_flatten(q for q in _rq if q is not None)
 
     # Return qubits
-    return (l_qubits, r_qubits)</code></pre>
+    return (_lq, _rq)</code></pre>
 </details>
 </dd>
 </dl>
@@ -316,7 +416,7 @@ Circuit([
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

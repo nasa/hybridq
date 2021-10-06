@@ -54,7 +54,7 @@ class BaseTupleSuperGate(Tuple):
             return tuple()
 
         # Split in left and right qubits
-        _lq, _rq = [tuple(x) for x in zip(_qubits)]
+        _lq, _rq = [tuple(x) for x in zip(*_qubits)]
 
         # If any none is present, set to None
         _lq = None if any(q is None for q in _lq) else _unique_flatten(_lq)

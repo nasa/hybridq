@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>hybridq.base.property API documentation</title>
 <meta name="description" content="Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -348,14 +348,14 @@ class Params(__Base__):
 
 
 @compare(&#39;elements&#39;)
-class Tuple(__Base__):
+class Tuple(Tags, __Base__):
     &#34;&#34;&#34;
     Tuple class for `__Base__`.
     &#34;&#34;&#34;
 
-    def __init__(self, elements=tuple(), **kwargs):
+    def __init__(self, elements=tuple(), tags=None, **kwargs):
         # Call super
-        super().__init__(**kwargs)
+        super().__init__(tags=tags, **kwargs)
 
         # Convert elements to tuple
         elements = tuple(elements)
@@ -390,6 +390,16 @@ class Tuple(__Base__):
         return self.elements.index(*args, **kwargs)
 
     def __radd__(self, other: Tuple):
+        # If &#39;other&#39; is &#39;tuple&#39; try to convert ..
+        if isinstance(other, tuple):
+            # .. to type(self) or ..
+            try:
+                other = type(self)(other)
+
+            # .. to Tuple.
+            except:
+                other = Tuple(other)
+
         # Check that other is a Tuple
         if not isinstance(other, Tuple):
             raise TypeError(f&#34;Type &#39;{type(other).__name__}&#39; not supported&#34;)
@@ -398,14 +408,43 @@ class Tuple(__Base__):
         return (type(self) if type(self) == type(other) else
                 Tuple)(other.elements + self.elements)
 
-    def __add__(self, other: Tuple):
-        # Check that other is a Tuple
+    def __add__(self, other: Tuple) -&gt; Tuple:
+        # If &#39;other&#39; is &#39;tuple&#39; try to convert ..
+        if isinstance(other, tuple):
+            # .. to type(self) or ..
+            try:
+                other = type(self)(other)
+
+            # .. to Tuple.
+            except:
+                other = Tuple(other)
+
+        # &#39;other&#39; must be Tuple
         if not isinstance(other, Tuple):
             raise TypeError(f&#34;Type &#39;{type(other).__name__}&#39; not supported&#34;)
 
-        # Return Tuple. If self and other have different types, fallback to Type.
-        return (type(self) if type(self) == type(other) else
-                Tuple)(self.elements + other.elements)
+        # Get left and right tags
+        l_tags = self.tags if self.provides(&#39;tags&#39;) else {}
+        r_tags = other.tags if other.provides(&#39;tags&#39;) else {}
+
+        # Get common keys
+        ckeys = set(l_tags).intersection(r_tags)
+
+        # Create new tags
+        tags = {}
+        tags.update({
+            (str(k) + &#39;_x&#39; if k in ckeys else k): v for k, v in l_tags.items()
+        })
+        tags.update({
+            (str(k) + &#39;_y&#39; if k in ckeys else k): v for k, v in r_tags.items()
+        })
+
+        # If self and other have different types, fallback to Tuple
+        other = (type(self) if type(self) == type(other) else
+                 Tuple)(self.elements + other.elements)
+
+        # Update tags and return
+        return other.update_tags(tags, inplace=True)
 
     def flatten(self) -&gt; Tuple:
         &#34;&#34;&#34;
@@ -853,8 +892,8 @@ is modified in place.</dd>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="hybridq.base.property.Tuple" href="#hybridq.base.property.Tuple">Tuple</a></li>
 <li><a title="hybridq.extras.gate.gate.MessageGate" href="../extras/gate/gate.html#hybridq.extras.gate.gate.MessageGate">MessageGate</a></li>
-<li><a title="hybridq.gate.property.BaseTupleGate" href="../gate/property.html#hybridq.gate.property.BaseTupleGate">BaseTupleGate</a></li>
 </ul>
 <h3>Instance variables</h3>
 <dl>
@@ -1105,7 +1144,7 @@ modified in place.</dd>
 </dd>
 <dt id="hybridq.base.property.Tuple"><code class="flex name class">
 <span>class <span class="ident">Tuple</span></span>
-<span>(</span><span>elements=(), **kwargs)</span>
+<span>(</span><span>elements=(), tags=None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Tuple class for <code>__Base__</code>.</p></div>
@@ -1113,14 +1152,14 @@ modified in place.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Tuple(__Base__):
+<pre><code class="python">class Tuple(Tags, __Base__):
     &#34;&#34;&#34;
     Tuple class for `__Base__`.
     &#34;&#34;&#34;
 
-    def __init__(self, elements=tuple(), **kwargs):
+    def __init__(self, elements=tuple(), tags=None, **kwargs):
         # Call super
-        super().__init__(**kwargs)
+        super().__init__(tags=tags, **kwargs)
 
         # Convert elements to tuple
         elements = tuple(elements)
@@ -1155,6 +1194,16 @@ modified in place.</dd>
         return self.elements.index(*args, **kwargs)
 
     def __radd__(self, other: Tuple):
+        # If &#39;other&#39; is &#39;tuple&#39; try to convert ..
+        if isinstance(other, tuple):
+            # .. to type(self) or ..
+            try:
+                other = type(self)(other)
+
+            # .. to Tuple.
+            except:
+                other = Tuple(other)
+
         # Check that other is a Tuple
         if not isinstance(other, Tuple):
             raise TypeError(f&#34;Type &#39;{type(other).__name__}&#39; not supported&#34;)
@@ -1163,14 +1212,43 @@ modified in place.</dd>
         return (type(self) if type(self) == type(other) else
                 Tuple)(other.elements + self.elements)
 
-    def __add__(self, other: Tuple):
-        # Check that other is a Tuple
+    def __add__(self, other: Tuple) -&gt; Tuple:
+        # If &#39;other&#39; is &#39;tuple&#39; try to convert ..
+        if isinstance(other, tuple):
+            # .. to type(self) or ..
+            try:
+                other = type(self)(other)
+
+            # .. to Tuple.
+            except:
+                other = Tuple(other)
+
+        # &#39;other&#39; must be Tuple
         if not isinstance(other, Tuple):
             raise TypeError(f&#34;Type &#39;{type(other).__name__}&#39; not supported&#34;)
 
-        # Return Tuple. If self and other have different types, fallback to Type.
-        return (type(self) if type(self) == type(other) else
-                Tuple)(self.elements + other.elements)
+        # Get left and right tags
+        l_tags = self.tags if self.provides(&#39;tags&#39;) else {}
+        r_tags = other.tags if other.provides(&#39;tags&#39;) else {}
+
+        # Get common keys
+        ckeys = set(l_tags).intersection(r_tags)
+
+        # Create new tags
+        tags = {}
+        tags.update({
+            (str(k) + &#39;_x&#39; if k in ckeys else k): v for k, v in l_tags.items()
+        })
+        tags.update({
+            (str(k) + &#39;_y&#39; if k in ckeys else k): v for k, v in r_tags.items()
+        })
+
+        # If self and other have different types, fallback to Tuple
+        other = (type(self) if type(self) == type(other) else
+                 Tuple)(self.elements + other.elements)
+
+        # Update tags and return
+        return other.update_tags(tags, inplace=True)
 
     def flatten(self) -&gt; Tuple:
         &#34;&#34;&#34;
@@ -1182,10 +1260,12 @@ modified in place.</dd>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="hybridq.base.property.Tags" href="#hybridq.base.property.Tags">Tags</a></li>
 <li>hybridq.base.base.__Base__</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="hybridq.dm.gate.property.BaseTupleSuperGate" href="../dm/gate/property.html#hybridq.dm.gate.property.BaseTupleSuperGate">BaseTupleSuperGate</a></li>
 <li><a title="hybridq.gate.property.BaseTupleGate" href="../gate/property.html#hybridq.gate.property.BaseTupleGate">BaseTupleGate</a></li>
 </ul>
 <h3>Instance variables</h3>
@@ -1238,6 +1318,17 @@ def elements(self):
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="hybridq.base.property.Tags" href="#hybridq.base.property.Tags">Tags</a></b></code>:
+<ul class="hlist">
+<li><code><a title="hybridq.base.property.Tags.remove_tag" href="#hybridq.base.property.Tags.remove_tag">remove_tag</a></code></li>
+<li><code><a title="hybridq.base.property.Tags.remove_tags" href="#hybridq.base.property.Tags.remove_tags">remove_tags</a></code></li>
+<li><code><a title="hybridq.base.property.Tags.set_tags" href="#hybridq.base.property.Tags.set_tags">set_tags</a></code></li>
+<li><code><a title="hybridq.base.property.Tags.update_tags" href="#hybridq.base.property.Tags.update_tags">update_tags</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -1289,7 +1380,7 @@ def elements(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

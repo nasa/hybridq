@@ -219,5 +219,7 @@ def Gate(name: str, **kwargs):
         return KrausSuperGate(**kwargs)
     elif name == 'SMATRIX':
         return MatrixSuperGate(**kwargs)
+    elif name == 'STUPLE':
+        return TupleSuperGate(**kwargs)
     else:
         raise NotImplementedError(f"'{name}' not implemented.")
