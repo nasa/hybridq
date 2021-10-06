@@ -86,7 +86,7 @@ class Circuit(BaseCircuit):
             return tuple()
 
         # Split in left and right qubits
-        _lq, _rq = [tuple(x) for x in zip(*_qubits)]
+        _lq, _rq = tuple(_qubits[0]), tuple(_qubits[1])
 
         # Check if there are virtual gates with no qubits
         if not ignore_missing_qubits and any(
