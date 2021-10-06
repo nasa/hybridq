@@ -383,7 +383,7 @@ class Circuit(BaseCircuit):
     def __check_gate__(gate: Gate):
         from hybridq.gate import TupleGate
         from hybridq.base.property import Tuple
-        if isinstance(gate, Tuple):
+        if isinstance(gate, tuple) or isinstance(gate, Tuple):
             return TupleGate(map(Circuit.__check_gate__, gate))
         elif isinstance(gate, BaseGate):
             return gate

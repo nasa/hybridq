@@ -27,9 +27,9 @@ class Circuit(BaseCircuit):
     def __check_gate__(gate: Gate):
         from hybridq.dm.gate import TupleSuperGate
         from hybridq.base.property import Tuple
-        if isinstance(gate, Tuple):
+        if isinstance(gate, tuple) or isinstance(gate, Tuple):
             return TupleSuperGate(map(Circuit.__check_gate__, gate))
-        if any(isinstance(gate, t) for t in (BaseGate, BaseSuperGate)):
+        elif any(isinstance(gate, t) for t in (BaseGate, BaseSuperGate)):
             return gate
         else:
             raise ValueError(f"'type(gate).__name__' not supported.")
