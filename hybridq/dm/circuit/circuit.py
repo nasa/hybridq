@@ -86,9 +86,9 @@ class Circuit(BaseCircuit):
                 q1 is None or q2 is None for q1, q2 in zip(_lq, _rq)):
             raise ValueError("Circuit contains virtual gates with no qubits.")
 
-        # If any none is present, set to None
-        _lq = _unique_flatten(_lq)
-        _rq = _unique_flatten(_rq)
+        # Flatten qubits and remove None's
+        _lq = _unique_flatten(q for q in _lq if q is not None)
+        _rq = _unique_flatten(q for q in _rq if q is not None)
 
         # Return qubits
         return (_lq, _rq)

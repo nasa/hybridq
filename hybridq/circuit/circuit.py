@@ -435,8 +435,8 @@ class Circuit(BaseCircuit):
         if not ignore_missing_qubits and any(q is None for q in _qubits):
             raise ValueError("Circuit contains virtual gates with no qubits.")
 
-        # Return sorted qubits
-        return _unique_flatten(_qubits)
+        # Flatten qubits and remove None's
+        return _unique_flatten(q for q in _qubits if q is not None)
 
     def inv(self) -> Circuit:
         """
