@@ -420,20 +420,23 @@ class Circuit(BaseCircuit):
         >>> Circuit([Gate('H', qubits=[2]), Gate('X', qubits=[1]), Gate('H')]).all_qubits(ignore_missing_qubits=True)
         [1, 2]
         """
-        from hybridq.utils import sort
+
+        # Define flatten
+        def _unique_flatten(l):
+            from hybridq.utils import sort
+            return sort(set(y for x in l for y in x))
+
+        # Get all qubits
+        _qubits = [
+            gate.qubits if gate.provides('qubits') else None for gate in self
+        ]
 
         # Check if there are virtual gates with no qubits
-        if not ignore_missing_qubits and any(
-                not gate.provides('qubits') or gate.qubits is None
-                for gate in self
-                if gate.n_qubits):
+        if not ignore_missing_qubits and any(q is None for q in _qubits):
             raise ValueError("Circuit contains virtual gates with no qubits.")
 
         # Return sorted qubits
-        return sort({
-            q for gate in self if gate.provides('qubits') and gate.qubits
-            for q in gate.qubits
-        })
+        return _unique_flatten(_qubits)
 
     def inv(self) -> Circuit:
         """
