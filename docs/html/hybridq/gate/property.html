@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>hybridq.gate.property API documentation</title>
 <meta name="description" content="Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -801,18 +801,18 @@ class FunctionalGate(QubitGate, __Base__, n_qubits=any):
         return self.apply(psi, order, **kwargs)
 
 
-class BaseTupleGate(TagGate, Tuple):
+class BaseTupleGate(Tuple):
     &#34;&#34;&#34;
     Gate defined as a tuple of gates.
     &#34;&#34;&#34;
 
-    def __init__(self, elements=tuple(), tags=None, **kwargs):
-        # Catch elements first, then tags
-        super().__init__(elements=elements, tags=tags, **kwargs)
-
     @property
     def qubits(self) -&gt; tuple[any, ...]:
         from hybridq.utils import sort
+
+        # If empty, return empty tuple
+        if not len(self):
+            return tuple()
 
         # Get all qubits
         _qubits = tuple(
@@ -829,29 +829,6 @@ class BaseTupleGate(TagGate, Tuple):
     @property
     def n_qubits(self) -&gt; int:
         return len(self.qubits)
-
-    def __add__(self, gate: BaseTupleGate) -&gt; BaseTupleGate:
-        # Get left and right tags
-        l_tags = self.tags
-        r_tags = gate.tags
-
-        # Get common keys
-        ckeys = set(l_tags).intersection(r_tags)
-
-        # Create new tags
-        tags = {}
-        tags.update({
-            (str(k) + &#39;_x&#39; if k in ckeys else k): v for k, v in l_tags.items()
-        })
-        tags.update({
-            (str(k) + &#39;_y&#39; if k in ckeys else k): v for k, v in r_tags.items()
-        })
-
-        # Get new gate
-        gate = Tuple.__add__(self, gate)
-
-        # Update tags and return
-        return gate.update_tags(tags, inplace=True)
 
 
 def _gate_transform(gates):
@@ -1101,18 +1078,18 @@ class ControlledGate(__Base__):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BaseTupleGate(TagGate, Tuple):
+<pre><code class="python">class BaseTupleGate(Tuple):
     &#34;&#34;&#34;
     Gate defined as a tuple of gates.
     &#34;&#34;&#34;
 
-    def __init__(self, elements=tuple(), tags=None, **kwargs):
-        # Catch elements first, then tags
-        super().__init__(elements=elements, tags=tags, **kwargs)
-
     @property
     def qubits(self) -&gt; tuple[any, ...]:
         from hybridq.utils import sort
+
+        # If empty, return empty tuple
+        if not len(self):
+            return tuple()
 
         # Get all qubits
         _qubits = tuple(
@@ -1128,35 +1105,12 @@ class ControlledGate(__Base__):
 
     @property
     def n_qubits(self) -&gt; int:
-        return len(self.qubits)
-
-    def __add__(self, gate: BaseTupleGate) -&gt; BaseTupleGate:
-        # Get left and right tags
-        l_tags = self.tags
-        r_tags = gate.tags
-
-        # Get common keys
-        ckeys = set(l_tags).intersection(r_tags)
-
-        # Create new tags
-        tags = {}
-        tags.update({
-            (str(k) + &#39;_x&#39; if k in ckeys else k): v for k, v in l_tags.items()
-        })
-        tags.update({
-            (str(k) + &#39;_y&#39; if k in ckeys else k): v for k, v in r_tags.items()
-        })
-
-        # Get new gate
-        gate = Tuple.__add__(self, gate)
-
-        # Update tags and return
-        return gate.update_tags(tags, inplace=True)</code></pre>
+        return len(self.qubits)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="hybridq.base.property.Tags" href="../base/property.html#hybridq.base.property.Tags">Tags</a></li>
 <li><a title="hybridq.base.property.Tuple" href="../base/property.html#hybridq.base.property.Tuple">Tuple</a></li>
+<li><a title="hybridq.base.property.Tags" href="../base/property.html#hybridq.base.property.Tags">Tags</a></li>
 <li>hybridq.base.base.__Base__</li>
 </ul>
 <h3>Instance variables</h3>
@@ -1184,6 +1138,10 @@ def n_qubits(self) -&gt; int:
 def qubits(self) -&gt; tuple[any, ...]:
     from hybridq.utils import sort
 
+    # If empty, return empty tuple
+    if not len(self):
+        return tuple()
+
     # Get all qubits
     _qubits = tuple(
         g.qubits if g.provides(&#39;qubits&#39;) else None for g in self)
@@ -1200,17 +1158,13 @@ def qubits(self) -&gt; tuple[any, ...]:
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="hybridq.base.property.Tags" href="../base/property.html#hybridq.base.property.Tags">Tags</a></b></code>:
-<ul class="hlist">
-<li><code><a title="hybridq.base.property.Tags.remove_tag" href="../base/property.html#hybridq.base.property.Tags.remove_tag">remove_tag</a></code></li>
-<li><code><a title="hybridq.base.property.Tags.remove_tags" href="../base/property.html#hybridq.base.property.Tags.remove_tags">remove_tags</a></code></li>
-<li><code><a title="hybridq.base.property.Tags.set_tags" href="../base/property.html#hybridq.base.property.Tags.set_tags">set_tags</a></code></li>
-<li><code><a title="hybridq.base.property.Tags.update_tags" href="../base/property.html#hybridq.base.property.Tags.update_tags">update_tags</a></code></li>
-</ul>
-</li>
 <li><code><b><a title="hybridq.base.property.Tuple" href="../base/property.html#hybridq.base.property.Tuple">Tuple</a></b></code>:
 <ul class="hlist">
 <li><code><a title="hybridq.base.property.Tuple.flatten" href="../base/property.html#hybridq.base.property.Tuple.flatten">flatten</a></code></li>
+<li><code><a title="hybridq.base.property.Tuple.remove_tag" href="../base/property.html#hybridq.base.property.Tags.remove_tag">remove_tag</a></code></li>
+<li><code><a title="hybridq.base.property.Tuple.remove_tags" href="../base/property.html#hybridq.base.property.Tags.remove_tags">remove_tags</a></code></li>
+<li><code><a title="hybridq.base.property.Tuple.set_tags" href="../base/property.html#hybridq.base.property.Tags.set_tags">set_tags</a></code></li>
+<li><code><a title="hybridq.base.property.Tuple.update_tags" href="../base/property.html#hybridq.base.property.Tags.update_tags">update_tags</a></code></li>
 </ul>
 </li>
 </ul>
@@ -3391,7 +3345,7 @@ def Matrix(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

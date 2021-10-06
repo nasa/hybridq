@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>hybridq.dm.gate.gate API documentation</title>
 <meta name="description" content="Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -65,6 +65,29 @@ class BaseSuperGate(dm_pr.__Base__):
     Common type for all gates.
     &#34;&#34;&#34;
     pass
+
+
+def TupleSuperGate(gates: iter[{BaseGate, BaseSuperGate}] = tuple(),
+                   tags: dict[any, any] = None) -&gt; TupleSuperGate:
+    &#34;&#34;&#34;
+    Generate a tuple gate.
+
+    Parameters
+    ----------
+    gates: iter[{BaseGate, BaseSuperGate}]
+        `gates` used to initialize the `TupleGate`.
+    tags: dict[any, any], optional
+        Dictionary of tags.
+
+    Returns
+    -------
+    TupleSuperGate
+    &#34;&#34;&#34;
+
+    # Return gate
+    return pr.generate(&#39;TupleSuperGate&#39;,
+                       (BaseSuperGate, dm_pr.BaseTupleSuperGate, pr.NameGate),
+                       name=&#39;STUPLE&#39;)(gates, tags=tags)
 
 
 @dm_pr.staticvars(&#39;l_qubits,r_qubits&#39;)
@@ -235,6 +258,8 @@ def Gate(name: str, **kwargs):
         return KrausSuperGate(**kwargs)
     elif name == &#39;SMATRIX&#39;:
         return MatrixSuperGate(**kwargs)
+    elif name == &#39;STUPLE&#39;:
+        return TupleSuperGate(**kwargs)
     else:
         raise NotImplementedError(f&#34;&#39;{name}&#39; not implemented.&#34;)</code></pre>
 </details>
@@ -270,6 +295,8 @@ def Gate(name: str, **kwargs):
         return KrausSuperGate(**kwargs)
     elif name == &#39;SMATRIX&#39;:
         return MatrixSuperGate(**kwargs)
+    elif name == &#39;STUPLE&#39;:
+        return TupleSuperGate(**kwargs)
     else:
         raise NotImplementedError(f&#34;&#39;{name}&#39; not implemented.&#34;)</code></pre>
 </details>
@@ -478,6 +505,50 @@ provided, <code>r_qubits</code> is assumed to be equal to <code>l_qubits</code>.
         Matrix=Map)(tags=tags)</code></pre>
 </details>
 </dd>
+<dt id="hybridq.dm.gate.gate.TupleSuperGate"><code class="name flex">
+<span>def <span class="ident">TupleSuperGate</span></span>(<span>gates: iter[{BaseGate, <a title="hybridq.dm.gate.gate.BaseSuperGate" href="#hybridq.dm.gate.gate.BaseSuperGate">BaseSuperGate</a>}] = (), tags: dict[any, any] = None) ‑> <a title="hybridq.dm.gate.gate.TupleSuperGate" href="#hybridq.dm.gate.gate.TupleSuperGate">TupleSuperGate()</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generate a tuple gate.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>gates</code></strong> :&ensp;<code>iter[{BaseGate, BaseSuperGate}]</code></dt>
+<dd><code>gates</code> used to initialize the <code>TupleGate</code>.</dd>
+<dt><strong><code>tags</code></strong> :&ensp;<code>dict[any, any]</code>, optional</dt>
+<dd>Dictionary of tags.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="hybridq.dm.gate.gate.TupleSuperGate" href="#hybridq.dm.gate.gate.TupleSuperGate">TupleSuperGate()</a></code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def TupleSuperGate(gates: iter[{BaseGate, BaseSuperGate}] = tuple(),
+                   tags: dict[any, any] = None) -&gt; TupleSuperGate:
+    &#34;&#34;&#34;
+    Generate a tuple gate.
+
+    Parameters
+    ----------
+    gates: iter[{BaseGate, BaseSuperGate}]
+        `gates` used to initialize the `TupleGate`.
+    tags: dict[any, any], optional
+        Dictionary of tags.
+
+    Returns
+    -------
+    TupleSuperGate
+    &#34;&#34;&#34;
+
+    # Return gate
+    return pr.generate(&#39;TupleSuperGate&#39;,
+                       (BaseSuperGate, dm_pr.BaseTupleSuperGate, pr.NameGate),
+                       name=&#39;STUPLE&#39;)(gates, tags=tags)</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -526,6 +597,7 @@ provided, <code>r_qubits</code> is assumed to be equal to <code>l_qubits</code>.
 <li><code><a title="hybridq.dm.gate.gate.Gate" href="#hybridq.dm.gate.gate.Gate">Gate</a></code></li>
 <li><code><a title="hybridq.dm.gate.gate.KrausSuperGate" href="#hybridq.dm.gate.gate.KrausSuperGate">KrausSuperGate</a></code></li>
 <li><code><a title="hybridq.dm.gate.gate.MatrixSuperGate" href="#hybridq.dm.gate.gate.MatrixSuperGate">MatrixSuperGate</a></code></li>
+<li><code><a title="hybridq.dm.gate.gate.TupleSuperGate" href="#hybridq.dm.gate.gate.TupleSuperGate">TupleSuperGate</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
@@ -539,7 +611,7 @@ provided, <code>r_qubits</code> is assumed to be equal to <code>l_qubits</code>.
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

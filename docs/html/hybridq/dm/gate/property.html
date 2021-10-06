@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>hybridq.dm.gate.property API documentation</title>
 <meta name="description" content="Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -56,7 +56,58 @@ specific language governing permissions and limitations under the License.
 
 from __future__ import annotations
 from hybridq.base import generate, staticvars, compare, requires, __Base__
+from hybridq.base.property import Tuple
 import numpy as np
+
+
+class BaseTupleSuperGate(Tuple):
+    &#34;&#34;&#34;
+    Gate defined as a tuple of gates.
+    &#34;&#34;&#34;
+
+    @property
+    def qubits(self) -&gt; tuple[tuple[any, ...], tuple[any, ...]]:
+        from hybridq.gate import BaseGate
+
+        # Define flatten
+        def _unique_flatten(l):
+            from hybridq.utils import sort
+            return tuple(sort(set(y for x in l for y in x)))
+
+        # Get qubits
+        def _get_qubits(gate):
+            if isinstance(gate, BaseGate):
+                # Get qubits
+                qubits = gate.qubits
+                return (qubits, qubits)
+            else:
+                return gate.qubits
+
+        # Get all qubits
+        _qubits = tuple(
+            _get_qubits(g) if g.provides(&#39;qubits&#39;) else (None, None)
+            for g in self)
+
+        # If empty, return empty tuple
+        if not len(_qubits):
+            return tuple()
+
+        # Split in left and right qubits
+        _lq, _rq = [tuple(x) for x in zip(*_qubits)]
+
+        # If any none is present, set to None
+        _lq = None if any(q is None for q in _lq) else _unique_flatten(_lq)
+        _rq = None if any(q is None for q in _rq) else _unique_flatten(_rq)
+
+        # Return qubits
+        return (_lq, _rq)
+
+    @property
+    def n_qubits(self) -&gt; int:
+        # Get left and right qubits
+        _lq, _rq = self.qubits
+        return None if _lq is None else len(_lq), None if _rq is None else len(
+            _rq)
 
 
 @requires(&#39;qubits,Matrix&#39;)
@@ -165,6 +216,147 @@ class Map(__Base__):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="hybridq.dm.gate.property.BaseTupleSuperGate"><code class="flex name class">
+<span>class <span class="ident">BaseTupleSuperGate</span></span>
+<span>(</span><span>elements=(), tags=None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Gate defined as a tuple of gates.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BaseTupleSuperGate(Tuple):
+    &#34;&#34;&#34;
+    Gate defined as a tuple of gates.
+    &#34;&#34;&#34;
+
+    @property
+    def qubits(self) -&gt; tuple[tuple[any, ...], tuple[any, ...]]:
+        from hybridq.gate import BaseGate
+
+        # Define flatten
+        def _unique_flatten(l):
+            from hybridq.utils import sort
+            return tuple(sort(set(y for x in l for y in x)))
+
+        # Get qubits
+        def _get_qubits(gate):
+            if isinstance(gate, BaseGate):
+                # Get qubits
+                qubits = gate.qubits
+                return (qubits, qubits)
+            else:
+                return gate.qubits
+
+        # Get all qubits
+        _qubits = tuple(
+            _get_qubits(g) if g.provides(&#39;qubits&#39;) else (None, None)
+            for g in self)
+
+        # If empty, return empty tuple
+        if not len(_qubits):
+            return tuple()
+
+        # Split in left and right qubits
+        _lq, _rq = [tuple(x) for x in zip(*_qubits)]
+
+        # If any none is present, set to None
+        _lq = None if any(q is None for q in _lq) else _unique_flatten(_lq)
+        _rq = None if any(q is None for q in _rq) else _unique_flatten(_rq)
+
+        # Return qubits
+        return (_lq, _rq)
+
+    @property
+    def n_qubits(self) -&gt; int:
+        # Get left and right qubits
+        _lq, _rq = self.qubits
+        return None if _lq is None else len(_lq), None if _rq is None else len(
+            _rq)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="hybridq.base.property.Tuple" href="../../base/property.html#hybridq.base.property.Tuple">Tuple</a></li>
+<li><a title="hybridq.base.property.Tags" href="../../base/property.html#hybridq.base.property.Tags">Tags</a></li>
+<li>hybridq.base.base.__Base__</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="hybridq.dm.gate.property.BaseTupleSuperGate.n_qubits"><code class="name">var <span class="ident">n_qubits</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def n_qubits(self) -&gt; int:
+    # Get left and right qubits
+    _lq, _rq = self.qubits
+    return None if _lq is None else len(_lq), None if _rq is None else len(
+        _rq)</code></pre>
+</details>
+</dd>
+<dt id="hybridq.dm.gate.property.BaseTupleSuperGate.qubits"><code class="name">var <span class="ident">qubits</span> : tuple[tuple[any, ...], tuple[any, ...]]</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def qubits(self) -&gt; tuple[tuple[any, ...], tuple[any, ...]]:
+    from hybridq.gate import BaseGate
+
+    # Define flatten
+    def _unique_flatten(l):
+        from hybridq.utils import sort
+        return tuple(sort(set(y for x in l for y in x)))
+
+    # Get qubits
+    def _get_qubits(gate):
+        if isinstance(gate, BaseGate):
+            # Get qubits
+            qubits = gate.qubits
+            return (qubits, qubits)
+        else:
+            return gate.qubits
+
+    # Get all qubits
+    _qubits = tuple(
+        _get_qubits(g) if g.provides(&#39;qubits&#39;) else (None, None)
+        for g in self)
+
+    # If empty, return empty tuple
+    if not len(_qubits):
+        return tuple()
+
+    # Split in left and right qubits
+    _lq, _rq = [tuple(x) for x in zip(*_qubits)]
+
+    # If any none is present, set to None
+    _lq = None if any(q is None for q in _lq) else _unique_flatten(_lq)
+    _rq = None if any(q is None for q in _rq) else _unique_flatten(_rq)
+
+    # Return qubits
+    return (_lq, _rq)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="hybridq.base.property.Tuple" href="../../base/property.html#hybridq.base.property.Tuple">Tuple</a></b></code>:
+<ul class="hlist">
+<li><code><a title="hybridq.base.property.Tuple.flatten" href="../../base/property.html#hybridq.base.property.Tuple.flatten">flatten</a></code></li>
+<li><code><a title="hybridq.base.property.Tuple.remove_tag" href="../../base/property.html#hybridq.base.property.Tags.remove_tag">remove_tag</a></code></li>
+<li><code><a title="hybridq.base.property.Tuple.remove_tags" href="../../base/property.html#hybridq.base.property.Tags.remove_tags">remove_tags</a></code></li>
+<li><code><a title="hybridq.base.property.Tuple.set_tags" href="../../base/property.html#hybridq.base.property.Tags.set_tags">set_tags</a></code></li>
+<li><code><a title="hybridq.base.property.Tuple.update_tags" href="../../base/property.html#hybridq.base.property.Tags.update_tags">update_tags</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="hybridq.dm.gate.property.Map"><code class="flex name class">
 <span>class <span class="ident">Map</span></span>
 </code></dt>
@@ -417,6 +609,13 @@ class Map(__Base__):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="hybridq.dm.gate.property.BaseTupleSuperGate" href="#hybridq.dm.gate.property.BaseTupleSuperGate">BaseTupleSuperGate</a></code></h4>
+<ul class="">
+<li><code><a title="hybridq.dm.gate.property.BaseTupleSuperGate.n_qubits" href="#hybridq.dm.gate.property.BaseTupleSuperGate.n_qubits">n_qubits</a></code></li>
+<li><code><a title="hybridq.dm.gate.property.BaseTupleSuperGate.qubits" href="#hybridq.dm.gate.property.BaseTupleSuperGate.qubits">qubits</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="hybridq.dm.gate.property.Map" href="#hybridq.dm.gate.property.Map">Map</a></code></h4>
 <ul class="">
 <li><code><a title="hybridq.dm.gate.property.Map.commutes_with" href="#hybridq.dm.gate.property.Map.commutes_with">commutes_with</a></code></li>
@@ -430,7 +629,7 @@ class Map(__Base__):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>
