@@ -762,18 +762,18 @@ class FunctionalGate(QubitGate, __Base__, n_qubits=any):
         return self.apply(psi, order, **kwargs)
 
 
-class BaseTupleGate(TagGate, Tuple):
+class BaseTupleGate(Tuple):
     """
     Gate defined as a tuple of gates.
     """
 
-    def __init__(self, elements=tuple(), tags=None, **kwargs):
-        # Catch elements first, then tags
-        super().__init__(elements=elements, tags=tags, **kwargs)
-
     @property
     def qubits(self) -> tuple[any, ...]:
         from hybridq.utils import sort
+
+        # If empty, return empty tuple
+        if not len(self):
+            return tuple()
 
         # Get all qubits
         _qubits = tuple(
@@ -790,29 +790,6 @@ class BaseTupleGate(TagGate, Tuple):
     @property
     def n_qubits(self) -> int:
         return len(self.qubits)
-
-    def __add__(self, gate: BaseTupleGate) -> BaseTupleGate:
-        # Get left and right tags
-        l_tags = self.tags
-        r_tags = gate.tags
-
-        # Get common keys
-        ckeys = set(l_tags).intersection(r_tags)
-
-        # Create new tags
-        tags = {}
-        tags.update({
-            (str(k) + '_x' if k in ckeys else k): v for k, v in l_tags.items()
-        })
-        tags.update({
-            (str(k) + '_y' if k in ckeys else k): v for k, v in r_tags.items()
-        })
-
-        # Get new gate
-        gate = Tuple.__add__(self, gate)
-
-        # Update tags and return
-        return gate.update_tags(tags, inplace=True)
 
 
 def _gate_transform(gates):

@@ -81,7 +81,7 @@ class BaseCircuit(list):
         Return string representation of `Circuit`.
         """
 
-        if len(self) <= 10:
+        if 0 < len(self) <= 10:
             s = 'Circuit([\n'
             for gate in self[:-1]:
                 s += '\t' + str(gate) + ',\n'
@@ -381,8 +381,11 @@ class Circuit(BaseCircuit):
 
     @staticmethod
     def __check_gate__(gate: Gate):
-        from hybridq.gate import BaseGate
-        if isinstance(gate, BaseGate):
+        from hybridq.gate import TupleGate
+        from hybridq.base.property import Tuple
+        if isinstance(gate, tuple) or isinstance(gate, Tuple):
+            return TupleGate(map(Circuit.__check_gate__, gate))
+        elif isinstance(gate, BaseGate):
             return gate
         else:
             raise ValueError(f"'{type(gate).__name__}' not supported.")
@@ -417,20 +420,26 @@ class Circuit(BaseCircuit):
         >>> Circuit([Gate('H', qubits=[2]), Gate('X', qubits=[1]), Gate('H')]).all_qubits(ignore_missing_qubits=True)
         [1, 2]
         """
-        from hybridq.utils import sort
+        # If Circuit has not qubits, return empty list
+        if not len(self):
+            return []
+
+        # Define flatten
+        def _unique_flatten(l):
+            from hybridq.utils import sort
+            return sort(set(y for x in l for y in x))
+
+        # Get all qubits
+        _qubits = [
+            gate.qubits if gate.provides('qubits') else None for gate in self
+        ]
 
         # Check if there are virtual gates with no qubits
-        if not ignore_missing_qubits and any(
-                not gate.provides('qubits') or gate.qubits is None
-                for gate in self
-                if gate.n_qubits):
+        if not ignore_missing_qubits and any(q is None for q in _qubits):
             raise ValueError("Circuit contains virtual gates with no qubits.")
 
-        # Return sorted qubits
-        return sort({
-            q for gate in self if gate.provides('qubits') and gate.qubits
-            for q in gate.qubits
-        })
+        # Flatten qubits and remove None's
+        return _unique_flatten(q for q in _qubits if q is not None)
 
     def inv(self) -> Circuit:
         """

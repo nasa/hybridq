@@ -25,7 +25,11 @@ class Circuit(BaseCircuit):
 
     @staticmethod
     def __check_gate__(gate: Gate):
-        if any(isinstance(gate, t) for t in (BaseGate, BaseSuperGate)):
+        from hybridq.dm.gate import TupleSuperGate
+        from hybridq.base.property import Tuple
+        if isinstance(gate, tuple) or isinstance(gate, Tuple):
+            return TupleSuperGate(map(Circuit.__check_gate__, gate))
+        elif any(isinstance(gate, t) for t in (BaseGate, BaseSuperGate)):
             return gate
         else:
             raise ValueError(f"'type(gate).__name__' not supported.")
@@ -37,35 +41,57 @@ class Circuit(BaseCircuit):
             self,
             *,
             ignore_missing_qubits: bool = False) -> tuple[list[any], list[any]]:
-        from hybridq.utils import sort
+        """
+        Get all qubits in `Circuit`. It raises a `ValueError` if qubits in
+        `Gate` are missing, unless `ignore_missing_qubits` is `True`. The
+        returned qubits are always sorted using `hybridq.utils.sort` for
+        consistency.
+
+        Parameters
+        ----------
+        ignore_missing_qubits: bool, optional
+            If `True`, ignore gates without specified qubits. Otherwise, raise
+            `ValueError`.
+
+        Returns
+        -------
+        tuple[list[any], list[any]]
+            Sorted list of all qubits in `Circuit`.
+        """
+        # If Circuit has not qubits, return empty list
+        if not len(self):
+            return []
+
+        # Define flatten
+        def _unique_flatten(l):
+            from hybridq.utils import sort
+            return sort(set(y for x in l for y in x))
+
+        # Get qubits
+        def _get_qubits(gate):
+            if isinstance(gate, BaseGate):
+                # Get qubits
+                qubits = gate.qubits
+                return (qubits, qubits)
+            else:
+                return gate.qubits
+
+        # Split in left and right qubits
+        _lq, _rq = [
+            tuple(x)
+            for x in zip(*(_get_qubits(g) if g.provides('qubits') else (None,
+                                                                        None)
+                           for g in self))
+        ]
 
         # Check if there are virtual gates with no qubits
         if not ignore_missing_qubits and any(
-                not gate.provides('qubits') or gate.qubits is None
-                for gate in self
-                if gate.n_qubits):
+                q1 is None or q2 is None for q1, q2 in zip(_lq, _rq)):
             raise ValueError("Circuit contains virtual gates with no qubits.")
 
-        # Initialize qubits
-        l_qubits = []
-        r_qubits = []
-
-        # For all gates ...
-        for gate in self:
-            if gate.provides('qubits') and gate.qubits:
-                qubits = gate.qubits
-                if isinstance(gate, BaseGate):
-                    l_qubits += qubits
-                    r_qubits += qubits
-                elif isinstance(gate, BaseSuperGate):
-                    l_qubits += qubits[0]
-                    r_qubits += qubits[1]
-                else:
-                    raise ValueError(f"{type(gate).__name__} is not supported")
-
-        # Sort qubits
-        l_qubits = sort(set(l_qubits))
-        r_qubits = sort(set(r_qubits))
+        # Flatten qubits and remove None's
+        _lq = _unique_flatten(q for q in _lq if q is not None)
+        _rq = _unique_flatten(q for q in _rq if q is not None)
 
         # Return qubits
-        return (l_qubits, r_qubits)
+        return (_lq, _rq)

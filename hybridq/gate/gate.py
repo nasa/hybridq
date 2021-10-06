@@ -558,7 +558,7 @@ def MatrixGate(U: np.ndarray,
                        n_qubits=n_qubits)(qubits=qubits, power=power, tags=tags)
 
 
-def TupleGate(gates: iter[BaseGate] = None,
+def TupleGate(gates: iter[BaseGate] = tuple(),
               tags: dict[any, any] = None) -> TupleGate:
     """
     Generate a tuple gate.

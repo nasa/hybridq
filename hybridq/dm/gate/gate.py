@@ -28,6 +28,29 @@ class BaseSuperGate(dm_pr.__Base__):
     pass
 
 
+def TupleSuperGate(gates: iter[{BaseGate, BaseSuperGate}] = tuple(),
+                   tags: dict[any, any] = None) -> TupleSuperGate:
+    """
+    Generate a tuple gate.
+
+    Parameters
+    ----------
+    gates: iter[{BaseGate, BaseSuperGate}]
+        `gates` used to initialize the `TupleGate`.
+    tags: dict[any, any], optional
+        Dictionary of tags.
+
+    Returns
+    -------
+    TupleSuperGate
+    """
+
+    # Return gate
+    return pr.generate('TupleSuperGate',
+                       (BaseSuperGate, dm_pr.BaseTupleSuperGate, pr.NameGate),
+                       name='STUPLE')(gates, tags=tags)
+
+
 @dm_pr.staticvars('l_qubits,r_qubits')
 class _MatrixSuperGate(BaseSuperGate):
     pass
