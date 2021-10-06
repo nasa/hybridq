@@ -44,13 +44,17 @@ class BaseTupleSuperGate(Tuple):
             else:
                 return gate.qubits
 
+        # Get all qubits
+        _qubits = tuple(
+            _get_qubits(g) if g.provides('qubits') else (None, None)
+            for g in self)
+
+        # If empty, return empty tuple
+        if not len(_qubits):
+            return tuple()
+
         # Split in left and right qubits
-        _lq, _rq = [
-            tuple(x)
-            for x in zip(*(_get_qubits(g) if g.provides('qubits') else (None,
-                                                                        None)
-                           for g in self))
-        ]
+        _lq, _rq = [tuple(x) for x in zip(_qubits)]
 
         # If any none is present, set to None
         _lq = None if any(q is None for q in _lq) else _unique_flatten(_lq)

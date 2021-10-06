@@ -771,6 +771,10 @@ class BaseTupleGate(Tuple):
     def qubits(self) -> tuple[any, ...]:
         from hybridq.utils import sort
 
+        # If empty, return empty tuple
+        if not len(self):
+            return tuple()
+
         # Get all qubits
         _qubits = tuple(
             g.qubits if g.provides('qubits') else None for g in self)

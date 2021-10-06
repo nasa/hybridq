@@ -28,7 +28,7 @@ class BaseSuperGate(dm_pr.__Base__):
     pass
 
 
-def TupleSuperGate(gates: iter[{BaseGate, BaseSuperGate}] = None,
+def TupleSuperGate(gates: iter[{BaseGate, BaseSuperGate}] = tuple(),
                    tags: dict[any, any] = None) -> TupleSuperGate:
     """
     Generate a tuple gate.
