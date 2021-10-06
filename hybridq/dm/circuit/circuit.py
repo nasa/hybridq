@@ -60,7 +60,7 @@ class Circuit(BaseCircuit):
         """
         # If Circuit has not qubits, return empty list
         if not len(self):
-            return []
+            return ([], [])
 
         # Define flatten
         def _unique_flatten(l):
