@@ -789,7 +789,9 @@ class BaseTupleGate(Tuple):
 
     @property
     def n_qubits(self) -> int:
-        return len(self.qubits)
+        # Get qubits
+        qubits = self.qubits
+        return None if qubits is None else len(self.qubits)
 
 
 def _gate_transform(gates):
