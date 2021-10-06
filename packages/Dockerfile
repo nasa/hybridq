@@ -19,6 +19,9 @@ ENV PATH=/opt/python/${PYTHON}/bin/:$PATH
 # Copy HybridQ
 COPY ./ /opt/hybridq
 
+# Remove git repository from requirements
+RUN sed -i '/git+https/d' /opt/hybridq/requirements.txt
+
 # Create wheel
 RUN mkdir /tmp/hybridq && \
     ARCH=core-avx2 pip wheel --no-dependencies -v /opt/hybridq -w /tmp/hybridq
