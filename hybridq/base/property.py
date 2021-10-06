@@ -309,14 +309,14 @@ class Params(__Base__):
 
 
 @compare('elements')
-class Tuple(__Base__):
+class Tuple(Tags, __Base__):
     """
     Tuple class for `__Base__`.
     """
 
-    def __init__(self, elements=tuple(), **kwargs):
+    def __init__(self, elements=tuple(), tags=None, **kwargs):
         # Call super
-        super().__init__(**kwargs)
+        super().__init__(tags=tags, **kwargs)
 
         # Convert elements to tuple
         elements = tuple(elements)
@@ -351,6 +351,16 @@ class Tuple(__Base__):
         return self.elements.index(*args, **kwargs)
 
     def __radd__(self, other: Tuple):
+        # If 'other' is 'tuple' try to convert ..
+        if isinstance(other, tuple):
+            # .. to type(self) or ..
+            try:
+                other = type(self)(other)
+
+            # .. to Tuple.
+            except:
+                other = Tuple(other)
+
         # Check that other is a Tuple
         if not isinstance(other, Tuple):
             raise TypeError(f"Type '{type(other).__name__}' not supported")
@@ -359,14 +369,43 @@ class Tuple(__Base__):
         return (type(self) if type(self) == type(other) else
                 Tuple)(other.elements + self.elements)
 
-    def __add__(self, other: Tuple):
-        # Check that other is a Tuple
+    def __add__(self, other: Tuple) -> Tuple:
+        # If 'other' is 'tuple' try to convert ..
+        if isinstance(other, tuple):
+            # .. to type(self) or ..
+            try:
+                other = type(self)(other)
+
+            # .. to Tuple.
+            except:
+                other = Tuple(other)
+
+        # 'other' must be Tuple
         if not isinstance(other, Tuple):
             raise TypeError(f"Type '{type(other).__name__}' not supported")
 
-        # Return Tuple. If self and other have different types, fallback to Type.
-        return (type(self) if type(self) == type(other) else
-                Tuple)(self.elements + other.elements)
+        # Get left and right tags
+        l_tags = self.tags if self.provides('tags') else {}
+        r_tags = other.tags if other.provides('tags') else {}
+
+        # Get common keys
+        ckeys = set(l_tags).intersection(r_tags)
+
+        # Create new tags
+        tags = {}
+        tags.update({
+            (str(k) + '_x' if k in ckeys else k): v for k, v in l_tags.items()
+        })
+        tags.update({
+            (str(k) + '_y' if k in ckeys else k): v for k, v in r_tags.items()
+        })
+
+        # If self and other have different types, fallback to Tuple
+        other = (type(self) if type(self) == type(other) else
+                 Tuple)(self.elements + other.elements)
+
+        # Update tags and return
+        return other.update_tags(tags, inplace=True)
 
     def flatten(self) -> Tuple:
         """
