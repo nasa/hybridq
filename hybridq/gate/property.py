@@ -817,8 +817,12 @@ def _s_transform(s):
 
     # If diagonal, just return the diagonal
     elif s.ndim == 2:
-        return _s_transform(np.diag(s)) if np.allclose(s, np.diag(
-            np.diag(s))) else s
+        # Get diagonal and pad to s.shape
+        sd = np.pad(np.diag(np.diag(s)), ((0, s.shape[0] - min(s.shape)),
+                                          (0, s.shape[1] - min(s.shape))))
+
+        # Return
+        return _s_transform(np.diag(s)) if np.allclose(s, sd) else s
 
     # Raise an implementation error
     else:
@@ -967,7 +971,10 @@ class SchmidtGate(__Base__):
 
 
 @requires('sample')
-@staticvars('gates', transform=dict(gates=lambda gates: BaseTupleGate(gates)))
+@staticvars(
+    'gates',
+    transform=dict(
+        gates=lambda gates: None if gates is None else BaseTupleGate(gates)))
 class StochasticGate(__Base__):
     pass
 
