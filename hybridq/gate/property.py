@@ -951,7 +951,9 @@ class SchmidtGate(__Base__):
         elif s.ndim == 1:
             # Return Matrix
             return np.sum([
-                _merge(l_g, r_g, c) for c, l_g, r_g in zip(s, l_gates, r_gates)
+                _merge(l_g, r_g, s)
+                for s, l_g, r_g in zip(s, l_gates, r_gates)
+                if not np.isclose(s, 0)
             ],
                           axis=0)
 
@@ -962,6 +964,7 @@ class SchmidtGate(__Base__):
                 _merge(l_gates[i], r_gates[j], s[i, j])
                 for i in range(s.shape[0])
                 for j in range(s.shape[1])
+                if not np.isclose(s[i, j], 0)
             ],
                           axis=0)
 
