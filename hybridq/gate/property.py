@@ -959,11 +959,15 @@ class SchmidtGate(__Base__):
 
         # Get \sum_ij s_ij L_i R_j
         elif s.ndim == 2:
+            from scipy.sparse import csr_matrix
+
+            # Convert to sparse matrix
+            s = csr_matrix(s)
+
             # Return Matrix
             return np.sum([
                 _merge(l_gates[i], r_gates[j], s[i, j])
-                for i in range(s.shape[0])
-                for j in range(s.shape[1])
+                for i, j in zip(*s.nonzero())
                 if not np.isclose(s[i, j], 0)
             ],
                           axis=0)
