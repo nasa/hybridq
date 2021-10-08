@@ -817,12 +817,10 @@ def _s_transform(s):
 
     # If diagonal, just return the diagonal
     elif s.ndim == 2:
-        # Get diagonal and pad to s.shape
-        sd = np.pad(np.diag(np.diag(s)), ((0, s.shape[0] - min(s.shape)),
-                                          (0, s.shape[1] - min(s.shape))))
-
         # Return
-        return _s_transform(np.diag(s)) if np.allclose(s, sd) else s
+        return _s_transform(
+            np.diag(s)) if s.shape[0] == s.shape[1] and np.allclose(
+                s, np.diag(np.diag(s))) else s
 
     # Raise an implementation error
     else:
@@ -850,7 +848,8 @@ class SchmidtGate(__Base__):
 
         # If s is scalar, skip control
         if s.ndim == 0:
-            pass
+            if nr != nl:
+                _err = True
 
         # s is a vector
         elif s.ndim == 1:
@@ -961,8 +960,8 @@ class SchmidtGate(__Base__):
             # Return Matrix
             return np.sum([
                 _merge(l_gates[i], r_gates[j], s[i, j])
-                for i in range(len(s))
-                for j in range(len(s))
+                for i in range(s.shape[0])
+                for j in range(s.shape[1])
             ],
                           axis=0)
 
