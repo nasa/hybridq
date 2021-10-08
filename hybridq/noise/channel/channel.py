@@ -1,5 +1,6 @@
 """
-Author: Salvatore Mandra (salvatore.mandra@nasa.gov)
+Authors: Salvatore Mandra (salvatore.mandra@nasa.gov),
+         Jeffrey Marshall (jeffrey.s.marshall@nasa.gov)
 
 Copyright © 2021, United States Government, as represented by the Administrator
 of the National Aeronautics and Space Administration. All rights reserved.
@@ -24,7 +25,7 @@ import numpy as np
 
 class BaseChannel(__Base__):
     """
-    Base class for 'Channel's.
+    Base class for `Channel`s.
     """
     pass
 
@@ -41,6 +42,9 @@ class _MatrixChannel(BaseChannel,
                      pr.NameGate,
                      n_qubits=any,
                      name=''):
+    """
+    Base class for `MatrixChannel`s.
+    """
 
     def __init_subclass__(cls, **kwargs):
         from hybridq.dm.gate import KrausSuperGate
@@ -88,25 +92,29 @@ class _MatrixChannel(BaseChannel,
         # Initialize Kraus operator
         cls.__Kraus = KrausSuperGate(gates=(LGates, RGates), s=s)
 
-    def __init__(self, _use_cache: bool = True, **kwargs):
+    def on(self,
+           qubits: tuple[any, ...] = None,
+           *,
+           inplace=False) -> _MatrixChannel:
         """
-        Initialize _MatrixChannel.
+        Return `_MatrixChannel` applied to `qubits`. If `inplace` is `True`,
+        `_MatrixChannel` is modified in place.
 
         Parameters
         ----------
-        _use_cache: bool, optional
-            Cache Kraus' map when possible.
+        qubits: iter[any]
+            Qubits the new Gate will act on.
+        inplace: bool, optional
+            If `True`, `_MatrixChannel` is modified in place. Otherwise, a new
+            `_MatrixChannel` is returned.
+
+        Returns
+        -------
+        _MatrixChannel
+            New `_MatrixChannel` acting on `qubits`. If `inplace` is `True`,
+            `_MatrixChannel` is modified in place.
         """
-        # Update cache
-        self.__use_cache = _use_cache
 
-        # Initialize cache
-        self.__cache = dict(KrausMap=None, qubits=None)
-
-        # Call super
-        super().__init__(**kwargs)
-
-    def on(self, qubits: tuple[any, ...] = None, *, inplace=False):
         # Update qubits
         g = pr.QubitGate.on(self, qubits=qubits, inplace=inplace)
 
@@ -124,7 +132,11 @@ class _MatrixChannel(BaseChannel,
         return dict(s=(100, f's.shape={self.s.shape}', 0))
 
     @property
-    def Kraus(self):
+    def Kraus(self) -> KrausSuperGate:
+        """
+        Return `KrausSuperGate` representing `_MatrixChannel`.
+        """
+
         # Check if qubits are current
         if self.__Kraus.gates[0][0].qubits != self.qubits:
             # Update Kraus operator
@@ -137,13 +149,29 @@ class _MatrixChannel(BaseChannel,
         # Return Kraus operator
         return self.__Kraus
 
-    def map(self, order: iter[any] = None):
+    def map(self,
+            order: tuple[any, ...] = None,
+            *,
+            cache_map: bool = True) -> KrausMap:
+        """
+        Return `_MatrixChannel` Kraus' map.
+
+        Parameters
+        ----------
+        order: tuple[any, ...], optional
+            If provided, Kraus' map is ordered accordingly to `order`.
+        cache_map: bool, optional
+            If `cache_map == True`, then `KrausMap` is cached for the next
+            call. (default: `True`)
+        """
+
         # Check if KrausMap is already cached
-        if self.__use_cache and self.__cache[
-                'qubits'] == self.qubits and self.__cache[
+        if cache_map and getattr(
+                self, '_cache',
+                None) and self._cache['qubits'] == self.qubits and self._cache[
                     'KrausMap'] is not None:
             # Get cached KrausMap
-            KrausMap = self.__cache['KrausMap']
+            KrausMap = self._cache['KrausMap']
 
         # Otherwise, compute fresh
         else:
@@ -151,11 +179,20 @@ class _MatrixChannel(BaseChannel,
             KrausMap = self.Kraus.map()
 
             # Update cache
-            if self.__use_cache:
-                self.__cache.update(qubits=self.qubits, KrausMap=KrausMap)
+            if cache_map:
+                self._cache = dict(qubits=self.qubits, KrausMap=KrausMap)
 
         # Return KrausMap
         return KrausMap
+
+    def _clear_cache(self) -> None:
+        """
+        Clear `_MatrixChannel`'s cache.
+        """
+        try:
+            delattr(self, '__cache')
+        except AttributeError:
+            pass
 
 
 def MatrixChannel(LMatrices: tuple[array, ...],
@@ -166,6 +203,43 @@ def MatrixChannel(LMatrices: tuple[array, ...],
                   name: str = 'MATRIX_CHANNEL',
                   copy: bool = True,
                   atol: float = 1e-8):
+    """
+    Return a channel described by `LMatrices` and `RMatrices`. More precisely,
+    `MatrixChannel` will represent a channel of the form:
+
+        rho -> E(rho) = \sum_ij s_ij L_i rho R_j^*
+
+    with `rho` being a density matrix.
+
+    Parameters
+    ----------
+    LMatrices: tuple[array, ...]
+        Left matrices associated to `MatrixChannel`.
+    RMatrices: tuple[array, ...], optional
+        Right matrices associated to `MatrixChannel`. If not provided,
+        `LMatrices` will be used as `RMatrices`.
+    s: {float, array}, optional
+        Weights for the left and right matrices associated to `MatrixChannel`.
+        If `s` is a constant, then `s_ij = s` for `i == j` and zero otherwise.
+        Similarly, if `s` is a one dimensional array, then `s_ij = s_i` for
+        `i == j` and zero otherwise.
+    tags: dict[any, any], optional
+        Tags to add to `MatrixChannel`s.
+    qubits: tuple[any, ...], optional
+        Qubits the `MatrixChannel` will act on.
+    name: str, optional
+        Name of `MatrixChannel`.
+    copy: bool, optional,
+        If `copy == True`, then `LMatrices`, `RMatrices` and `s` are copied
+        instead of passed by reference (default: `True`).
+    atol: float, optional
+        Use `atol` as absolute tollerance while checking.
+
+    Returns
+    -------
+    MatrixChannel
+    """
+
     from hybridq.utils import isintegral, isnumber
 
     # Define sample
@@ -299,62 +373,44 @@ def MatrixChannel(LMatrices: tuple[array, ...],
                     **sdict)(qubits=qubits, tags=tags)
 
 
-def LocalPauliChannel(qubits: tuple[any, ...],
-                      s: {float, array, dict},
-                      tags: dict[any, any] = None,
-                      name: str = 'LOCAL_PAULI_CHANNEL',
-                      copy: bool = True):
-    from hybridq.utils import isintegral
-    from hybridq.gate import Gate
-
-    # Get qubits
-    qubits = tuple(qubits)
-
-    # Try to convert s to dict
-    try:
-        # All upper cases
-        s = {(2 * k if len(k) == 1 else k): v
-             for k, v in ((str(k).upper(), v) for k, v in dict(s).items())}
-
-        # Check if tokens are valid
-        if any(len(k) != 2 or set(k).difference('IXYZ') for k in s):
-            raise ValueError("'s' contains non-valid tokens")
-
-        # Build matrix
-        _s = np.zeros((4, 4))
-        for (k1, k2), v in s.items():
-            k1 = dict(I=0, X=1, Y=2, Z=3)[k1]
-            k2 = dict(I=0, X=1, Y=2, Z=3)[k2]
-            _s[k1, k2] = v
-
-    # Otherwise, convert to array
-    except:
-        s = (np.array if copy else np.asarray)(s)
-
-        # If a single float, return vector
-        if s.ndim == 0:
-            s = np.ones(4) * s
-
-        # Otherwise, dimensions must be consistent
-        if s.ndim > 2 or set(s.shape) != {4}:
-            raise ValueError("'s' must be either a vector of exactly "
-                             "4 elements, or a (4, 4) matrix")
-
-    # Get matrices
-    Matrices = [Gate(g).Matrix for g in 'IXYZ']
-
-    # Return gates
-    return tuple(
-        MatrixChannel(
-            LMatrices=Matrices, qubits=(q,), s=s, tags=tags, name=name)
-        for q in qubits)
-
-
 def GlobalPauliChannel(qubits: tuple[any, ...],
                        s: {float, array, dict},
                        tags: dict[any, any] = None,
                        name: str = 'GLOBAL_PAULI_CHANNEL',
-                       copy: bool = True):
+                       copy: bool = True,
+                       atol: float = 1e-8) -> GlobalPauliChannel:
+    """
+    Return a `GlobalPauliChannel`s acting on `qubits`.
+    More precisely, each `LocalPauliChannel` has the form:
+
+        rho -> E(rho) = \sum_{i1,i2,...}{j1,j2,...}
+                s_{i1,i2...}{j1,j2,...}
+                    sigma_i1 sigma_i2 ... rho sigma_j1 sigma_j2 ...
+
+    with `rho` being a density matrix and `sigma_i` being Pauli matrices.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `LocalPauliChannel`s will act on.
+    s: {float, array, dict}
+        Weight for Pauli matrices. The diagonal of `s` is set to `1`.
+        Similarly, if `s` is a one dimensional array, then the diagonal of `s`
+        is set to that array.  If `s` is a `dict`, weights can be specified by
+        using the tokens `I`, `X`, `Y` and `Z`. For instance, `dict(XYYZ=0.2)`
+        will set the weight for `sigma_i1 == X`, `sigma_i2 == Y`, `sigma_j1 == Y`
+        and `sigma_j2 == Z` to `0.2`.
+    tags: dict[any, any]
+        Tags to add to `LocalPauliChannel`s.
+    name: str, optional
+        Alternative name for `GlobalPauliChannel`.
+    copy: bool, optional,
+        If `copy == True`, then `s` is copied instead of passed by reference
+        (default: `True`).
+    atol: float, optional
+        Use `atol` as absolute tollerance while checking.
+    """
+
     from hybridq.utils import isintegral, kron
     from itertools import product
     from hybridq.gate import Gate
@@ -365,10 +421,10 @@ def GlobalPauliChannel(qubits: tuple[any, ...],
     # Define n_qubits
     n_qubits = len(qubits)
 
-    # Try to convert s to dict
-    try:
-        # Convert to dict
-        s = {str(k).upper(): v for k, v in dict(s).items()}
+    # If 's' is a 'dict'
+    if isinstance(s, dict):
+        # Convert to upper
+        s = {str(k).upper(): v for k, v in s.items()}
 
         # Check if tokens are valid
         if any(len(k) != 2 * n_qubits for k in s):
@@ -392,7 +448,11 @@ def GlobalPauliChannel(qubits: tuple[any, ...],
             # Fill matrix
             _s[x, y] = v
 
-    except:
+        # assign
+        s = _s
+
+    # Otherwise, convert to array
+    else:
         s = (np.array if copy else np.asarray)(s)
 
         # If a single float, return vector
@@ -400,7 +460,7 @@ def GlobalPauliChannel(qubits: tuple[any, ...],
             s = np.ones(4**n_qubits) * s
 
         # Otherwise, dimensions must be consistent
-        if s.ndim > 2 or set(s.shape) != {4**n_qubits}:
+        elif s.ndim > 2 or set(s.shape) != {4**n_qubits}:
             raise ValueError("'s' must be either a vector of exactly "
                              f"{4**n_qubits} elements, or a "
                              f"{(4**n_qubits, 4**n_qubits)} matrix")
@@ -416,4 +476,47 @@ def GlobalPauliChannel(qubits: tuple[any, ...],
                          qubits=qubits,
                          s=s,
                          tags=tags,
-                         name=name)
+                         name=name,
+                         copy=False,
+                         atol=atol)
+
+
+def LocalPauliChannel(qubits: tuple[any, ...],
+                      s: {float, array, dict},
+                      tags: dict[any, any] = None,
+                      name: str = 'LOCAL_PAULI_CHANNEL',
+                      copy: bool = True,
+                      atol: float = 1e-8) -> tuple[LocalPauliChannel, ...]:
+    """
+    Return a `tuple` of `LocalPauliChannel`s acting independently on `qubits`.
+    More precisely, each `LocalPauliChannel` has the form:
+
+        rho -> E_i(rho) = \sum_ij s_ij sigma_i rho sigma_j
+
+    with `rho` being a density matrix and `sigma_i` being Pauli matrices.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `LocalPauliChannel`s will act on.
+    s: {float, array, dict}
+        Weight for Pauli matrices. If `s` is a constant, then `s_ij = s` for
+        `i == j` and zero otherwise.  Similarly, if `s` is a one dimensional
+        array, then `s_ij = s_i` for `i == j` and zero otherwise. If `s` is a
+        `dict`, weights can be specified by using the tokens `I`, `X`, `Y` and
+        `Z`. For instance, `dict(XY=0.2)` will set `s[1, 2] = 0.2`.
+    tags: dict[any, any]
+        Tags to add to `LocalPauliChannel`s.
+    name: str, optional
+        Alternative name for `LocalPauliChannel`s.
+    copy: bool, optional,
+        If `copy == True`, then `s` is copied instead of passed by reference
+        (default: `True`).
+    atol: float, optional
+        Use `atol` as absolute tollerance while checking.
+    """
+
+    return tuple(
+        GlobalPauliChannel(
+            qubits=(q,), name=name, s=s, tags=tags, copy=copy, atol=atol)
+        for q in qubits)
