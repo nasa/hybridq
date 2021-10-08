@@ -187,7 +187,7 @@ def test_utils__aligned_array(order, alignment):
         # These should be different from a
         _c1_dtype = next(t for t in dtypes if np.dtype(t) != a.dtype)
         c1 = asarray(a, dtype=_c1_dtype, alignment=alignment)
-        c2 = asarray(a, order='C' if order is 'F' else 'F', alignment=alignment)
+        c2 = asarray(a, order='C' if order == 'F' else 'F', alignment=alignment)
 
         # Checks
         assert (c1.shape == a.shape)
@@ -202,7 +202,7 @@ def test_utils__aligned_array(order, alignment):
             assert (c2.shape == a.shape)
             assert (c2.dtype == a.dtype)
             assert ((c2.ctypes.data % alignment) == 0)
-            assert (('C' if order is 'F' else 'F') in _get_order(c2))
+            assert (('C' if order == 'F' else 'F') in _get_order(c2))
             assert (not np.may_share_memory(c2, a))
 
 
