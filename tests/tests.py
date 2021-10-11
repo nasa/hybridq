@@ -2389,7 +2389,8 @@ def test_dm_0__supergate_2(nq):
     ])
 
     # Get KrausSuperGate
-    K1 = KrausSuperGate(s=sg.s, gates=sg.gates)
+    K1 = KrausSuperGate(s=sg.s,
+                        gates=[sg.gates[0], [g.conj() for g in sg.gates[1]]])
     K2 = MatrixSuperGate(Map=K1.Matrix,
                          l_qubits=K1.gates[0].qubits,
                          r_qubits=K1.gates[1].qubits)
