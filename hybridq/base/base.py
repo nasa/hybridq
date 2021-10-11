@@ -17,7 +17,7 @@ specific language governing permissions and limitations under the License.
 
 from __future__ import annotations
 from copy import deepcopy
-import dill as pickle
+import dill as Pickler
 import numpy as np
 
 
@@ -375,27 +375,47 @@ class __Base__:
     ##################################### METHODS FOR PICKLE ###################################
 
     def __getstate__(self):
-        return pickle.dumps(self.__dict__)
+        return Pickler.dumps(self.__dict__)
 
     def __setstate__(self, state):
-        self.__dict__ = pickle.loads(state)
+        self.__dict__ = Pickler.loads(state)
 
     @staticmethod
     def __generate__(class_name: str, mro: list[type], staticvars, methods):
         return generate(class_name=class_name,
                         mro=mro,
-                        methods=dict(pickle.loads(methods)),
-                        **pickle.loads(staticvars))()
+                        methods=dict(Pickler.loads(methods)),
+                        **Pickler.loads(staticvars))()
 
-    def __reduce__(self):
+    def __reduce__(self,
+                   *,
+                   ignore_sdict: tuple[str, ...] = tuple(),
+                   ignore_methods: tuple[str, ...] = tuple(),
+                   ignore_keys: tuple[str, ...] = tuple()):
         # Get class
         cls = type(self)
 
+        # Get static dict
+        sdict = {
+            k: v
+            for k, v in self.__static_dict__.items()
+            if k not in ignore_sdict
+        }
+
+        # Get methods
+        methods = {
+            k: v
+            for k, v in self.__methods_dict__.items()
+            if k not in ignore_methods
+        }
+
+        # Get state
+        state = {k: v for k, v in self.__dict__.items() if k not in ignore_keys}
+
         # Return reduction
-        return (cls.__generate__, (cls.__name__, cls.__get_mro__(),
-                                   pickle.dumps(self.__static_dict__),
-                                   pickle.dumps(self.__methods_dict__)),
-                self.__getstate__())
+        return (cls.__generate__,
+                (cls.__name__, cls.__get_mro__(), Pickler.dumps(sdict),
+                 Pickler.dumps(methods)), Pickler.dumps(state))
 
     #################################### STRING REPRESENTATION #################################
 
