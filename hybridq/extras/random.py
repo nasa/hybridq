@@ -62,8 +62,8 @@ def get_random_gate(randomize_power: bool = True,
                     use_clifford_only: bool = False,
                     use_unitary_only: bool = True):
     """
-  Generate random gate.
-  """
+    Generate random gate.
+    """
     # Get available gates
     avail_gates = get_clifford_gates(
     ) if use_clifford_only else get_available_gates()
@@ -123,10 +123,12 @@ def get_rqc(n_qubits: int,
             randomize_power: bool = True,
             use_clifford_only: bool = False,
             use_unitary_only: bool = True,
-            use_random_indexes: bool = False):
+            use_random_indexes: bool = False,
+            verbose: bool = False):
     """
   Generate random quantum circuit.
   """
+    from tqdm.auto import tqdm
 
     # Initialize circuit
     circuit = Circuit()
@@ -139,17 +141,19 @@ def get_rqc(n_qubits: int,
     # Check that size is correct
     assert (len(indexes) == n_qubits)
 
-    # Add random gates
-    for _ in range(n_gates):
-        gate = get_random_gate(randomize_power=randomize_power,
-                               use_unitary_only=use_unitary_only,
-                               use_clifford_only=use_clifford_only)
+    # Get random gates
+    gates = (get_random_gate(randomize_power=randomize_power,
+                             use_unitary_only=use_unitary_only,
+                             use_clifford_only=use_clifford_only)
+             for _ in range(n_gates))
+
+    # Assign random qubits, and return circuit
+    return Circuit(
         gate.on([
             indexes[i]
             for i in np.random.choice(n_qubits, gate.n_qubits, replace=False)
-        ],
-                inplace=True)
-        circuit.append(gate)
-
-    # Return rqc
-    return circuit
+        ])
+        for gate in tqdm(gates,
+                         disable=not verbose,
+                         total=n_gates,
+                         desc='Generating random circuit'))
