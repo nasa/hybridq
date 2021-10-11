@@ -165,24 +165,28 @@ def KrausSuperGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
     # Get gates
     gates = tuple(gates)
 
-    # Try to transform gates as a pair of tuples
+    # Get left and right gates
     try:
+        # Try by first assuming that 'gates' is a tuple of gates ...
         l_gates, r_gates = gates
         l_gates = TupleGate(l_gates)
-        r_gates = TupleGate(r_gates)
-        if r_gates and not l_gates:
-            raise ValueError(
-                "'l_gates' cannot be empty if 'r_gates' is provided")
-        gates = (l_gates, r_gates)
+        r_gates = TupleGate(g.conj() for g in r_gates)
+
+    # ... if an error occurs ...
     except:
-        # Try as single tuple of gates
         try:
-            gates = TupleGate(gates)
-            gates = (gates, TupleGate(g.conj() for g in gates))
+            # ... try as a single tuple of gates.
+            l_gates = TupleGate(gates)
+            r_gates = TupleGate(g.conj() for g in l_gates)
+
         except:
-            # Raise an error
+            # Finally, raise an error.
             raise ValueError("'gates' must be either a single list "
                              "of 'Gate's or a pair of lists of 'Gate's")
+
+    # If r_gates is not empty, l_gates must be not empty
+    if r_gates and not l_gates:
+        raise ValueError("'l_gates' cannot be empty if 'r_gates' is provided")
 
     return dm_pr.generate(
         'KrausSuperGate',
@@ -192,7 +196,7 @@ def KrausSuperGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
                      n_qubits=property(lambda self: tuple(
                          None if q is None else len(q) for q in self.qubits)),
                      __print__=__print_qubits__),
-        gates=gates,
+        gates=(l_gates, r_gates),
         s=(np.array if copy else np.asarray)(s),
         name='KRAUS')(tags=tags)
 
