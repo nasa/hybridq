@@ -713,7 +713,8 @@ def StochasticGate(gates: iter[BaseGate],
 def SchmidtGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
                 s=None,
                 tags: dict[any, any] = None,
-                copy: bool = True) -> SchmidtGate:
+                copy: bool = True,
+                use_cache: bool = True) -> SchmidtGate:
     """
     Return a SchmidtGate.
 
@@ -735,6 +736,8 @@ def SchmidtGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
     copy: bool, optional
         A copy of `s` is used instead of a reference if `copy` is True
         (default: True).
+    use_cache: bool, optional
+        If `True`, extra memory is used to store a cached `Matrix`.
 
     Returns
     -------
@@ -746,7 +749,6 @@ def SchmidtGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
 
     # Get left/right gates
     try:
-        gates = tuple(gates)
         l_gates, r_gates = gates
         l_gates, r_gates = TupleGate(l_gates), TupleGate(r_gates)
 
@@ -770,6 +772,7 @@ def SchmidtGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
                        (BaseGate, pr.SchmidtGate, pr.TagGate, pr.NameGate),
                        gates=(l_gates, r_gates),
                        s=s,
+                       _use_cache=use_cache,
                        name='SCHMIDT')(tags=tags)
 
 

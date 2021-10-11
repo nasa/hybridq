@@ -831,8 +831,11 @@ def _s_transform(s):
 
 
 @compare('gates,s')
-@staticvars('gates,s',
-            transform=dict(gates=_gate_transform, s=_s_transform),
+@staticvars('gates,s,_use_cache',
+            _use_cache=True,
+            transform=dict(gates=_gate_transform,
+                           s=_s_transform,
+                           _use_cache=lambda x: bool(x)),
             check=dict(s=(lambda s: s is None or 0 <= s.ndim <= 2,
                           "'s' cannot have more than two dimensions.")))
 class SchmidtGate(__Base__):
@@ -887,6 +890,10 @@ class SchmidtGate(__Base__):
                 0)
         }
 
+    def __reduce__(self):
+        return super().__reduce__(ignore_keys=('_cached_hash',
+                                               '_cached_Matrix'))
+
     @property
     def Matrix(self):
         """
@@ -895,6 +902,21 @@ class SchmidtGate(__Base__):
         """
         from hybridq.gate import TupleGate, MatrixGate, NamedGate
         from hybridq.utils import sort
+
+        # Check if a cached value is already present. If yes, return it
+        if self._use_cache:
+            # Get cached hash
+            cached_hash = getattr(self, '_cached_hash', None)
+
+            # Get cached Matrix
+            cached_Matrix = getattr(self, '_cached_Matrix', None)
+
+            # Compute new hash
+            new_hash = hash(self)
+
+            # Return cached matrix
+            if new_hash == cached_hash and cached_Matrix is not None:
+                return cached_Matrix
 
         # Get left and right gates
         l_gates, r_gates = self.gates
@@ -947,18 +969,18 @@ class SchmidtGate(__Base__):
         # Get \sum_i X_i L_i R_i
         if s.ndim == 0:
             # Return Matrix
-            return np.sum(
+            Matrix = np.sum(
                 [_merge(l_g, r_g, s) for l_g, r_g in zip(l_gates, r_gates)],
                 axis=0)
 
         elif s.ndim == 1:
             # Return Matrix
-            return np.sum([
+            Matrix = np.sum([
                 _merge(l_g, r_g, s)
                 for s, l_g, r_g in zip(s, l_gates, r_gates)
                 if not np.isclose(s, 0)
             ],
-                          axis=0)
+                            axis=0)
 
         # Get \sum_ij s_ij L_i R_j
         elif s.ndim == 2:
@@ -968,15 +990,26 @@ class SchmidtGate(__Base__):
             s = csr_matrix(s)
 
             # Return Matrix
-            return np.sum([
+            Matrix = np.sum([
                 _merge(l_gates[i], r_gates[j], s[i, j])
                 for i, j in zip(*s.nonzero())
                 if not np.isclose(s[i, j], 0)
             ],
-                          axis=0)
+                            axis=0)
 
         else:
             raise NotImplementedError
+
+        # Save cache
+        if self._use_cache:
+            # Cache hash
+            self._cached_hash = new_hash
+
+            # Cache Matrix
+            self._cached_Matrix = Matrix
+
+        # Return Matrix
+        return Matrix
 
 
 @requires('sample')
