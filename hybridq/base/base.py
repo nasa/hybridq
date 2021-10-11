@@ -348,13 +348,6 @@ class __Base__:
                 set(x for c in cls.mro()
                     for x in getattr(c, '__required__', [])))
 
-    ######################################## REQUIREMENTS ######################################
-
-    @classmethod
-    def __get_requirements__(cls):
-        return tuple(
-            {x for c in cls.mro() for x in getattr(c, '__required__', [])})
-
     ########################################## PROVIDES ########################################
 
     def provides(self,
@@ -372,6 +365,12 @@ class __Base__:
         return which(
             getattr(self, m, NotImplemented) is not NotImplemented
             for m in method)
+
+    ######################################### HASH METHOD ######################################
+
+    def __hash__(self) -> int:
+        from pickle import dumps
+        return hash(dumps(self))
 
     ##################################### METHODS FOR PICKLE ###################################
 

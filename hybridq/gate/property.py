@@ -317,6 +317,9 @@ class PowerMatrixGate(PowerGate, __Base__):
         else:
             return super().__eq__(other)
 
+    def __hash__(self) -> int:
+        return super().__hash__()
+
     def __print__(self):
         return {
             'ct': (0, '^+' if self.__conj and self.__T else
