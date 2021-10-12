@@ -120,7 +120,8 @@ def MatrixSuperGate(Map: np.ndarray,
 def KrausSuperGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
                    s: any = 1,
                    tags: dict[any, any] = None,
-                   copy: bool = True) -> KrausSuperGate:
+                   copy: bool = True,
+                   use_cache: bool = True) -> KrausSuperGate:
     """
     Return a KrausSuperGate.
 
@@ -147,6 +148,8 @@ def KrausSuperGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
     copy: bool, optional
         A copy of `s` is used instead of a reference if `copy` is True
         (default: True).
+    use_cache: bool, optional
+        If `True`, extra memory is used to store a cached `Matrix`.
 
     Returns
     -------
@@ -198,7 +201,8 @@ def KrausSuperGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
                      __print__=__print_qubits__),
         gates=(l_gates, r_gates),
         s=(np.array if copy else np.asarray)(s),
-        name='KRAUS')(tags=tags)
+        name='KRAUS',
+        _use_cache=use_cache)(tags=tags)
 
 
 # Define gate aliases
