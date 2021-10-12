@@ -211,10 +211,6 @@ class BaseCircuit(list):
         """
         return isinstance(circuit, type(self)) and super().__eq__(circuit)
 
-    def __hash__(self) -> int:
-        from pickle import dumps
-        return hash(dumps(self))
-
     def all_tags(self) -> list[dict]:
         """
         Return a list of all tags in each `Gate`.
