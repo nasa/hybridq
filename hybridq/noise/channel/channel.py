@@ -98,42 +98,6 @@ class _MatrixChannel(BaseChannel,
                                      s=s,
                                      use_cache=use_cache)
 
-    def on(self,
-           qubits: tuple[any, ...] = None,
-           *,
-           inplace=False) -> _MatrixChannel:
-        """
-        Return `_MatrixChannel` applied to `qubits`. If `inplace` is `True`,
-        `_MatrixChannel` is modified in place.
-
-        Parameters
-        ----------
-        qubits: iter[any]
-            Qubits the new Gate will act on.
-        inplace: bool, optional
-            If `True`, `_MatrixChannel` is modified in place. Otherwise, a new
-            `_MatrixChannel` is returned.
-
-        Returns
-        -------
-        _MatrixChannel
-            New `_MatrixChannel` acting on `qubits`. If `inplace` is `True`,
-            `_MatrixChannel` is modified in place.
-        """
-
-        # Update qubits
-        g = pr.QubitGate.on(self, qubits=qubits, inplace=inplace)
-
-        # Update Kraus operator
-        lg, rg = g.Kraus.gates
-        for _gate in lg:
-            _gate._on(g.qubits)
-        for _gate in rg:
-            _gate._on(g.qubits)
-
-        # Return gate
-        return g
-
     def __print__(self):
         return dict(s=(100, f's.shape={self.s.shape}', 0))
 
@@ -143,14 +107,12 @@ class _MatrixChannel(BaseChannel,
         Return `KrausSuperGate` representing `_MatrixChannel`.
         """
 
-        # Check if qubits are current
+        # Check if qubits are current ...
         if self.__Kraus.gates[0][0].qubits != self.qubits:
-            # Update Kraus operator
-            lg, rg = self.__Kraus.gates
-            for _gate in lg:
-                _gate._on(self.qubits)
-            for _gate in rg:
-                _gate._on(self.qubits)
+            # ... otherwise, update qubits in all gates
+            for lg, rg in zip(*self.__Kraus.gates):
+                lg._on(self.qubits)
+                rg._on(self.qubits)
 
         # Return Kraus operator
         return self.__Kraus
