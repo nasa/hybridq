@@ -357,9 +357,11 @@ def GlobalPauliChannel(qubits: tuple[any, ...],
     qubits: tuple[any, ...]
         Qubits the `LocalPauliChannel`s will act on.
     s: {float, array, dict}
-        Weight for Pauli matrices. The diagonal of `s` is set to `1`.
-        Similarly, if `s` is a one dimensional array, then the diagonal of `s`
-        is set to that array.  If `s` is a `dict`, weights can be specified by
+        Weight for Pauli matrices.
+        If `s` is a float, the diagonal of the matrix s_ij is set to `s`.
+        Similarly, if `s` is a one dimensional array, then the diagonal of
+        matrix s_ij is set to that array.
+        If `s` is a `dict`, weights can be specified by
         using the tokens `I`, `X`, `Y` and `Z`. For instance, `dict(XYYZ=0.2)`
         will set the weight for `sigma_i1 == X`, `sigma_i2 == Y`, `sigma_j1 == Y`
         and `sigma_j2 == Z` to `0.2`.
