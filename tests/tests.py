@@ -2320,11 +2320,14 @@ def test_dm_0__supergate_1(n_qubits, k, ndim):
         raise NotImplementedError
 
     # Get Kraus operator
-    K = KrausSuperGate(gates=gates, s=s_1)
+    K = KrausSuperGate(gates=gates, s=s_1, use_cache=True)
     K = to_matrix_supergate(K)
 
     # Get matrix corresponding to the operator
     M1 = K.Matrix
+
+    # Check that cached matrix is stored properly
+    assert (np.allclose(K.Matrix, M1))
 
     # Get left/right qubits
     l_qubits, r_qubits = K.qubits
