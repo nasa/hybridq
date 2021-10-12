@@ -485,3 +485,59 @@ def LocalPauliChannel(qubits: tuple[any, ...],
         GlobalPauliChannel(
             qubits=(q,), name=name, s=s, tags=tags, copy=copy, atol=atol)
         for q in qubits)
+
+
+
+def LocalDepolarizingChannel(qubits: tuple[any, ...],
+                      p: {float, array, dict},
+                      tags: dict[any, any] = None,
+                      name: str = 'LOCAL_DEPOLARIZING_CHANNEL',
+                      atol: float = 1e-8) -> tuple[LocalPauliChannel, ...]:
+    """
+    Return a `tuple` of depolarizing channels acting independently on `qubits`.
+    More precisely, each channel has the form:
+
+        rho -> E_i(rho) = (1-p_i) rho + p_i * I/2
+
+    with `rho` being a density matrix, p_i the user specified depolarizing
+    probability for qubit i, and I the identity matrix.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `LocalPauliChannel`s will act on.
+    p: {float, array, dict}
+        Depolarizing probability for qubits.
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length
+        of `qubits`, which corresponds to each depolarizing probability.
+        Otherwise a dictionary mapping from `qubit`s to probability
+        can be given.
+    tags: dict[any, any]
+        Tags to add to `LocalPauliChannel`s.
+    name: str, optional
+        Alternative name for channel.
+    atol: float, optional
+        Use `atol` as absolute tollerance while checking.
+    """
+
+    if isinstance(p, float):
+        p = {q: p for q in qubits}
+    elif isinstance(p, dict):
+        if set(p.keys()) != set(qubits):
+            raise ValueError("Each qubit must be assigned")
+    else:
+        try:
+            p = list(p)
+            p = {q: p[i] for (i,q) in enumerate(qubits)}
+        except TypeError:
+            raise ValueError("Must be convertible to list")
+
+    def s_p(p):
+        # s array for p, for a single qubit
+        return [p/4 if i > 0 else 1 - 0.75*p for i in range(4)]
+
+    return tuple(
+        GlobalPauliChannel(
+            qubits=(q,), name=name, s=s_p(p[q]), tags=tags, atol=atol)
+        for q in qubits)
