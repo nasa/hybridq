@@ -30,6 +30,7 @@ class BaseChannel(__Base__):
     pass
 
 
+@compare('LMatrices,RMatrices,s')
 @staticvars('LMatrices,RMatrices,s',
             transform=dict(LMatrices=lambda M: tuple(map(np.asarray, M)),
                            RMatrices=lambda M: tuple(map(np.asarray, M)),
@@ -176,7 +177,7 @@ class _MatrixChannel(BaseChannel,
         # Otherwise, compute fresh
         else:
             # Compute map
-            KrausMap = self.Kraus.map()
+            KrausMap = self.Kraus.map(order=order)
 
             # Update cache
             if cache_map:
