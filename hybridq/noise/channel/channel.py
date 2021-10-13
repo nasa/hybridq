@@ -545,9 +545,8 @@ def LocalDepolarizingChannel(qubits: tuple[any, ...],
 
 def GlobalDepolarizingChannel(qubits: tuple[any, ...],
                       p: float,
-                      tags: dict[any, any] = None,
                       name: str = 'GLOBAL_DEPOLARIZING_CHANNEL',
-                      atol: float = 1e-8) -> tuple[GlobalPauliChannel, ...]:
+                      **kwargs) -> tuple[GlobalPauliChannel, ...]:
     """
     Return a depolarizing channel that acts on all qubits
 
@@ -563,15 +562,12 @@ def GlobalDepolarizingChannel(qubits: tuple[any, ...],
         Qubits the `LocalPauliChannel`s will act on.
     p: float
         Depolarizing probability.
-    tags: dict[any, any]
-        Tags to add to `LocalPauliChannel`s.
     name: str, optional
         Alternative name for channel.
-    atol: float, optional
-        Use `atol` as absolute tolerance while checking.
+    kwargs: kwargs for GlobalPauliChannel
     """
     nq = len(qubits)
     pi = p / 4**nq
     s = [pi if i > 0 else 1 - p + pi for i in range(4**nq)]
 
-    return GlobalPauliChannel(qubits=qubits, name=name, s=s, tags=tags, atol=atol)
+    return GlobalPauliChannel(qubits=qubits, name=name, s=s, **kwargs)
