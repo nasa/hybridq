@@ -21,7 +21,9 @@ from hybridq.gate.utils import get_available_gates
 from hybridq.extras.random import get_random_gate, get_rqc, get_random_indexes
 from hybridq.dm.circuit import Circuit as SuperCircuit
 from hybridq.dm.circuit import simulation as dm_simulation
-from hybridq.noise.channel import GlobalDepolarizingChannel
+from hybridq.noise.channel import GlobalDepolarizingChannel, \
+    LocalDepolarizingChannel, LocalPauliChannel, AmplitudeDampingChannel
+from hybridq.noise.utils import ptrace
 from hybridq.circuit import Circuit, simulation, utils
 from hybridq.circuit.simulation import clifford
 from hybridq.extras.io.cirq import to_cirq
@@ -31,7 +33,7 @@ from hybridq.utils.utils import _type
 from functools import partial as partial_func
 from opt_einsum import get_symbol, contract
 from more_itertools import flatten
-from itertools import chain
+from itertools import chain, permutations
 from tqdm.auto import tqdm
 from warnings import warn
 import numpy as np
@@ -2657,4 +2659,48 @@ def test_GlobalDepolarizingChannel(nq, p):
 
     np.testing.assert_array_almost_equal(expected, rho_t, decimal=6)
 
+
+def test_local_channels():
+    """
+    This test checks local channels are simulated correctly,
+    in both the tensor network backend, and evolution-einsum.
+    """
+    d = 2 ** 3
+    adc_gamma = 0.75
+    q0, q1, q2 = 0, 1, 2
+
+    c = SuperCircuit()
+    c += LocalPauliChannel([q0], s=[0.25, 0.0, 0, 0.75])
+    c += AmplitudeDampingChannel([q1], gamma=adc_gamma)
+    c += LocalDepolarizingChannel([q2], p=0.1)
+
+    rho = np.reshape(
+        dm_simulation.simulate(c, '+', optimize='evolution-einsum'), (d, d))
+
+    # state is product state from the above channels
+    rho0_expected = np.array([[0.5, -0.25], [-0.25, 0.5]])
+    rho1_expected = 0.5 * np.array([[1 + adc_gamma, np.sqrt(1 - adc_gamma)],
+                                    [np.sqrt(1 - adc_gamma), 1 - adc_gamma]])
+    rho2_expected = np.array([[0.5, 0.5 * 0.9], [0.5 * 0.9, 0.5]])
+
+    rho0 = ptrace(rho, q0)
+    rho1 = ptrace(rho, q1)
+    rho2 = ptrace(rho, q2)
+
+    rho0_tn = dm_simulation.simulate(c, '+', final_state='.ab.ab',
+                                     optimize='tn')
+    rho1_tn = dm_simulation.simulate(c, '+', final_state='a.ba.b',
+                                     optimize='tn')
+    rho2_tn = dm_simulation.simulate(c, '+', final_state='ab.ab.',
+                                     optimize='tn')
+
+    np.testing.assert_array_almost_equal(rho0, rho0_expected)
+    np.testing.assert_array_almost_equal(rho1, rho1_expected)
+    np.testing.assert_array_almost_equal(rho2, rho2_expected)
+
+    np.testing.assert_array_almost_equal(rho0_tn, rho0_expected)
+    np.testing.assert_array_almost_equal(rho1_tn, rho1_expected)
+    np.testing.assert_array_almost_equal(rho2_tn, rho2_expected)
+
+    
 #########################################################################

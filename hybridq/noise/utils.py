@@ -72,5 +72,73 @@ def add_depolarizing_noise(c: Circuit, probs=(0., 0.)):
     return c2
 
 
+def ptrace(state: np.ndarray, keep: list[int],
+           dims: list[int] = None) -> np.ndarray:
+    """
+    compute the partial trace of a pure state (vector) or density matrix.
+    state: np.array
+        One dimensional for pure state e.g. np.array([1,0,0,0])
+        or two dimensional for density matrix e.g. np.array([[1,0],[0,0]])
+    keep: list of int
+        the qubits we want to keep (all others traced out).
+        Can also specify a single int if only keeping one qubit.
+    dims: list of int, optional
+        List of qudit dimensions respecting the ordering of `state`.
+        Number of qubits is len(dims), and full Hilbert space
+        dimension is product(dims).
+        If unspecified, assumes 2 for all.
+    Returns the density matrix of the remaining qubits.
+    """
+    state = np.asarray(state)
+    if len(state.shape) not in (1, 2):
+        raise ValueError('should be pure state (one dimensional) '
+                         'or density matrix (two dimensional). '
+                         f'Received dimension {len(state.shape)}')
+
+    # pure state or not
+    pure = len(state.shape) == 1
+    if not pure and state.shape[0] != state.shape[1]:
+        raise ValueError('invalid state input.')
+
+    full_dim = np.prod(state.shape[0])
+    if dims is not None and full_dim != np.prod(dims):
+        raise ValueError('specified dimensions inconsistent with state')
+
+    n_qubits = np.log2(full_dim) if dims is None else len(dims)
+    if np.isclose(n_qubits, round(n_qubits)):
+        n_qubits = int(round(n_qubits))
+    else:
+        raise ValueError('invalid state size')
+
+    keep = [keep] if isinstance(keep, int) else list(keep)
+    if not np.all([q in range(n_qubits) for q in keep]) or len(keep) >= n_qubits:
+        raise ValueError('invalid axes')
+    if dims is None:
+        dims = [2] * n_qubits
+
+    # dimensions of qubits we keep
+    final_dims = [dims[i] for i in keep]
+    final_dim = np.prod(final_dims)
+    # dimensions to trace out
+    drop_dim = int(round(full_dim / final_dim))
+
+    if pure:
+        state = state.reshape(dims)
+        perm = keep + [q for q in range(n_qubits) if q not in keep]
+        state = np.transpose(state, perm).reshape(final_dim, drop_dim)
+        return np.einsum('ij,kj->ik', state, state.conj())
+    else:
+        # now we have to redefine things in case of a density matrix
+        # basically we double the sizes
+        density_dims = dims + dims
+        keep += [q + n_qubits for q in keep]
+        perm = keep + [q for q in range(2 * n_qubits) if q not in keep]
+
+        state = state.reshape(density_dims)
+        state = np.transpose(state, perm)
+        state = state.reshape((final_dim, final_dim, drop_dim, drop_dim))
+        return np.einsum('ijkk->ij', state)
+
+
 
 
