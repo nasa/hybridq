@@ -60,9 +60,13 @@ def add_depolarizing_noise(c: Circuit, probs=(0., 0.)):
     c2 = NoiseCircuit()
     for g in c:
         c2 += [g]
-        if isinstance(c2, BaseChannel):
+        if isinstance(g, BaseChannel):
             continue
-        c2 += [GlobalDepolarizingChannel(g.qubits, probs[len(g.qubits)-1])]
+        k = len(g.qubits)  # locality
+        if k > len(probs):
+            raise ValueError("`probs` does not have sufficient "
+                             f"entries for {k}-local Gate")
+        c2 += [GlobalDepolarizingChannel(g.qubits, probs[k - 1])]
     return c2
 
 
