@@ -112,27 +112,6 @@ class _MatrixChannel(BaseChannel,
         # Return Kraus operator
         return self.__Kraus
 
-    def choi_matrix(self) -> np.ndarray:
-        """
-        return the Choi matrix for channel of shape (d**2, d**2)
-        for a d-dimensional Hilbert space.
-
-        The channel can be applied as:
-        Lambda(rho) = Tr_0[ (I \otimes rho^T) C]
-        where C is the Choi matrix.
-        """
-        op = self.map()
-        # dimension (assume all have same shape)
-        d = self.Kraus.gates[0][0].matrix().shape[0]
-
-        C = np.zeros(d ** 4, dtype=complex).reshape(d ** 2, d ** 2)
-        for ij in range(d ** 2):
-            Eij = np.zeros(d ** 2)
-            Eij[ij] = 1
-            map = op @ Eij  # using vectorization
-            C += np.kron(Eij.reshape((d, d)), map.reshape((d, d)))
-        return C
-
     def is_channel(self, atol=1e-8) -> bool:
         """
         Checks using the Choi matrix whether or not `self` defines
@@ -155,6 +134,50 @@ class _MatrixChannel(BaseChannel,
              for e in np.linalg.eigvals(C)])
 
         return tp and hp and cp
+
+    def choi_matrix(self, order: tuple[any, ...] = None,
+            *,
+            cache_map: bool = True) -> np.ndarray:
+        """
+        return the Choi matrix for channel of shape (d**2, d**2)
+        for a d-dimensional Hilbert space.
+
+        The channel can be applied as:
+        Lambda(rho) = Tr_0[ (I \otimes rho^T) C]
+        where C is the Choi matrix.
+
+        Parameters
+        ----------
+        order: tuple[any, ...], optional
+            If provided, Kraus' map is ordered accordingly to `order`.
+            See `self.map()`
+        cache_map: bool, optional
+            If `cache_map == True`, then the output of `self.map()` and `Choi`
+             are cached for the next call. (default: `True`).
+        """
+        if cache_map and getattr(
+                self, '_cache',
+                None) and 'Choi' in self._cache:
+            # Get cached Choi matrix
+            C = self._cache['Choi']
+        else:
+            op = self.map(order, cache_map=cache_map)
+            # dimension (assume all have same shape)
+            d = self.Kraus.gates[0][0].matrix().shape[0]
+
+            C = np.zeros(d ** 4, dtype=complex).reshape(d ** 2, d ** 2)
+            for ij in range(d ** 2):
+                Eij = np.zeros(d ** 2)
+                Eij[ij] = 1
+                map = op @ Eij  # using vectorization
+                C += np.kron(Eij.reshape((d, d)), map.reshape((d, d)))
+
+            if cache_map:
+                # since cache is updated by self.map(), we just need to
+                # add the Choi matrix to the cache.
+                self._cache['Choi'] = C
+
+        return C
 
     def map(self,
             order: tuple[any, ...] = None,
