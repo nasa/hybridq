@@ -44,7 +44,7 @@ class MyInstall(DistutilsInstall):
 here = path.abspath(path.dirname(__file__))
 
 # Version
-version = '0.7.7-3'
+version = '0.7.7-4'
 
 # Get the long description from the README file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:

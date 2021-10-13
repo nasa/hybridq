@@ -146,8 +146,8 @@ def KrausSuperGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
     tags: dict[any, any], optional
         Dictionary of tags.
     copy: bool, optional
-        A copy of `s` is used instead of a reference if `copy` is True
-        (default: True).
+        A copy of `gates` and `s` is used instead of a reference if `copy` is
+        `True` (default: True).
     use_cache: bool, optional
         If `True`, extra memory is used to store a cached `Matrix`.
 
@@ -156,6 +156,11 @@ def KrausSuperGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
     KrausSuperGate
     """
     from hybridq.gate import TupleGate
+
+    # Copy if needed
+    def _copy(x: iter[any, ...]):
+        from copy import deepcopy
+        return (deepcopy(y) for y in x) if copy else x
 
     def __print_qubits__(self):
         return {
@@ -172,15 +177,15 @@ def KrausSuperGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
     try:
         # Try by first assuming that 'gates' is a tuple of gates ...
         l_gates, r_gates = gates
-        l_gates = TupleGate(l_gates)
-        r_gates = TupleGate(g.conj() for g in r_gates)
+        l_gates = TupleGate(_copy(l_gates))
+        r_gates = TupleGate(_copy(r_gates))
 
     # ... if an error occurs ...
     except:
         try:
             # ... try as a single tuple of gates.
-            l_gates = TupleGate(gates)
-            r_gates = TupleGate(g.conj() for g in l_gates)
+            l_gates = TupleGate(_copy(gates))
+            r_gates = _copy(l_gates)
 
         except:
             # Finally, raise an error.
@@ -201,6 +206,7 @@ def KrausSuperGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
                      __print__=__print_qubits__),
         gates=(l_gates, r_gates),
         s=(np.array if copy else np.asarray)(s),
+        _conj_rgates=True,
         name='KRAUS',
         _use_cache=use_cache)(tags=tags)
 
