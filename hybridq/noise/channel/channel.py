@@ -134,6 +134,10 @@ class _MatrixChannel(BaseChannel,
         return C
 
     def is_channel(self, atol=1e-8) -> bool:
+        """
+        Checks using the Choi matrix whether or not `self` defines
+        a valid quantum channel.
+        """
         C = self.choi_matrix()
         dim = int(np.sqrt(C.shape[0]))
 
