@@ -19,4 +19,5 @@ from hybridq.noise.channel.channel import MatrixChannel, \
                                           LocalPauliChannel, \
                                           GlobalPauliChannel, \
                                           LocalDepolarizingChannel, \
-                                          GlobalDepolarizingChannel
+                                          GlobalDepolarizingChannel, \
+                                          AmplitudeDampingChannel

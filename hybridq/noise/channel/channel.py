@@ -490,9 +490,10 @@ def LocalPauliChannel(qubits: tuple[any, ...],
 def LocalDepolarizingChannel(qubits: tuple[any, ...],
                       p: {float, array, dict},
                       name: str = 'LOCAL_DEPOLARIZING_CHANNEL',
-                      **kwargs) -> tuple[LocalPauliChannel, ...]:
+                      **kwargs) -> tuple[LocalDepolarizingChannel, ...]:
     """
-    Return a `tuple` of depolarizing channels acting independently on `qubits`.
+    Return a `tuple` of `LocalDepolarizingChannel`s acting independently
+    on `qubits`.
     More precisely, each channel has the form:
 
         rho -> E_i(rho) = (1-p_i) rho + p_i * I/2
@@ -564,7 +565,7 @@ def AmplitudeDampingChannel(qubits: tuple[any, ...],
                             atol: float = 1e-8,
                             **kwargs) -> tuple[AmplitudeDampingChannel, ...]:
     """
-    Return a `tuple` of AmplitudeDampingChannel acting independently
+    Return a `tuple` of `AmplitudeDampingChannel`s acting independently
     on `qubits`. There are 4 Kraus operators (for each qubit):
     sqrt(p) * [ [1, 0], [0, sqrt(1-gamma)] ]
     sqrt(p) * [ [0, sqrt(gamma)], [0, 0] ]
@@ -598,7 +599,7 @@ def AmplitudeDampingChannel(qubits: tuple[any, ...],
     gamma = _convert_to_dict(qubits, gamma)
     p = _convert_to_dict(qubits, p)
 
-    def kraus(gamma_i, pi):
+    def adc_kraus(gamma_i, pi):
         E0 = np.sqrt(pi) * np.diag([1, np.sqrt(1-gamma_i)])
         E1 = np.sqrt(pi) * np.array([[0, np.sqrt(gamma_i)], [0, 0]])
         E2 = np.sqrt(1 - pi) * np.diag([np.sqrt(1-gamma_i), 1])
@@ -611,15 +612,16 @@ def AmplitudeDampingChannel(qubits: tuple[any, ...],
                 mats += [m]
         return tuple(mats)
 
-    return tuple(MatrixChannel(LMatrices=kraus(gamma[q], p[q]),
+    return tuple(MatrixChannel(LMatrices=adc_kraus(gamma[q], p[q]),
                          qubits=(q,),
                          s=1,
+                         name=name,
                          atol=atol,
                          **kwargs) for q in qubits)
 
 
 def _convert_to_dict(qubits, arg):
-    if isinstance(arg, float):
+    if isinstance(arg, (float, int)):
         arg = {q: arg for q in qubits}
     elif isinstance(arg, dict):
         pass

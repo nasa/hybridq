@@ -18,6 +18,9 @@ specific language governing permissions and limitations under the License.
 
 from __future__ import annotations
 import numpy as np
+from hybridq.circuit import Circuit
+from hybridq.noise.channel.channel import BaseChannel, GlobalDepolarizingChannel
+from hybridq.dm.circuit import Circuit as NoiseCircuit
 
 
 def is_dm(rho: np.ndarray, atol=1e-6) -> bool:
@@ -40,6 +43,28 @@ def is_dm(rho: np.ndarray, atol=1e-6) -> bool:
 
 def is_channel():
     raise NotImplementedError("working on this")
+
+
+def add_depolarizing_noise(c: Circuit, probs=(0., 0.)):
+    """
+    Given a `Circuit`, add depolarizing noise after each instance of
+    a `BaseGate`, with the same locality as the gate.
+
+    Noise will not be added after a `BaseChannel`
+
+    probs: tuple[float, ...]
+        depolarizing probabilities as a tuple, where the k'th value corresponds
+        to the probability of depolarizing for a k-local gate.
+        probs should be the size of the largest locality `Gate` in the circuit.
+    """
+    c2 = NoiseCircuit()
+    for g in c:
+        c2 += [g]
+        if isinstance(c2, BaseChannel):
+            continue
+        c2 += [GlobalDepolarizingChannel(g.qubits, probs[len(g.qubits)-1])]
+    return c2
+
 
 
 
