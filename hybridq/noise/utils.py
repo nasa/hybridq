@@ -23,7 +23,6 @@ from hybridq.noise.channel.channel import BaseChannel, GlobalDepolarizingChannel
 from hybridq.dm.circuit import Circuit as SuperCircuit
 
 
-
 def is_dm(rho: np.ndarray, atol=1e-6) -> bool:
     """
     check if the given input a valid density matrix.
@@ -40,10 +39,6 @@ def is_dm(rho: np.ndarray, atol=1e-6) -> bool:
     psd = np.all([apprx_gtr(e, 0) for e in ev])
 
     return (hc and tp and psd)
-
-
-def is_channel():
-    raise NotImplementedError("working on this")
 
 
 def add_depolarizing_noise(c: Circuit, probs=(0., 0.)):
