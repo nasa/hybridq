@@ -726,7 +726,7 @@ def SchmidtGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
         Correlation matrix between `Gates`. More precisely,
         `SchmidtGate.Matrix` is built as follows:
         ```
-        U = \sum_{ij} s_ij G_i G_j.
+        U = \sum_{ij} s_ij L_i R_j.
         ```
         `s` can be a single scalar, a vector or a matrix consistent with the
         number of gates.
