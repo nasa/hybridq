@@ -478,7 +478,7 @@ def LocalPauliChannel(qubits: tuple[any, ...],
         If `copy == True`, then `s` is copied instead of passed by reference
         (default: `True`).
     atol: float, optional
-        Use `atol` as absolute tollerance while checking.
+        Use `atol` as absolute tolerance while checking.
     """
 
     return tuple(
@@ -518,7 +518,7 @@ def LocalDepolarizingChannel(qubits: tuple[any, ...],
     name: str, optional
         Alternative name for channel.
     atol: float, optional
-        Use `atol` as absolute tollerance while checking.
+        Use `atol` as absolute tolerance while checking.
     """
 
     if isinstance(p, float):
@@ -541,3 +541,37 @@ def LocalDepolarizingChannel(qubits: tuple[any, ...],
         GlobalPauliChannel(
             qubits=(q,), name=name, s=s_p(p[q]), tags=tags, atol=atol)
         for q in qubits)
+
+
+def GlobalDepolarizingChannel(qubits: tuple[any, ...],
+                      p: float,
+                      tags: dict[any, any] = None,
+                      name: str = 'GLOBAL_DEPOLARIZING_CHANNEL',
+                      atol: float = 1e-8) -> tuple[GlobalPauliChannel, ...]:
+    """
+    Return a depolarizing channel that acts on all qubits
+
+        rho -> E(rho) = (1-p) rho + p * I/d
+
+    with `rho` being a density matrix of `len(qubits)` qubits,
+    p the user specified depolarizing probability,
+    I the identity matrix, and d=2**len(qubits) the full dimension.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `LocalPauliChannel`s will act on.
+    p: float
+        Depolarizing probability.
+    tags: dict[any, any]
+        Tags to add to `LocalPauliChannel`s.
+    name: str, optional
+        Alternative name for channel.
+    atol: float, optional
+        Use `atol` as absolute tolerance while checking.
+    """
+    nq = len(qubits)
+    pi = p / 4**nq
+    s = [pi if i > 0 else 1 - p + pi for i in range(4**nq)]
+
+    return GlobalPauliChannel(qubits=qubits, name=name, s=s, tags=tags, atol=atol)

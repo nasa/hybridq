@@ -21,6 +21,7 @@ from hybridq.gate.utils import get_available_gates
 from hybridq.extras.random import get_random_gate, get_rqc, get_random_indexes
 from hybridq.dm.circuit import Circuit as SuperCircuit
 from hybridq.dm.circuit import simulation as dm_simulation
+from hybridq.noise.channel import GlobalDepolarizingChannel
 from hybridq.circuit import Circuit, simulation, utils
 from hybridq.circuit.simulation import clifford
 from hybridq.extras.io.cirq import to_cirq
@@ -2636,5 +2637,24 @@ def test_dm_3__simulation_3(n_qubits, n_gates):
     # Check
     assert (np.allclose(np.diag(_rho_1), probs, atol=1e-3))
 
+
+@pytest.mark.parametrize('nq', [1, 2, 3])
+@pytest.mark.parametrize('p', [0.0, 0.25, 0.5, 1.0])
+def test_GlobalDepolarizingChannel(nq, p):
+    np.random.seed(1)
+    d = 2 ** nq
+    psi = np.random.rand(d) + 1j * np.random.rand(d)
+    psi = psi / np.linalg.norm(psi)
+    rho = np.outer(psi, psi.conj())
+    Id = np.eye(d)
+
+    expected = (1 - p) * rho + (p / d) * Id
+
+    gpc = GlobalDepolarizingChannel(list(range(nq)), p)
+    E = gpc.map()
+    rho_v = np.reshape(rho, (d ** 2, 1))
+    rho_t = np.reshape(E @ rho_v, (d, d))
+
+    np.testing.assert_array_almost_equal(expected, rho_t, decimal=6)
 
 #########################################################################
