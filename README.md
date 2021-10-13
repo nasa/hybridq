@@ -23,7 +23,7 @@ greatly simplifying the development of new hybrid algorithms and techniques.
 
 ## Documentation
 
-For technical documentation on how to use **HybridQ**, see [hybridq/docs](hybridq/docs).
+For technical documentation on how to use **HybridQ**, see [hybridq/docs](https://github.com/nasa/hybridq/tree/main/docs).
 
 ## Installation
 
