@@ -825,8 +825,9 @@ def _s_transform(s):
         raise NotImplementedError
 
 
-@compare('gates,s')
-@staticvars('gates,s',
+@compare('gates,s,_conj_rgates')
+@staticvars('gates,s,_conj_rgates',
+            _conj_rgates=False,
             transform=dict(gates=_gate_transform, s=_s_transform),
             check=dict(s=(lambda s: s is None or 0 <= s.ndim <= 2,
                           "'s' cannot have more than two dimensions.")))
@@ -897,7 +898,8 @@ class SchmidtGate(__Base__):
         l_gates = TupleGate(
             MatrixGate(U=g.matrix(), qubits=g.qubits) for g in l_gates)
         r_gates = TupleGate(
-            MatrixGate(U=g.matrix(), qubits=g.qubits) for g in r_gates)
+            MatrixGate(U=(g.conj() if self._conj_rgates else g).matrix(),
+                       qubits=g.qubits) for g in r_gates)
 
         # Get left and right qubits
         l_qubits, r_qubits = l_gates.qubits, r_gates.qubits
