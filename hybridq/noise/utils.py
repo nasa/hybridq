@@ -20,7 +20,8 @@ from __future__ import annotations
 import numpy as np
 from hybridq.circuit import Circuit
 from hybridq.noise.channel.channel import BaseChannel, GlobalDepolarizingChannel
-from hybridq.dm.circuit import Circuit as NoiseCircuit
+from hybridq.dm.circuit import Circuit as SuperCircuit
+
 
 
 def is_dm(rho: np.ndarray, atol=1e-6) -> bool:
@@ -59,7 +60,7 @@ def add_depolarizing_noise(c: Circuit, probs=(0., 0.)):
         to the probability of depolarizing for a k-local gate.
         probs should be the size of the largest locality `Gate` in the circuit.
     """
-    c2 = NoiseCircuit()
+    c2 = SuperCircuit()
     for g in c:
         c2 += [g]
         if isinstance(g, BaseChannel):
@@ -72,8 +73,8 @@ def add_depolarizing_noise(c: Circuit, probs=(0., 0.)):
     return c2
 
 
-def ptrace(state: np.ndarray, keep: list[int],
-           dims: list[int] = None) -> np.ndarray:
+def ptrace(state: np.ndarray, keep: {int, list[int]},
+           dims: {int, list[int]}=None) -> np.ndarray:
     """
     compute the partial trace of a pure state (vector) or density matrix.
     state: np.array
@@ -84,8 +85,8 @@ def ptrace(state: np.ndarray, keep: list[int],
         Can also specify a single int if only keeping one qubit.
     dims: list of int, optional
         List of qudit dimensions respecting the ordering of `state`.
-        Number of qubits is len(dims), and full Hilbert space
-        dimension is product(dims).
+        Number of qubits is `len(dims)`, and full Hilbert space
+        dimension is `product(dims)`.
         If unspecified, assumes 2 for all.
     Returns the density matrix of the remaining qubits.
     """

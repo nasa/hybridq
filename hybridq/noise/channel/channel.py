@@ -112,6 +112,23 @@ class _MatrixChannel(BaseChannel,
         # Return Kraus operator
         return self.__Kraus
 
+    def choi_matrix(self) -> np.ndarray:
+        """
+        return the Choi matrix for channel of shape (d**2, d**2)
+        for a d-dimensional Hilbert space.
+        """
+        op = self.map()
+        # dimension (assume all have same shape)
+        d = self.Kraus.gates[0][0].matrix().shape[0]
+
+        C = np.zeros(d ** 4, dtype=complex).reshape(d ** 2, d ** 2)
+        for ij in range(d ** 2):
+            Eij = np.zeros(d ** 2)
+            Eij[ij] = 1
+            map = op @ Eij  # using vectorization
+            C += np.kron(Eij.reshape((d, d)), map.reshape((d, d)))
+        return C
+
     def map(self,
             order: tuple[any, ...] = None,
             *,

@@ -2702,5 +2702,25 @@ def test_local_channels():
     np.testing.assert_array_almost_equal(rho1_tn, rho1_expected)
     np.testing.assert_array_almost_equal(rho2_tn, rho2_expected)
 
-    
+
+@pytest.mark.parametrize('n', [1, 2])
+def test_choi(n):
+    """
+    Choi matrix acts to produce the output state as
+    rho = Tr_0[ (I \otimes rho_0^T) C)
+    """
+    np.random.seed(1)
+    d = 2 ** n
+    psi = np.random.rand(d) + 1j * np.random.rand(d)
+    psi = psi / np.linalg.norm(psi)
+    rho = np.outer(psi, psi.conj())
+
+    g = GlobalDepolarizingChannel(list(range(n)), p=0.15)
+    rho_t = np.reshape(g.map() @ np.reshape(rho, (d ** 2, 1)), (d, d))
+
+    C = g.choi_matrix()
+    rho_t_choi = ptrace(np.kron(np.eye(d), rho.T) @ C, list(range(n)))
+
+    np.testing.assert_array_almost_equal(rho_t, rho_t_choi)
+
 #########################################################################
