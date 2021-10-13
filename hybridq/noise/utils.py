@@ -48,10 +48,12 @@ def is_channel():
 def add_depolarizing_noise(c: Circuit, probs=(0., 0.)):
     """
     Given a `Circuit`, add depolarizing noise after each instance of
-    a `BaseGate`, with the same locality as the gate.
+    a `Gate`, with the same locality as the gate.
+    Note, noise will not be added after a `BaseChannel`
 
-    Noise will not be added after a `BaseChannel`
-
+    c: Circuit
+        The `Circuit` which will be modified. Note, a new `Circuit` is
+        returned (this is not in place).
     probs: tuple[float, ...]
         depolarizing probabilities as a tuple, where the k'th value corresponds
         to the probability of depolarizing for a k-local gate.
