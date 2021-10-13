@@ -2652,7 +2652,7 @@ def test_GlobalDepolarizingChannel(nq, p):
 
     expected = (1 - p) * rho + (p / d) * Id
 
-    gpc = GlobalDepolarizingChannel(list(range(nq)), p)
+    gpc = GlobalDepolarizingChannel(tuple(range(nq)), p)
     E = gpc.map()
     rho_v = np.reshape(rho, (d ** 2, 1))
     rho_t = np.reshape(E @ rho_v, (d, d))
@@ -2670,9 +2670,9 @@ def test_local_channels():
     q0, q1, q2 = 0, 1, 2
 
     c = SuperCircuit()
-    c += LocalPauliChannel([q0], s=[0.25, 0.0, 0, 0.75])
-    c += AmplitudeDampingChannel([q1], gamma=adc_gamma)
-    c += LocalDepolarizingChannel([q2], p=0.1)
+    c += LocalPauliChannel((q0,), s=[0.25, 0.0, 0, 0.75])
+    c += AmplitudeDampingChannel((q1,), gamma=adc_gamma)
+    c += LocalDepolarizingChannel((q2,), p=0.1)
 
     rho = np.reshape(
         dm_simulation.simulate(c, '+', optimize='evolution-einsum'), (d, d))
@@ -2715,10 +2715,11 @@ def test_choi(n):
     psi = psi / np.linalg.norm(psi)
     rho = np.outer(psi, psi.conj())
 
-    g = GlobalDepolarizingChannel(list(range(n)), p=0.15)
+    g = GlobalDepolarizingChannel(tuple(range(n)), p=0.15)
     rho_t = np.reshape(g.map() @ np.reshape(rho, (d ** 2, 1)), (d, d))
 
     C = g.choi_matrix()
+    # trace out first n qubits representing the identity part
     rho_t_choi = ptrace(np.kron(np.eye(d), rho.T) @ C, list(range(n)))
 
     np.testing.assert_array_almost_equal(rho_t, rho_t_choi)

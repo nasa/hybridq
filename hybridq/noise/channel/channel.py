@@ -116,6 +116,10 @@ class _MatrixChannel(BaseChannel,
         """
         return the Choi matrix for channel of shape (d**2, d**2)
         for a d-dimensional Hilbert space.
+
+        The channel can be applied as:
+        Lambda(rho) = Tr_0[ (I \otimes rho^T) C]
+        where C is the Choi matrix.
         """
         op = self.map()
         # dimension (assume all have same shape)
@@ -128,6 +132,25 @@ class _MatrixChannel(BaseChannel,
             map = op @ Eij  # using vectorization
             C += np.kron(Eij.reshape((d, d)), map.reshape((d, d)))
         return C
+
+    def is_channel(self, atol=1e-8) -> bool:
+        C = self.choi_matrix()
+        dim = int(np.sqrt(C.shape[0]))
+
+        # trace preserving
+        tp = np.isclose(C.trace(), dim, atol=atol)
+
+        # hermiticity preserving
+        hp = np.allclose(C, C.conj().T, atol=atol)
+
+        # completely positive
+        apprx_gtr = lambda e, x: np.real(e) >= x or np.isclose(e, x,
+                                                               atol=atol)
+        cp = np.all(
+            [apprx_gtr(e, 0) and np.isclose(np.imag(e), 0, atol=atol)
+             for e in np.linalg.eigvals(C)])
+
+        return tp and hp and cp
 
     def map(self,
             order: tuple[any, ...] = None,
