@@ -678,7 +678,7 @@ def _convert_to_dict(qubits, arg):
             arg = list(arg)
             if len(arg) != len(qubits):
                 raise ValueError("Must have exactly one value per qubit")
-            
+
             arg = {q: arg[i] for (i, q) in enumerate(qubits)}
         except TypeError:
             raise ValueError("Must be convertible to list")
