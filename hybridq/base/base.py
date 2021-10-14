@@ -495,7 +495,7 @@ class __Base__:
 
         # Perform all checks
         return all(
-            cmp(getattr(self, k), getattr(other, k))
+            np.all(cmp(getattr(self, k), getattr(other, k)))
             for c in compare
             for k, cmp in c.items())
 
