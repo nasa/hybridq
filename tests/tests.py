@@ -24,7 +24,7 @@ from hybridq.dm.circuit import simulation as dm_simulation
 from hybridq.noise.channel import GlobalDepolarizingChannel, \
     LocalDepolarizingChannel, LocalPauliChannel, AmplitudeDampingChannel, \
     LocalDephasingChannel
-from hybridq.noise.utils import ptrace, choi_matrix, is_channel
+from hybridq.noise.channel.utils import ptrace, choi_matrix, is_channel
 from hybridq.circuit import Circuit, simulation, utils
 from hybridq.circuit.simulation import clifford
 from hybridq.extras.io.cirq import to_cirq
@@ -2645,7 +2645,7 @@ def test_dm_3__simulation_3(n_qubits, n_gates):
 @pytest.mark.parametrize('p', [0.0, 0.25, 0.5, 1.0])
 def test_noise_1__GlobalDepolarizingChannel(nq, p):
     np.random.seed(1)
-    d = 2 ** nq
+    d = 2**nq
     psi = np.random.rand(d) + 1j * np.random.rand(d)
     psi = psi / np.linalg.norm(psi)
     rho = np.outer(psi, psi.conj())
@@ -2655,7 +2655,7 @@ def test_noise_1__GlobalDepolarizingChannel(nq, p):
 
     gpc = GlobalDepolarizingChannel(tuple(range(nq)), p)
     E = gpc.map()
-    rho_v = np.reshape(rho, (d ** 2, 1))
+    rho_v = np.reshape(rho, (d**2, 1))
     rho_t = np.reshape(E @ rho_v, (d, d))
 
     np.testing.assert_array_almost_equal(expected, rho_t, decimal=6)
@@ -2666,7 +2666,7 @@ def test_noise_1__local_channels():
     This test checks local channels are simulated correctly,
     in both the tensor network backend, and evolution-einsum.
     """
-    d = 2 ** 4
+    d = 2**4
     adc_gamma = 0.75
     q0, q1, q2, q3 = 0, 1, 2, 3
 
@@ -2681,23 +2681,32 @@ def test_noise_1__local_channels():
 
     # state is product state from the above channels
     rho0_expected = np.array([[0.5, -0.25], [-0.25, 0.5]])
-    rho1_expected = 0.5 * np.array([[1 + adc_gamma, np.sqrt(1 - adc_gamma)],
+    rho1_expected = 0.5 * np.array([[1 + adc_gamma,
+                                     np.sqrt(1 - adc_gamma)],
                                     [np.sqrt(1 - adc_gamma), 1 - adc_gamma]])
     rho2_expected = np.array([[0.5, 0.5 * 0.9], [0.5 * 0.9, 0.5]])
-    rho3_expected = np.array([[1, 0.85-0.15], [0.85-0.15, 1]]) / 2
+    rho3_expected = np.array([[1, 0.85 - 0.15], [0.85 - 0.15, 1]]) / 2
 
     rho0 = ptrace(rho, q0)
     rho1 = ptrace(rho, q1)
     rho2 = ptrace(rho, q2)
     rho3 = ptrace(rho, q3)
 
-    rho0_tn = dm_simulation.simulate(c, '+', final_state='.abc.abc',
+    rho0_tn = dm_simulation.simulate(c,
+                                     '+',
+                                     final_state='.abc.abc',
                                      optimize='tn')
-    rho1_tn = dm_simulation.simulate(c, '+', final_state='a.bca.bc',
+    rho1_tn = dm_simulation.simulate(c,
+                                     '+',
+                                     final_state='a.bca.bc',
                                      optimize='tn')
-    rho2_tn = dm_simulation.simulate(c, '+', final_state='ab.cab.c',
+    rho2_tn = dm_simulation.simulate(c,
+                                     '+',
+                                     final_state='ab.cab.c',
                                      optimize='tn')
-    rho3_tn = dm_simulation.simulate(c, '+', final_state='abc.abc.',
+    rho3_tn = dm_simulation.simulate(c,
+                                     '+',
+                                     final_state='abc.abc.',
                                      optimize='tn')
 
     np.testing.assert_array_almost_equal(rho0, rho0_expected)
@@ -2718,13 +2727,13 @@ def test_noise_1__choi(n):
     rho = Tr_0[ (I \otimes rho_0^T) C)
     """
     np.random.seed(1)
-    d = 2 ** n
+    d = 2**n
     psi = np.random.rand(d) + 1j * np.random.rand(d)
     psi = psi / np.linalg.norm(psi)
     rho = np.outer(psi, psi.conj())
 
     g = GlobalDepolarizingChannel(tuple(range(n)), p=0.15)
-    rho_t = np.reshape(g.map() @ np.reshape(rho, (d ** 2, 1)), (d, d))
+    rho_t = np.reshape(g.map() @ np.reshape(rho, (d**2, 1)), (d, d))
 
     C = choi_matrix(g)
     # trace out first n qubits representing the identity part
@@ -2735,12 +2744,13 @@ def test_noise_1__choi(n):
 
 def test_noise_1__is_channel():
     # check the first channel fails the test
-    ldc = LocalDephasingChannel((0,1), {0: 1.01, 1: 0.99})
+    ldc = LocalDephasingChannel((0, 1), {0: 1.01, 1: 0.99})
 
     invalid_channel = ldc[0]
     valid_channel = ldc[1]
 
     assert not is_channel(invalid_channel)
     assert is_channel(valid_channel)
+
 
 #########################################################################
