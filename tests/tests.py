@@ -73,6 +73,38 @@ def set_seed():
 ################################ TEST UTILS ################################
 
 
+@pytest.mark.parametrize('n_qubits,n_gates', [(50, 200) for _ in range(10)])
+def test_utils__hash(n_qubits, n_gates):
+    # Get random circuit
+    circuit = _get_rqc_non_unitary(n_qubits, n_gates)
+
+    # Get hash of all gates
+    _hash = tuple(map(hash, circuit))
+
+    # Calling it twice should give the same hash
+    assert (all(x == y for x, y in zip(_hash, map(hash, circuit))))
+
+    # Add tags to circuit
+    circuit_tags = Circuit(g.set_tags({'a': 1}) for g in circuit)
+
+    # By default, the full object is used to compute the hash. Therefore,
+    # adding tags should change the hash
+    assert (all(x != y for x, y in zip(_hash, map(hash, circuit_tags))))
+
+    # Howerver, tags can be ignored
+    assert (all(
+        x == y for x, y in zip((g.__get_hash__(ignore_keys=['_Tags__tags'])
+                                for g in circuit), (g.__get_hash__(
+                                    ignore_keys=['_Tags__tags'])
+                                                    for g in circuit_tags))))
+
+    # Similarly for qubits
+    circuit_no_qubits = Circuit(g.on() for g in circuit)
+    assert (all(x == y for x, y in zip((g.__get_hash__(
+        ignore_keys=['_QubitGate__qubits']) for g in circuit), (g.__get_hash__(
+            ignore_keys=['_QubitGate__qubits']) for g in circuit_no_qubits))))
+
+
 @pytest.mark.parametrize(
     't', [t for t in ['float32', 'float64', 'float128'] for _ in range(100)])
 def test_utils__to_complex(t):
