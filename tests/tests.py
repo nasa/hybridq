@@ -24,7 +24,7 @@ from hybridq.dm.circuit import simulation as dm_simulation
 from hybridq.noise.channel import GlobalDepolarizingChannel, \
     LocalDepolarizingChannel, LocalPauliChannel, AmplitudeDampingChannel, \
     LocalDephasingChannel
-from hybridq.noise.utils import ptrace, choi_matrix
+from hybridq.noise.utils import ptrace, choi_matrix, is_channel
 from hybridq.circuit import Circuit, simulation, utils
 from hybridq.circuit.simulation import clifford
 from hybridq.extras.io.cirq import to_cirq
@@ -2731,5 +2731,16 @@ def test_noise_1__choi(n):
     rho_t_choi = ptrace(np.kron(np.eye(d), rho.T) @ C, list(range(n)))
 
     np.testing.assert_array_almost_equal(rho_t, rho_t_choi)
+
+
+def test_noise_1__is_channel():
+    # check the first channel fails the test
+    ldc = LocalDephasingChannel((0,1), {0: 1.01, 1: 0.99})
+
+    invalid_channel = ldc[0]
+    valid_channel = ldc[1]
+
+    assert not is_channel(invalid_channel)
+    assert is_channel(valid_channel)
 
 #########################################################################
