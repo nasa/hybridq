@@ -464,9 +464,13 @@ def LocalPauliChannel(qubits: tuple[any, ...],
     """
 
     return tuple(
-        GlobalPauliChannel(
-            qubits=(q,), name=name, s=s, tags=tags, copy=copy, atol=atol)
-        for q in qubits)
+        GlobalPauliChannel(qubits=(q,),
+                           name=name,
+                           s=s,
+                           tags=tags,
+                           copy=copy,
+                           atol=atol,
+                           use_cache=use_cache) for q in qubits)
 
 
 def LocalDepolarizingChannel(qubits: tuple[any, ...],
