@@ -660,7 +660,7 @@ def LocalDephasingChannel(qubits: tuple[any, ...],
     p = _convert_to_dict(qubits, p)
 
     if pauli_index not in range(4):
-        raise ValueError("`")
+        raise ValueError("`pauli_index` must be in {0,1,2,3}")
 
     def s_p(pi):
         s = [1-pi, 0, 0, 0]
