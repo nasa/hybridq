@@ -488,9 +488,9 @@ def LocalPauliChannel(qubits: tuple[any, ...],
 
 
 def LocalDepolarizingChannel(qubits: tuple[any, ...],
-                      p: {float, array, dict},
-                      name: str = 'LOCAL_DEPOLARIZING_CHANNEL',
-                      **kwargs) -> tuple[LocalDepolarizingChannel, ...]:
+                             p: {float, array, dict},
+                             name: str = 'LOCAL_DEPOLARIZING_CHANNEL',
+                             **kwargs) -> tuple[LocalDepolarizingChannel, ...]:
     """
     Return a `tuple` of `LocalDepolarizingChannel`s acting independently
     on `qubits`.
@@ -520,18 +520,17 @@ def LocalDepolarizingChannel(qubits: tuple[any, ...],
 
     def s_p(pi):
         # s array for p, for a single qubit
-        return [pi/4 if i > 0 else 1 - 0.75*pi for i in range(4)]
+        return [pi / 4 if i > 0 else 1 - 0.75 * pi for i in range(4)]
 
     return tuple(
-        GlobalPauliChannel(
-            qubits=(q,), name=name, s=s_p(p[q]), **kwargs)
+        GlobalPauliChannel(qubits=(q,), name=name, s=s_p(p[q]), **kwargs)
         for q in qubits)
 
 
 def GlobalDepolarizingChannel(qubits: tuple[any, ...],
-                      p: float,
-                      name: str = 'GLOBAL_DEPOLARIZING_CHANNEL',
-                      **kwargs) -> GlobalDepolarizingChannel:
+                              p: float,
+                              name: str = 'GLOBAL_DEPOLARIZING_CHANNEL',
+                              **kwargs) -> GlobalDepolarizingChannel:
     """
     Return a depolarizing channel that acts on all qubits
 
@@ -559,10 +558,10 @@ def GlobalDepolarizingChannel(qubits: tuple[any, ...],
 
 
 def LocalDephasingChannel(qubits: tuple[any, ...],
-                      p: {float, array, dict},
-                      pauli_index: int = 3,
-                      name: str = 'LOCAL_DEPHASING_CHANNEL',
-                      **kwargs) -> tuple[LocalDephasingChannel, ...]:
+                          p: {float, array, dict},
+                          pauli_index: int = 3,
+                          name: str = 'LOCAL_DEPHASING_CHANNEL',
+                          **kwargs) -> tuple[LocalDephasingChannel, ...]:
     """
     Return a `tuple` of `LocalDephasingChannel`s acting independently
     on `qubits`.
@@ -596,13 +595,12 @@ def LocalDephasingChannel(qubits: tuple[any, ...],
         raise ValueError("`pauli_index` must be in {0,1,2,3}")
 
     def s_p(pi):
-        s = [1-pi, 0, 0, 0]
+        s = [1 - pi, 0, 0, 0]
         s[pauli_index] += pi
         return s
 
     return tuple(
-        GlobalPauliChannel(
-            qubits=(q,), name=name, s=s_p(p[q]), **kwargs)
+        GlobalPauliChannel(qubits=(q,), name=name, s=s_p(p[q]), **kwargs)
         for q in qubits)
 
 
@@ -648,9 +646,9 @@ def AmplitudeDampingChannel(qubits: tuple[any, ...],
     p = _convert_to_dict(qubits, p)
 
     def adc_kraus(gamma_i, pi):
-        E0 = np.sqrt(pi) * np.diag([1, np.sqrt(1-gamma_i)])
+        E0 = np.sqrt(pi) * np.diag([1, np.sqrt(1 - gamma_i)])
         E1 = np.sqrt(pi) * np.array([[0, np.sqrt(gamma_i)], [0, 0]])
-        E2 = np.sqrt(1 - pi) * np.diag([np.sqrt(1-gamma_i), 1])
+        E2 = np.sqrt(1 - pi) * np.diag([np.sqrt(1 - gamma_i), 1])
         E3 = np.sqrt(1 - pi) * np.array([[0, 0], [np.sqrt(gamma_i), 0]])
 
         mats = []
@@ -660,12 +658,13 @@ def AmplitudeDampingChannel(qubits: tuple[any, ...],
                 mats += [m]
         return tuple(mats)
 
-    return tuple(MatrixChannel(LMatrices=adc_kraus(gamma[q], p[q]),
-                         qubits=(q,),
-                         s=1,
-                         name=name,
-                         atol=atol,
-                         **kwargs) for q in qubits)
+    return tuple(
+        MatrixChannel(LMatrices=adc_kraus(gamma[q], p[q]),
+                      qubits=(q,),
+                      s=1,
+                      name=name,
+                      atol=atol,
+                      **kwargs) for q in qubits)
 
 
 def _convert_to_dict(qubits, arg):
