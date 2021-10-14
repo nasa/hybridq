@@ -112,73 +112,6 @@ class _MatrixChannel(BaseChannel,
         # Return Kraus operator
         return self.__Kraus
 
-    def is_channel(self, atol=1e-8) -> bool:
-        """
-        Checks using the Choi matrix whether or not `self` defines
-        a valid quantum channel.
-        """
-        C = self.choi_matrix()
-        dim = int(np.sqrt(C.shape[0]))
-
-        # trace preserving
-        tp = np.isclose(C.trace(), dim, atol=atol)
-
-        # hermiticity preserving
-        hp = np.allclose(C, C.conj().T, atol=atol)
-
-        # completely positive
-        apprx_gtr = lambda e, x: np.real(e) >= x or np.isclose(e, x,
-                                                               atol=atol)
-        cp = np.all(
-            [apprx_gtr(e, 0) and np.isclose(np.imag(e), 0, atol=atol)
-             for e in np.linalg.eigvals(C)])
-
-        return tp and hp and cp
-
-    def choi_matrix(self, order: tuple[any, ...] = None,
-            *,
-            cache_map: bool = True) -> np.ndarray:
-        """
-        return the Choi matrix for channel of shape (d**2, d**2)
-        for a d-dimensional Hilbert space.
-
-        The channel can be applied as:
-        Lambda(rho) = Tr_0[ (I \otimes rho^T) C]
-        where C is the Choi matrix.
-
-        Parameters
-        ----------
-        order: tuple[any, ...], optional
-            If provided, Kraus' map is ordered accordingly to `order`.
-            See `self.map()`
-        cache_map: bool, optional
-            If `cache_map == True`, then the output of `self.map()` and `Choi`
-             are cached for the next call. (default: `True`).
-        """
-        if cache_map and getattr(
-                self, '_cache',
-                None) and 'Choi' in self._cache:
-            # Get cached Choi matrix
-            C = self._cache['Choi']
-        else:
-            op = self.map(order, cache_map=cache_map)
-            # dimension (assume all have same shape)
-            d = self.Kraus.gates[0][0].matrix().shape[0]
-
-            C = np.zeros(d ** 4, dtype=complex).reshape(d ** 2, d ** 2)
-            for ij in range(d ** 2):
-                Eij = np.zeros(d ** 2)
-                Eij[ij] = 1
-                map = op @ Eij  # using vectorization
-                C += np.kron(Eij.reshape((d, d)), map.reshape((d, d)))
-
-            if cache_map:
-                # since cache is updated by self.map(), we just need to
-                # add the Choi matrix to the cache.
-                self._cache['Choi'] = C
-
-        return C
-
     def map(self,
             order: tuple[any, ...] = None,
             *,
@@ -648,7 +581,7 @@ def LocalDephasingChannel(qubits: tuple[any, ...],
         Dephasing probability for qubits.
         If a single value is passed, the same is used for all qubits.
         If a one dimensional array is passed, it must be the same length
-        of `qubits`, which corresponds to each depolarizing probability.
+        of `qubits`, which corresponds to each dephasing probability.
         Otherwise a dictionary mapping from `qubit`s to probability
         can be given.
     pauli_index: int

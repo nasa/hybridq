@@ -45,7 +45,7 @@ def add_depolarizing_noise(c: Circuit, probs=(0., 0.)):
     """
     Given a `Circuit`, add depolarizing noise after each instance of
     a `Gate`, with the same locality as the gate.
-    Note, noise will not be added after a `BaseChannel`
+    Note, noise will not be added after an instance of `BaseChannel`
 
     c: Circuit
         The `Circuit` which will be modified. Note, a new `Circuit` is
@@ -53,7 +53,8 @@ def add_depolarizing_noise(c: Circuit, probs=(0., 0.)):
     probs: tuple[float, ...]
         depolarizing probabilities as a tuple, where the k'th value corresponds
         to the probability of depolarizing for a k-local gate.
-        probs should be the size of the largest locality `Gate` in the circuit.
+        `probs` should be the size of the largest locality `Gate`
+        in the circuit.
     """
     c2 = SuperCircuit()
     for g in c:
@@ -136,5 +137,69 @@ def ptrace(state: np.ndarray, keep: {int, list[int]},
         return np.einsum('ijkk->ij', state)
 
 
+def is_channel(channel: MatrixChannel, order: tuple[any, ...] = None,
+                atol=1e-8, **kwargs) -> bool:
+    """
+    Checks using the Choi matrix whether or not `channel` defines
+    a valid quantum channel.
+    That is, we check it is a valid CPTP map.
+
+    Parameters
+    ----------
+    order: tuple[any, ...], optional
+        If provided, Kraus' map is ordered accordingly to `order`.
+        See `MatrixChannel.map()`
+    atol: float, optional
+        absolute tolerance to use for determining channel is CPTP.
+    kwargs: kwargs for `MatrixChannel.map()`
+    """
+    C = choi_matrix(channel, order, **kwargs)
+    dim = int(np.sqrt(C.shape[0]))
+
+    # trace preserving
+    tp = np.isclose(C.trace(), dim, atol=atol)
+
+    # hermiticity preserving
+    hp = np.allclose(C, C.conj().T, atol=atol)
+
+    # completely positive
+    apprx_gtr = lambda e, x: np.real(e) >= x or np.isclose(e, x,
+                                                           atol=atol)
+    cp = np.all(
+        [apprx_gtr(e, 0) and np.isclose(np.imag(e), 0, atol=atol)
+         for e in np.linalg.eigvals(C)])
+
+    return tp and hp and cp
 
 
+def choi_matrix(channel: MatrixChannel,
+                order: tuple[any, ...] = None,
+                **kwargs) -> np.ndarray:
+    """
+    return the Choi matrix for channel, of shape (d**2, d**2)
+    for a d-dimensional Hilbert space.
+
+    The channel can be applied as:
+    Lambda(rho) = Tr_0[ (I \otimes rho^T) C]
+    where C is the Choi matrix.
+
+    Parameters
+    ----------
+    order: tuple[any, ...], optional
+        If provided, Kraus' map is ordered accordingly to `order`.
+        See `MatrixChannel.map()`
+    kwargs: kwargs for `MatrixChannel.map()`
+    """
+
+    op = channel.map(order, **kwargs)
+    # dimension (assume all have same shape)
+    d = channel.Kraus.gates[0][0].matrix().shape[0]
+
+    C = np.zeros(d ** 4, dtype=complex).reshape(d ** 2, d ** 2)
+    for ij in range(d ** 2):
+        Eij = np.zeros(d ** 2)
+        Eij[ij] = 1
+        map = op @ Eij  # using vectorization
+        C += np.kron(Eij.reshape((d, d)), map.reshape((d, d)))
+
+    return C
