@@ -357,9 +357,11 @@ def GlobalPauliChannel(qubits: tuple[any, ...],
     qubits: tuple[any, ...]
         Qubits the `LocalPauliChannel`s will act on.
     s: {float, array, dict}
-        Weight for Pauli matrices. The diagonal of `s` is set to `1`.
-        Similarly, if `s` is a one dimensional array, then the diagonal of `s`
-        is set to that array.  If `s` is a `dict`, weights can be specified by
+        Weight for Pauli matrices.
+        If `s` is a float, the diagonal of the matrix s_ij is set to `s`.
+        Similarly, if `s` is a one dimensional array, then the diagonal of
+        matrix s_ij is set to that array.
+        If `s` is a `dict`, weights can be specified by
         using the tokens `I`, `X`, `Y` and `Z`. For instance, `dict(XYYZ=0.2)`
         will set the weight for `sigma_i1 == X`, `sigma_i2 == Y`, `sigma_j1 == Y`
         and `sigma_j2 == Z` to `0.2`.
@@ -476,10 +478,211 @@ def LocalPauliChannel(qubits: tuple[any, ...],
         If `copy == True`, then `s` is copied instead of passed by reference
         (default: `True`).
     atol: float, optional
-        Use `atol` as absolute tollerance while checking.
+        Use `atol` as absolute tolerance while checking.
     """
 
     return tuple(
         GlobalPauliChannel(
             qubits=(q,), name=name, s=s, tags=tags, copy=copy, atol=atol)
         for q in qubits)
+
+
+def LocalDepolarizingChannel(qubits: tuple[any, ...],
+                      p: {float, array, dict},
+                      name: str = 'LOCAL_DEPOLARIZING_CHANNEL',
+                      **kwargs) -> tuple[LocalDepolarizingChannel, ...]:
+    """
+    Return a `tuple` of `LocalDepolarizingChannel`s acting independently
+    on `qubits`.
+    More precisely, each channel has the form:
+
+        rho -> E_i(rho) = (1-p_i) rho + p_i * I/2
+
+    with `rho` being a density matrix, p_i the user specified depolarizing
+    probability for qubit i, and I the identity matrix.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `LocalDepolarizingChannel`s will act on.
+    p: {float, array, dict}
+        Depolarizing probability for qubits.
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length
+        of `qubits`, which corresponds to each depolarizing probability.
+        Otherwise a dictionary mapping from `qubit`s to probability
+        can be given.
+    name: str, optional
+        Alternative name for channel.
+    kwargs: kwargs for GlobalPauliChannel
+    """
+    p = _convert_to_dict(qubits, p)
+
+    def s_p(pi):
+        # s array for p, for a single qubit
+        return [pi/4 if i > 0 else 1 - 0.75*pi for i in range(4)]
+
+    return tuple(
+        GlobalPauliChannel(
+            qubits=(q,), name=name, s=s_p(p[q]), **kwargs)
+        for q in qubits)
+
+
+def GlobalDepolarizingChannel(qubits: tuple[any, ...],
+                      p: float,
+                      name: str = 'GLOBAL_DEPOLARIZING_CHANNEL',
+                      **kwargs) -> GlobalDepolarizingChannel:
+    """
+    Return a depolarizing channel that acts on all qubits
+
+        rho -> E(rho) = (1-p) rho + p * I/d
+
+    with `rho` being a density matrix of `len(qubits)` qubits,
+    p the user specified depolarizing probability,
+    I the identity matrix, and d=2**len(qubits) the full dimension.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `GlobalDepolarizingChannel` will act on.
+    p: float
+        Depolarizing probability.
+    name: str, optional
+        Alternative name for channel.
+    kwargs: kwargs for GlobalPauliChannel
+    """
+    nq = len(qubits)
+    pi = p / 4**nq
+    s = [pi if i > 0 else 1 - p + pi for i in range(4**nq)]
+
+    return GlobalPauliChannel(qubits=qubits, name=name, s=s, **kwargs)
+
+
+def LocalDephasingChannel(qubits: tuple[any, ...],
+                      p: {float, array, dict},
+                      pauli_index: int = 3,
+                      name: str = 'LOCAL_DEPHASING_CHANNEL',
+                      **kwargs) -> tuple[LocalDephasingChannel, ...]:
+    """
+    Return a `tuple` of `LocalDephasingChannel`s acting independently
+    on `qubits`.
+    More precisely, each channel has the form:
+
+        rho -> E_i(rho) = (1-p_i) rho + p_i * σ rho σ
+
+    with `rho` being a density matrix, p_i the user specified depolarizing
+    probability for qubit i, and σ a user specified Pauli matrix.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `LocalDephasingChannel`s will act on.
+    p: {float, array, dict}
+        Dephasing probability for qubits.
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length
+        of `qubits`, which corresponds to each dephasing probability.
+        Otherwise a dictionary mapping from `qubit`s to probability
+        can be given.
+    pauli_index: int
+        Integer in {0,1,2,3} representing the dephasing axis (Pauli marix).
+    name: str, optional
+        Alternative name for channel.
+    kwargs: kwargs for GlobalPauliChannel
+    """
+    p = _convert_to_dict(qubits, p)
+
+    if pauli_index not in range(4):
+        raise ValueError("`pauli_index` must be in {0,1,2,3}")
+
+    def s_p(pi):
+        s = [1-pi, 0, 0, 0]
+        s[pauli_index] += pi
+        return s
+
+    return tuple(
+        GlobalPauliChannel(
+            qubits=(q,), name=name, s=s_p(p[q]), **kwargs)
+        for q in qubits)
+
+
+def AmplitudeDampingChannel(qubits: tuple[any, ...],
+                            gamma: {float, array, dict},
+                            p: {float, array, dict} = 1,
+                            name: str = 'AMPLITUDE_DAMPING_CHANNEL',
+                            atol: float = 1e-8,
+                            **kwargs) -> tuple[AmplitudeDampingChannel, ...]:
+    """
+    Return a `tuple` of `AmplitudeDampingChannel`s acting independently
+    on `qubits`. There are 4 Kraus operators (for each qubit):
+    sqrt(p) * [ [1, 0], [0, sqrt(1-gamma)] ]
+    sqrt(p) * [ [0, sqrt(gamma)], [0, 0] ]
+    sqrt(1-p) * [ [sqrt(1-gamma), 0], [0, 1] ]
+    sqrt(1-p) * [ [0, 0], [sqrt(gamma), 0] ]
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `AmplitudeDampingChannel`s will act on.
+    gamma: {float, array, dict}
+        Transition rate (0->1 and 1->0).
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length
+        of `qubits`, which corresponds to the value for each qubit.
+        Otherwise a dictionary mapping from `qubit`s to gamma
+        can be given.
+    p: {float, array, dict}
+        1-p is probability for the 'excitation' channel (1->0).
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length
+        of `qubits`, which corresponds to the value for each qubit.
+        Otherwise a dictionary mapping from `qubit`s to gamma
+        can be given.
+    name: str, optional
+        Alternative name for channel.
+    atol: float, optional
+        Use `atol` as absolute tolerance while checking.
+    kwargs: kwargs for MatrixChannel
+    """
+    gamma = _convert_to_dict(qubits, gamma)
+    p = _convert_to_dict(qubits, p)
+
+    def adc_kraus(gamma_i, pi):
+        E0 = np.sqrt(pi) * np.diag([1, np.sqrt(1-gamma_i)])
+        E1 = np.sqrt(pi) * np.array([[0, np.sqrt(gamma_i)], [0, 0]])
+        E2 = np.sqrt(1 - pi) * np.diag([np.sqrt(1-gamma_i), 1])
+        E3 = np.sqrt(1 - pi) * np.array([[0, 0], [np.sqrt(gamma_i), 0]])
+
+        mats = []
+        # drop zero operators
+        for m in [E0, E1, E2, E3]:
+            if not np.allclose(m, 0, atol=atol):
+                mats += [m]
+        return tuple(mats)
+
+    return tuple(MatrixChannel(LMatrices=adc_kraus(gamma[q], p[q]),
+                         qubits=(q,),
+                         s=1,
+                         name=name,
+                         atol=atol,
+                         **kwargs) for q in qubits)
+
+
+def _convert_to_dict(qubits, arg):
+    if isinstance(arg, (float, int)):
+        arg = {q: arg for q in qubits}
+    elif isinstance(arg, dict):
+        pass
+    else:
+        try:
+            arg = list(arg)
+            if len(arg) != len(qubits):
+                raise ValueError("Must have exactly one value per qubit")
+
+            arg = {q: arg[i] for (i, q) in enumerate(qubits)}
+        except TypeError:
+            raise ValueError("Must be convertible to list")
+
+    if set(arg.keys()) != set(qubits):
+        raise ValueError("Each qubit must be assigned")
+    return arg
