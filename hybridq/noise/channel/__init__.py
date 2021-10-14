@@ -17,4 +17,8 @@ specific language governing permissions and limitations under the License.
 
 from hybridq.noise.channel.channel import MatrixChannel, \
                                           LocalPauliChannel, \
-                                          GlobalPauliChannel
+                                          GlobalPauliChannel, \
+                                          LocalDepolarizingChannel, \
+                                          GlobalDepolarizingChannel, \
+                                          AmplitudeDampingChannel, \
+                                          LocalDephasingChannel

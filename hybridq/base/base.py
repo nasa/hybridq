@@ -356,9 +356,25 @@ class __Base__:
 
     ######################################### HASH METHOD ######################################
 
+    def __get_hash__(self,
+                     *,
+                     ignore_sdict: tuple[str, ...] = tuple(),
+                     ignore_methods: tuple[str, ...] = tuple(),
+                     ignore_keys: tuple[str, ...] = tuple()):
+        """
+        Get hash of `__Base__`.
+
+        See Also
+        --------
+        __Base__.__reduce__
+        """
+        return hash(
+            self.__reduce__(ignore_sdict=ignore_sdict,
+                            ignore_methods=ignore_methods,
+                            ignore_keys=ignore_keys)[1:])
+
     def __hash__(self) -> int:
-        from pickle import dumps
-        return hash(dumps(self))
+        return self.__get_hash__()
 
     ##################################### METHODS FOR PICKLE ###################################
 

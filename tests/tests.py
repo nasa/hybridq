@@ -21,6 +21,10 @@ from hybridq.gate.utils import get_available_gates
 from hybridq.extras.random import get_random_gate, get_rqc, get_random_indexes
 from hybridq.dm.circuit import Circuit as SuperCircuit
 from hybridq.dm.circuit import simulation as dm_simulation
+from hybridq.noise.channel import GlobalDepolarizingChannel, \
+    LocalDepolarizingChannel, LocalPauliChannel, AmplitudeDampingChannel, \
+    LocalDephasingChannel
+from hybridq.noise.channel.utils import ptrace, choi_matrix, is_channel
 from hybridq.circuit import Circuit, simulation, utils
 from hybridq.circuit.simulation import clifford
 from hybridq.extras.io.cirq import to_cirq
@@ -30,7 +34,7 @@ from hybridq.utils.utils import _type
 from functools import partial as partial_func
 from opt_einsum import get_symbol, contract
 from more_itertools import flatten
-from itertools import chain
+from itertools import chain, permutations
 from tqdm.auto import tqdm
 from warnings import warn
 import numpy as np
@@ -71,6 +75,38 @@ def set_seed():
 
 
 ################################ TEST UTILS ################################
+
+
+@pytest.mark.parametrize('n_qubits,n_gates', [(50, 200) for _ in range(10)])
+def test_utils__hash(n_qubits, n_gates):
+    # Get random circuit
+    circuit = _get_rqc_non_unitary(n_qubits, n_gates)
+
+    # Get hash of all gates
+    _hash = tuple(map(hash, circuit))
+
+    # Calling it twice should give the same hash
+    assert (all(x == y for x, y in zip(_hash, map(hash, circuit))))
+
+    # Add tags to circuit
+    circuit_tags = Circuit(g.set_tags({'a': 1}) for g in circuit)
+
+    # By default, the full object is used to compute the hash. Therefore,
+    # adding tags should change the hash
+    assert (all(x != y for x, y in zip(_hash, map(hash, circuit_tags))))
+
+    # Howerver, tags can be ignored
+    assert (all(
+        x == y for x, y in zip((g.__get_hash__(ignore_keys=['_Tags__tags'])
+                                for g in circuit), (g.__get_hash__(
+                                    ignore_keys=['_Tags__tags'])
+                                                    for g in circuit_tags))))
+
+    # Similarly for qubits
+    circuit_no_qubits = Circuit(g.on() for g in circuit)
+    assert (all(x == y for x, y in zip((g.__get_hash__(
+        ignore_keys=['_QubitGate__qubits']) for g in circuit), (g.__get_hash__(
+            ignore_keys=['_QubitGate__qubits']) for g in circuit_no_qubits))))
 
 
 @pytest.mark.parametrize(
@@ -2638,6 +2674,118 @@ def test_dm_3__simulation_3(n_qubits, n_gates):
 
     # Check
     assert (np.allclose(np.diag(_rho_1), probs, atol=1e-3))
+
+
+@pytest.mark.parametrize('nq', [1, 2, 3])
+@pytest.mark.parametrize('p', [0.0, 0.25, 0.5, 1.0])
+def test_noise_1__GlobalDepolarizingChannel(nq, p):
+    np.random.seed(1)
+    d = 2**nq
+    psi = np.random.rand(d) + 1j * np.random.rand(d)
+    psi = psi / np.linalg.norm(psi)
+    rho = np.outer(psi, psi.conj())
+    Id = np.eye(d)
+
+    expected = (1 - p) * rho + (p / d) * Id
+
+    gpc = GlobalDepolarizingChannel(tuple(range(nq)), p)
+    E = gpc.map()
+    rho_v = np.reshape(rho, (d**2, 1))
+    rho_t = np.reshape(E @ rho_v, (d, d))
+
+    np.testing.assert_array_almost_equal(expected, rho_t, decimal=6)
+
+
+def test_noise_1__local_channels():
+    """
+    This test checks local channels are simulated correctly,
+    in both the tensor network backend, and evolution-einsum.
+    """
+    d = 2**4
+    adc_gamma = 0.75
+    q0, q1, q2, q3 = 0, 1, 2, 3
+
+    c = SuperCircuit()
+    c += LocalPauliChannel((q0,), s=[0.25, 0.0, 0, 0.75])
+    c += AmplitudeDampingChannel((q1,), gamma=adc_gamma)
+    c += LocalDepolarizingChannel((q2,), p=0.1)
+    c += LocalDephasingChannel((q3,), p=0.15, pauli_index=2)
+
+    rho = np.reshape(
+        dm_simulation.simulate(c, '+', optimize='evolution-einsum'), (d, d))
+
+    # state is product state from the above channels
+    rho0_expected = np.array([[0.5, -0.25], [-0.25, 0.5]])
+    rho1_expected = 0.5 * np.array([[1 + adc_gamma,
+                                     np.sqrt(1 - adc_gamma)],
+                                    [np.sqrt(1 - adc_gamma), 1 - adc_gamma]])
+    rho2_expected = np.array([[0.5, 0.5 * 0.9], [0.5 * 0.9, 0.5]])
+    rho3_expected = np.array([[1, 0.85 - 0.15], [0.85 - 0.15, 1]]) / 2
+
+    rho0 = ptrace(rho, q0)
+    rho1 = ptrace(rho, q1)
+    rho2 = ptrace(rho, q2)
+    rho3 = ptrace(rho, q3)
+
+    rho0_tn = dm_simulation.simulate(c,
+                                     '+',
+                                     final_state='.abc.abc',
+                                     optimize='tn')
+    rho1_tn = dm_simulation.simulate(c,
+                                     '+',
+                                     final_state='a.bca.bc',
+                                     optimize='tn')
+    rho2_tn = dm_simulation.simulate(c,
+                                     '+',
+                                     final_state='ab.cab.c',
+                                     optimize='tn')
+    rho3_tn = dm_simulation.simulate(c,
+                                     '+',
+                                     final_state='abc.abc.',
+                                     optimize='tn')
+
+    np.testing.assert_array_almost_equal(rho0, rho0_expected)
+    np.testing.assert_array_almost_equal(rho1, rho1_expected)
+    np.testing.assert_array_almost_equal(rho2, rho2_expected)
+    np.testing.assert_array_almost_equal(rho3, rho3_expected)
+
+    np.testing.assert_array_almost_equal(rho0_tn, rho0_expected)
+    np.testing.assert_array_almost_equal(rho1_tn, rho1_expected)
+    np.testing.assert_array_almost_equal(rho2_tn, rho2_expected)
+    np.testing.assert_array_almost_equal(rho3_tn, rho3_expected)
+
+
+@pytest.mark.parametrize('n', [1, 2])
+def test_noise_1__choi(n):
+    """
+    Choi matrix acts to produce the output state as
+    rho = Tr_0[ (I \otimes rho_0^T) C)
+    """
+    np.random.seed(1)
+    d = 2**n
+    psi = np.random.rand(d) + 1j * np.random.rand(d)
+    psi = psi / np.linalg.norm(psi)
+    rho = np.outer(psi, psi.conj())
+
+    g = GlobalDepolarizingChannel(tuple(range(n)), p=0.15)
+    rho_t = np.reshape(g.map() @ np.reshape(rho, (d**2, 1)), (d, d))
+
+    C = choi_matrix(g)
+    # trace out first n qubits representing the identity part
+    rho_t_choi = ptrace(np.kron(np.eye(d), rho.T) @ C, list(range(n)))
+
+    np.testing.assert_array_almost_equal(rho_t, rho_t_choi)
+
+
+def test_noise_1__is_channel():
+    # check the first channel fails the test
+    ldc = LocalDephasingChannel((0, 1), {0: 1.01, 1: 0.99})
+
+    invalid_channel = ldc[0]
+    valid_channel = ldc[1]
+
+    assert not is_channel(invalid_channel)
+    assert is_channel(valid_channel)
 
 
 #########################################################################
