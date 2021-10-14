@@ -137,8 +137,8 @@ def ptrace(state: np.ndarray, keep: {int, list[int]},
         return np.einsum('ijkk->ij', state)
 
 
-def is_channel(channel: MatrixChannel, order: tuple[any, ...] = None,
-                atol=1e-8, **kwargs) -> bool:
+def is_channel(channel: MatrixChannel, atol=1e-8,
+               order: tuple[any, ...] = None, **kwargs) -> bool:
     """
     Checks using the Choi matrix whether or not `channel` defines
     a valid quantum channel.
@@ -146,11 +146,11 @@ def is_channel(channel: MatrixChannel, order: tuple[any, ...] = None,
 
     Parameters
     ----------
+    atol: float, optional
+        absolute tolerance to use for determining channel is CPTP.
     order: tuple[any, ...], optional
         If provided, Kraus' map is ordered accordingly to `order`.
         See `MatrixChannel.map()`
-    atol: float, optional
-        absolute tolerance to use for determining channel is CPTP.
     kwargs: kwargs for `MatrixChannel.map()`
     """
     C = choi_matrix(channel, order, **kwargs)

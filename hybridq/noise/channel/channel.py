@@ -504,7 +504,7 @@ def LocalDepolarizingChannel(qubits: tuple[any, ...],
     Parameters
     ----------
     qubits: tuple[any, ...]
-        Qubits the `LocalPauliChannel`s will act on.
+        Qubits the `LocalDepolarizingChannel`s will act on.
     p: {float, array, dict}
         Depolarizing probability for qubits.
         If a single value is passed, the same is used for all qubits.
@@ -544,7 +544,7 @@ def GlobalDepolarizingChannel(qubits: tuple[any, ...],
     Parameters
     ----------
     qubits: tuple[any, ...]
-        Qubits the `LocalPauliChannel`s will act on.
+        Qubits the `GlobalDepolarizingChannel` will act on.
     p: float
         Depolarizing probability.
     name: str, optional
@@ -576,7 +576,7 @@ def LocalDephasingChannel(qubits: tuple[any, ...],
     Parameters
     ----------
     qubits: tuple[any, ...]
-        Qubits the `LocalPauliChannel`s will act on.
+        Qubits the `LocalDephasingChannel`s will act on.
     p: {float, array, dict}
         Dephasing probability for qubits.
         If a single value is passed, the same is used for all qubits.
@@ -676,9 +676,13 @@ def _convert_to_dict(qubits, arg):
     else:
         try:
             arg = list(arg)
+            if len(arg) != len(qubits):
+                raise ValueError("Must have exactly one value per qubit")
+            
             arg = {q: arg[i] for (i, q) in enumerate(qubits)}
         except TypeError:
             raise ValueError("Must be convertible to list")
+
     if set(arg.keys()) != set(qubits):
         raise ValueError("Each qubit must be assigned")
     return arg
