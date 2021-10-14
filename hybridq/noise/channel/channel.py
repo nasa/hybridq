@@ -585,9 +585,9 @@ def LocalDepolarizingChannel(qubits: tuple[any, ...],
     """
     p = _convert_to_dict(qubits, p)
 
-    def s_p(p):
+    def s_p(pi):
         # s array for p, for a single qubit
-        return [p/4 if i > 0 else 1 - 0.75*p for i in range(4)]
+        return [pi/4 if i > 0 else 1 - 0.75*pi for i in range(4)]
 
     return tuple(
         GlobalPauliChannel(
@@ -598,7 +598,7 @@ def LocalDepolarizingChannel(qubits: tuple[any, ...],
 def GlobalDepolarizingChannel(qubits: tuple[any, ...],
                       p: float,
                       name: str = 'GLOBAL_DEPOLARIZING_CHANNEL',
-                      **kwargs) -> GlobalPauliChannel:
+                      **kwargs) -> GlobalDepolarizingChannel:
     """
     Return a depolarizing channel that acts on all qubits
 
@@ -623,6 +623,54 @@ def GlobalDepolarizingChannel(qubits: tuple[any, ...],
     s = [pi if i > 0 else 1 - p + pi for i in range(4**nq)]
 
     return GlobalPauliChannel(qubits=qubits, name=name, s=s, **kwargs)
+
+
+def LocalDephasingChannel(qubits: tuple[any, ...],
+                      p: {float, array, dict},
+                      pauli_index: int = 3,
+                      name: str = 'LOCAL_DEPHASING_CHANNEL',
+                      **kwargs) -> tuple[LocalDephasingChannel, ...]:
+    """
+    Return a `tuple` of `LocalDephasingChannel`s acting independently
+    on `qubits`.
+    More precisely, each channel has the form:
+
+        rho -> E_i(rho) = (1-p_i) rho + p_i * σ rho σ
+
+    with `rho` being a density matrix, p_i the user specified depolarizing
+    probability for qubit i, and σ a user specified Pauli matrix.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `LocalPauliChannel`s will act on.
+    p: {float, array, dict}
+        Dephasing probability for qubits.
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length
+        of `qubits`, which corresponds to each depolarizing probability.
+        Otherwise a dictionary mapping from `qubit`s to probability
+        can be given.
+    pauli_index: int
+        Integer in {0,1,2,3} representing the dephasing axis (Pauli marix).
+    name: str, optional
+        Alternative name for channel.
+    kwargs: kwargs for GlobalPauliChannel
+    """
+    p = _convert_to_dict(qubits, p)
+
+    if pauli_index not in range(4):
+        raise ValueError("`")
+
+    def s_p(pi):
+        s = [1-pi, 0, 0, 0]
+        s[pauli_index] += pi
+        return s
+
+    return tuple(
+        GlobalPauliChannel(
+            qubits=(q,), name=name, s=s_p(p[q]), **kwargs)
+        for q in qubits)
 
 
 def AmplitudeDampingChannel(qubits: tuple[any, ...],
