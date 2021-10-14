@@ -17,7 +17,6 @@ specific language governing permissions and limitations under the License.
 """
 
 from __future__ import annotations
-import numpy as np
 from hybridq.noise.channel.channel import BaseChannel, GlobalDepolarizingChannel
 from hybridq.dm.circuit import Circuit as SuperCircuit
 
