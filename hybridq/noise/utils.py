@@ -154,7 +154,7 @@ def is_channel(channel: MatrixChannel, order: tuple[any, ...] = None,
     kwargs: kwargs for `MatrixChannel.map()`
     """
     C = choi_matrix(channel, order, **kwargs)
-    dim = int(np.sqrt(C.shape[0]))
+    dim = _channel_dim(channel)
 
     # trace preserving
     tp = np.isclose(C.trace(), dim, atol=atol)
@@ -192,10 +192,9 @@ def choi_matrix(channel: MatrixChannel,
     """
 
     op = channel.map(order, **kwargs)
-    # dimension (assume all have same shape)
-    d = channel.Kraus.gates[0][0].matrix().shape[0]
+    d = _channel_dim(channel)
 
-    C = np.zeros(d ** 4, dtype=complex).reshape(d ** 2, d ** 2)
+    C = np.zeros((d**2, d**2), dtype=complex)
     for ij in range(d ** 2):
         Eij = np.zeros(d ** 2)
         Eij[ij] = 1
@@ -203,3 +202,8 @@ def choi_matrix(channel: MatrixChannel,
         C += np.kron(Eij.reshape((d, d)), map.reshape((d, d)))
 
     return C
+
+
+def _channel_dim(channel):
+    # dimension (assume all Kraus' have same shape)
+    return channel.Kraus.gates[0][0].matrix().shape[0]
