@@ -375,15 +375,35 @@ class __Base__:
                         methods=dict(Pickler.loads(methods)),
                         **Pickler.loads(staticvars))()
 
-    def __reduce__(self):
+    def __reduce__(self,
+                   *,
+                   ignore_sdict: tuple[str, ...] = tuple(),
+                   ignore_methods: tuple[str, ...] = tuple(),
+                   ignore_keys: tuple[str, ...] = tuple()):
         # Get class
         cls = type(self)
 
+        # Get static dict
+        sdict = {
+            k: v
+            for k, v in self.__static_dict__.items()
+            if k not in ignore_sdict
+        }
+
+        # Get methods
+        methods = {
+            k: v
+            for k, v in self.__methods_dict__.items()
+            if k not in ignore_methods
+        }
+
+        # Get state
+        state = {k: v for k, v in self.__dict__.items() if k not in ignore_keys}
+
         # Return reduction
-        return (cls.__generate__, (cls.__name__, cls.__get_mro__(),
-                                   Pickler.dumps(self.__static_dict__),
-                                   Pickler.dumps(self.__methods_dict__)),
-                self.__getstate__())
+        return (cls.__generate__,
+                (cls.__name__, cls.__get_mro__(), Pickler.dumps(sdict),
+                 Pickler.dumps(methods)), Pickler.dumps(state))
 
     #################################### STRING REPRESENTATION #################################
 
