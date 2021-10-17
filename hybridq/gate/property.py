@@ -889,9 +889,15 @@ class SchmidtGate(__Base__):
                 0)
         }
 
-    def __reduce__(self):
-        return super().__reduce__(ignore_keys=('_cached_hash',
-                                               '_cached_Matrix'))
+    def __reduce__(self,
+                   *,
+                   ignore_sdict: tuple[str, ...] = tuple(),
+                   ignore_methods: tuple[str, ...] = tuple(),
+                   ignore_keys: tuple[str, ...] = tuple()):
+        return super().__reduce__(ignore_sdict=ignore_sdict,
+                                  ignore_methods=ignore_methods,
+                                  ignore_keys=ignore_keys +
+                                  ('_cached_hash', '_cached_Matrix'))
 
     @property
     def Matrix(self):
