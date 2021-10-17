@@ -76,6 +76,11 @@ class Map(__Base__):
     def map(self, order: iter[any] = None):
         """
         Return map.
+
+        Parameters
+        ----------
+        order: tuple[any, ...], optional
+            If provided, Kraus' map is ordered accordingly to `order`.
         """
         # Get left and right qubits
         l_qubits, r_qubits = self.qubits

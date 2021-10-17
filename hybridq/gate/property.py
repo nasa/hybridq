@@ -820,8 +820,10 @@ def _s_transform(s):
 
     # If diagonal, just return the diagonal
     elif s.ndim == 2:
-        return _s_transform(np.diag(s)) if np.allclose(s, np.diag(
-            np.diag(s))) else s
+        # Return
+        return _s_transform(
+            np.diag(s)) if s.shape[0] == s.shape[1] and np.allclose(
+                s, np.diag(np.diag(s))) else s
 
     # Raise an implementation error
     else:
@@ -850,7 +852,8 @@ class SchmidtGate(__Base__):
 
         # If s is scalar, skip control
         if s.ndim == 0:
-            pass
+            if nr != nl:
+                _err = True
 
         # s is a vector
         elif s.ndim == 1:
@@ -953,17 +956,24 @@ class SchmidtGate(__Base__):
         elif s.ndim == 1:
             # Return Matrix
             return np.sum([
-                _merge(l_g, r_g, c) for c, l_g, r_g in zip(s, l_gates, r_gates)
+                _merge(l_g, r_g, s)
+                for s, l_g, r_g in zip(s, l_gates, r_gates)
+                if not np.isclose(s, 0)
             ],
                           axis=0)
 
         # Get \sum_ij s_ij L_i R_j
         elif s.ndim == 2:
+            from scipy.sparse import csr_matrix
+
+            # Convert to sparse matrix
+            s = csr_matrix(s)
+
             # Return Matrix
             return np.sum([
                 _merge(l_gates[i], r_gates[j], s[i, j])
-                for i in range(len(s))
-                for j in range(len(s))
+                for i, j in zip(*s.nonzero())
+                if not np.isclose(s[i, j], 0)
             ],
                           axis=0)
 
@@ -972,7 +982,10 @@ class SchmidtGate(__Base__):
 
 
 @requires('sample')
-@staticvars('gates', transform=dict(gates=lambda gates: BaseTupleGate(gates)))
+@staticvars(
+    'gates',
+    transform=dict(
+        gates=lambda gates: None if gates is None else BaseTupleGate(gates)))
 class StochasticGate(__Base__):
     pass
 
