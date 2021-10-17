@@ -834,7 +834,9 @@ def _s_transform(s):
 @staticvars('gates,s,_conj_rgates,_use_cache',
             _conj_rgates=False,
             _use_cache=True,
-            transform=dict(gates=_gate_transform, s=_s_transform),
+            transform=dict(gates=_gate_transform,
+                           s=_s_transform,
+                           _use_cache=lambda x: bool(x)),
             check=dict(s=(lambda s: s is None or 0 <= s.ndim <= 2,
                           "'s' cannot have more than two dimensions.")))
 class SchmidtGate(__Base__):
