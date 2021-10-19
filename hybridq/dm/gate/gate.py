@@ -44,11 +44,14 @@ def TupleSuperGate(gates: iter[{BaseGate, BaseSuperGate}] = tuple(),
     -------
     TupleSuperGate
     """
+    from hybridq.gate.gate import BaseGate
 
     # Return gate
     return pr.generate('TupleSuperGate',
                        (BaseSuperGate, dm_pr.BaseTupleSuperGate, pr.NameGate),
-                       name='STUPLE')(gates, tags=tags)
+                       name='STUPLE',
+                       _base_check={any: [BaseGate, BaseSuperGate]})(gates,
+                                                                     tags=tags)
 
 
 @dm_pr.staticvars('l_qubits,r_qubits')
