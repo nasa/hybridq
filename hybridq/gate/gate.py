@@ -577,7 +577,8 @@ def TupleGate(gates: iter[BaseGate] = tuple(),
 
     # Return gate
     return pr.generate('TupleGate', (BaseGate, pr.BaseTupleGate, pr.NameGate),
-                       name='TUPLE')(gates, tags=tags)
+                       name='TUPLE',
+                       _base_check={all: [BaseGate]})(gates, tags=tags)
 
 
 def FunctionalGate(f: callable,
@@ -659,7 +660,7 @@ def StochasticGate(gates: iter[BaseGate],
 
     See Also
     --------
-    BaseTupleGate, TagGate, NameGate
+    TupleGate, TagGate, NameGate
     """
 
     # Get gates and probabilities
@@ -734,8 +735,8 @@ def SchmidtGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
     tags: dict[any, any], optional
         Dictionary of tags.
     copy: bool, optional
-        A copy of `s` is used instead of a reference if `copy` is True
-        (default: True).
+        If `True`, a copy of `gates` and `s` is used instead of a reference
+        (default: `True`).
     use_cache: bool, optional
         If `True`, extra memory is used to store a cached `Matrix`.
 
@@ -744,18 +745,23 @@ def SchmidtGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
     SchmidtGate
     """
 
+    # Copy if needed
+    def _copy(x: iter[any, ...]):
+        from copy import deepcopy
+        return (deepcopy(y) for y in x) if copy else x
+
     # Get s
     s = None if s is None else (np.array if copy else np.asarray)(s)
 
     # Get left/right gates
     try:
         l_gates, r_gates = gates
-        l_gates, r_gates = TupleGate(l_gates), TupleGate(r_gates)
+        l_gates = TupleGate(_copy(l_gates))
+        r_gates = TupleGate(_copy(r_gates))
 
-        # All gates must have qubits and matrix
+        # Check all gates have qubits and matrix
         if any(
-                any(not isinstance(g, BaseGate) or
-                    not g.provides('qubits,matrix') or g.qubits is None
+                any(not g.provides('qubits,matrix') or g.qubits is None
                     for g in gs)
                 for gs in [l_gates, r_gates]):
             raise
