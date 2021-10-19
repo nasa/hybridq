@@ -2372,8 +2372,8 @@ def test_dm_0__supergate_1(n_qubits, k, ndim):
     # Check that the time to get cached matrix is always smaller
     assert (_time_1 >= _time_2)
 
-    # Check that time is always smaller than 20ms
-    assert (_time_2 < 0.02)
+    # Check that time is always smaller than 200ms
+    assert (_time_2 < 0.2)
 
     # Check that cached matrix is stored properly
     assert (np.allclose(_M1, M1))
