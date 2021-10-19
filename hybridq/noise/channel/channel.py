@@ -31,10 +31,12 @@ class BaseChannel(__Base__):
 
 
 @compare('LMatrices,RMatrices,s')
-@staticvars('LMatrices,RMatrices,s',
+@staticvars('LMatrices,RMatrices,s,_use_cache',
+            _use_cache=True,
             transform=dict(LMatrices=lambda M: tuple(map(np.asarray, M)),
                            RMatrices=lambda M: tuple(map(np.asarray, M)),
-                           s=lambda s: np.asarray(s)))
+                           s=lambda s: np.asarray(s),
+                           _use_cache=lambda x: bool(x)))
 class _MatrixChannel(BaseChannel,
                      BaseGate,
                      BaseSuperGate,
@@ -59,6 +61,7 @@ class _MatrixChannel(BaseChannel,
         RMatrices = cls.__get_staticvar__('RMatrices')
         n_qubits = cls.__get_staticvar__('n_qubits')
         s = cls.__get_staticvar__('s')
+        use_cache = cls.__get_staticvar__('_use_cache')
 
         # Check dimensions
         if any(M.shape != (2**n_qubits, 2**n_qubits) for M in LMatrices):
@@ -91,7 +94,9 @@ class _MatrixChannel(BaseChannel,
         RGates = tuple(map(MatrixGate, RMatrices))
 
         # Initialize Kraus operator
-        cls.__Kraus = KrausSuperGate(gates=(LGates, RGates), s=s)
+        cls.__Kraus = KrausSuperGate(gates=(LGates, RGates),
+                                     s=s,
+                                     use_cache=use_cache)
 
     def __print__(self):
         return dict(s=(100, f's.shape={self.s.shape}', 0))
@@ -112,10 +117,7 @@ class _MatrixChannel(BaseChannel,
         # Return Kraus operator
         return self.__Kraus
 
-    def map(self,
-            order: tuple[any, ...] = None,
-            *,
-            cache_map: bool = True) -> KrausMap:
+    def map(self, order: tuple[any, ...] = None) -> KrausMap:
         """
         Return `_MatrixChannel` Kraus' map.
 
@@ -123,39 +125,10 @@ class _MatrixChannel(BaseChannel,
         ----------
         order: tuple[any, ...], optional
             If provided, Kraus' map is ordered accordingly to `order`.
-        cache_map: bool, optional
-            If `cache_map == True`, then `KrausMap` is cached for the next
-            call. (default: `True`)
         """
 
-        # Check if KrausMap is already cached
-        if cache_map and getattr(
-                self, '_cache',
-                None) and self._cache['qubits'] == self.qubits and self._cache[
-                    'KrausMap'] is not None:
-            # Get cached KrausMap
-            KrausMap = self._cache['KrausMap']
-
-        # Otherwise, compute fresh
-        else:
-            # Compute map
-            KrausMap = self.Kraus.map(order=order)
-
-            # Update cache
-            if cache_map:
-                self._cache = dict(qubits=self.qubits, KrausMap=KrausMap)
-
-        # Return KrausMap
-        return KrausMap
-
-    def _clear_cache(self) -> None:
-        """
-        Clear `_MatrixChannel`'s cache.
-        """
-        try:
-            delattr(self, '__cache')
-        except AttributeError:
-            pass
+        # Return map
+        return self.Kraus.map(order=order)
 
 
 def MatrixChannel(LMatrices: tuple[array, ...],
@@ -165,7 +138,8 @@ def MatrixChannel(LMatrices: tuple[array, ...],
                   tags: dict[any, any] = None,
                   name: str = 'MATRIX_CHANNEL',
                   copy: bool = True,
-                  atol: float = 1e-8):
+                  atol: float = 1e-8,
+                  use_cache: bool = True):
     """
     Return a channel described by `LMatrices` and `RMatrices`. More precisely,
     `MatrixChannel` will represent a channel of the form:
@@ -197,6 +171,8 @@ def MatrixChannel(LMatrices: tuple[array, ...],
         instead of passed by reference (default: `True`).
     atol: float, optional
         Use `atol` as absolute tollerance while checking.
+    use_cache: bool, optional
+        If `True`, extra memory is used to store a cached `Matrix`.
 
     Returns
     -------
@@ -288,7 +264,8 @@ def MatrixChannel(LMatrices: tuple[array, ...],
                  s=s,
                  LMatrices=LMatrices,
                  RMatrices=LMatrices if RMatrices is None else RMatrices,
-                 n_qubits=n_qubits)
+                 n_qubits=n_qubits,
+                 _use_cache=use_cache)
 
     # Initialize methods
     methods = {}
@@ -341,7 +318,8 @@ def GlobalPauliChannel(qubits: tuple[any, ...],
                        tags: dict[any, any] = None,
                        name: str = 'GLOBAL_PAULI_CHANNEL',
                        copy: bool = True,
-                       atol: float = 1e-8) -> GlobalPauliChannel:
+                       atol: float = 1e-8,
+                       use_cache: bool = True) -> GlobalPauliChannel:
     """
     Return a `GlobalPauliChannel`s acting on `qubits`.
     More precisely, each `LocalPauliChannel` has the form:
@@ -374,6 +352,8 @@ def GlobalPauliChannel(qubits: tuple[any, ...],
         (default: `True`).
     atol: float, optional
         Use `atol` as absolute tollerance while checking.
+    use_cache: bool, optional
+        If `True`, extra memory is used to store a cached `Matrix`.
     """
 
     from hybridq.utils import isintegral, kron
@@ -443,7 +423,8 @@ def GlobalPauliChannel(qubits: tuple[any, ...],
                          tags=tags,
                          name=name,
                          copy=False,
-                         atol=atol)
+                         atol=atol,
+                         use_cache=use_cache)
 
 
 def LocalPauliChannel(qubits: tuple[any, ...],
@@ -451,7 +432,8 @@ def LocalPauliChannel(qubits: tuple[any, ...],
                       tags: dict[any, any] = None,
                       name: str = 'LOCAL_PAULI_CHANNEL',
                       copy: bool = True,
-                      atol: float = 1e-8) -> tuple[LocalPauliChannel, ...]:
+                      atol: float = 1e-8,
+                      use_cache: bool = True) -> tuple[LocalPauliChannel, ...]:
     """
     Return a `tuple` of `LocalPauliChannel`s acting independently on `qubits`.
     More precisely, each `LocalPauliChannel` has the form:
@@ -482,9 +464,13 @@ def LocalPauliChannel(qubits: tuple[any, ...],
     """
 
     return tuple(
-        GlobalPauliChannel(
-            qubits=(q,), name=name, s=s, tags=tags, copy=copy, atol=atol)
-        for q in qubits)
+        GlobalPauliChannel(qubits=(q,),
+                           name=name,
+                           s=s,
+                           tags=tags,
+                           copy=copy,
+                           atol=atol,
+                           use_cache=use_cache) for q in qubits)
 
 
 def LocalDepolarizingChannel(qubits: tuple[any, ...],

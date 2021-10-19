@@ -2336,6 +2336,7 @@ def test_simulation_5__iswap(n_qubits, depth):
 def test_dm_0__supergate_1(n_qubits, k, ndim):
     from hybridq.dm.gate.utils import to_matrix_supergate
     from hybridq.dm.gate import KrausSuperGate
+    from time import time
 
     # Generate some random gates
     gates = tuple(_get_rqc_unitary(n_qubits, k))
@@ -2356,11 +2357,26 @@ def test_dm_0__supergate_1(n_qubits, k, ndim):
         raise NotImplementedError
 
     # Get Kraus operator
-    K = KrausSuperGate(gates=gates, s=s_1)
-    K = to_matrix_supergate(K)
+    K = KrausSuperGate(gates=gates, s=s_1, use_cache=True)
 
     # Get matrix corresponding to the operator
+    _time_1 = time()
     M1 = K.Matrix
+    _time_1 = time() - _time_1
+
+    # Get cached
+    _time_2 = time()
+    _M1 = K.Matrix
+    _time_2 = time() - _time_2
+
+    # Check that the time to get cached matrix is always smaller
+    assert (_time_1 >= _time_2)
+
+    # Check that time is always smaller than 200ms
+    assert (_time_2 < 0.2)
+
+    # Check that cached matrix is stored properly
+    assert (np.allclose(_M1, M1))
 
     # Get left/right qubits
     l_qubits, r_qubits = K.qubits
@@ -2756,7 +2772,7 @@ def test_noise_1__local_channels():
 def test_noise_1__choi(n):
     """
     Choi matrix acts to produce the output state as
-    rho = Tr_0[ (I \otimes rho_0^T) C)
+    rho = Tr_0[ (I ⊗ rho_0^T) C)
     """
     np.random.seed(1)
     d = 2**n

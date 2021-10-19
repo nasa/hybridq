@@ -44,11 +44,14 @@ def TupleSuperGate(gates: iter[{BaseGate, BaseSuperGate}] = tuple(),
     -------
     TupleSuperGate
     """
+    from hybridq.gate.gate import BaseGate
 
     # Return gate
     return pr.generate('TupleSuperGate',
                        (BaseSuperGate, dm_pr.BaseTupleSuperGate, pr.NameGate),
-                       name='STUPLE')(gates, tags=tags)
+                       name='STUPLE',
+                       _base_check={any: [BaseGate, BaseSuperGate]})(gates,
+                                                                     tags=tags)
 
 
 @dm_pr.staticvars('l_qubits,r_qubits')
@@ -120,7 +123,8 @@ def MatrixSuperGate(Map: np.ndarray,
 def KrausSuperGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
                    s: any = 1,
                    tags: dict[any, any] = None,
-                   copy: bool = True) -> KrausSuperGate:
+                   copy: bool = True,
+                   use_cache: bool = True) -> KrausSuperGate:
     """
     Return a KrausSuperGate.
 
@@ -147,6 +151,8 @@ def KrausSuperGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
     copy: bool, optional
         A copy of `gates` and `s` is used instead of a reference if `copy` is
         `True` (default: True).
+    use_cache: bool, optional
+        If `True`, extra memory is used to store a cached `Matrix`.
 
     Returns
     -------
@@ -204,7 +210,8 @@ def KrausSuperGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
         gates=(l_gates, r_gates),
         s=(np.array if copy else np.asarray)(s),
         _conj_rgates=True,
-        name='KRAUS')(tags=tags)
+        name='KRAUS',
+        _use_cache=use_cache)(tags=tags)
 
 
 # Define gate aliases
