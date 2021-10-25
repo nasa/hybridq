@@ -62,6 +62,7 @@ setup(
     long_description_content_type='text/markdown',
     url='https://github.com/s-mandra/hybridq',
     author='Salvatore Mandrà',
+    author_email = 'salvatore.mandra@nasa.gov'
     classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: Apache Software License',
