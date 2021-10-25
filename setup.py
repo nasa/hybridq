@@ -62,7 +62,7 @@ setup(
     long_description_content_type='text/markdown',
     url='https://github.com/s-mandra/hybridq',
     author='Salvatore Mandrà',
-    author_email = 'salvatore.mandra@nasa.gov'
+    author_email = 'salvatore.mandra@nasa.gov',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: Apache Software License',
@@ -71,12 +71,11 @@ setup(
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Mathematics',
         'Topic :: Scientific/Engineering :: Physics',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3 :: Only'
     ],
-    python_requires='>=3.6, <3.9',
+    python_requires='>=3.7, <3.9',
     keywords=['simulator quantum circuits', 'quantum computing'],
     packages=find_packages(exclude=['docs', 'tests']),
     install_requires=install_requires,
