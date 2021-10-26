@@ -38,7 +38,7 @@ def add_depolarizing_noise(circuit: Circuit,
     probs: {float, list[float, ...], dict[any, float]}
         Depolarizing probabilities for `circuit`. If probs is a single `float`,
         the same probability is applied to all gates regardless the number of
-        qubits. If `probs` is a list, the k-th value is used a the probability
+        qubits. If `probs` is a list, the k-th value is used as the probability
         for all the k-qubit gates. If probs is a `dict`, `probs[k]` will be
         used as probability for k-qubit gates. If `probs[k]` is missing, the
         probability for a k-qubit gate will fallback to `probs[any]` (if
@@ -49,28 +49,23 @@ def add_depolarizing_noise(circuit: Circuit,
         Verbose output.
     """
     from hybridq.circuit import Circuit
-    # Check where
+
+    # Check 'where'
     if where not in ['before', 'after']:
         raise ValueError("'where' can only be either 'before' or 'after'")
 
     # Convert circuit
     circuit = Circuit(circuit)
 
-    # Get all qubits
-    qubits = circuit.all_qubits()
-
     # Convert probs
-    probs = __get_params(qubits, probs, value_type=float)
+    probs = channel.__get_params(keys=sorted(set(g.n_qubits for g in circuit)),
+                                 args=probs,
+                                 value_type=float)
 
     # Define how to add noise
     def _add_noise(g):
         # Get probability
-        if g.n_qubits in probs:
-            p = probs[g.n_qubits]
-        elif any in probs:
-            p = probs[any]
-        else:
-            raise ValueError(f"Params for '{g.n_qubits}' qubits not provided")
+        p = probs[g.n_qubits]
 
         # Get noise
         noise = channel.GlobalDepolarizingChannel(g.qubits, p)
@@ -85,53 +80,73 @@ def add_depolarizing_noise(circuit: Circuit,
                         for g in _add_noise(w))
 
 
-def __get_params(keys,
-                 args,
-                 key_type: callable = lambda x: x,
-                 value_type: callable = lambda x: x):
-    from hybridq.utils import to_dict, to_list
+def add_amplitude_damping_noise(
+        circuit: Circuit,
+        gammas: {float, list[float, ...], dict[any, float]},
+        probs: {float, list[float, ...], dict[any, float]} = 1,
+        where: {'before', 'after'} = 'after',
+        verbose: bool = False):
+    """
+    Given a `Circuit`, add amplitude damping noise after each instance of a `Gate`,
+    with the same locality as the gate.  Note, noise will not be added after an
+    instance of `BaseChannel`
 
-    # Initialize output
-    _args = None
+    circuit: Circuit
+        The `Circuit` which will be modified. Note, a new `Circuit` is
+        returned (this is not in place).
+    gammas: {float, list[float, ...], dict[any, float]}
+        Transition rate (0->1 and 1->0) for the amplitude damping noise
+        channel. If gammas is a single `float`, the same probability is applied
+        to all qubits. If `gammas` is a list, the k-th value is used as the
+        probability for the k-th qubit. If gammas is a `dict`, `gammas[q]` will
+        be used as probability for the qubit `q`. If `gammas[q]` is missing,
+        the probability for a qubit `q` will fallback to `gammas[any]` (if
+        provided).
+    probs: {float, list[float, ...], dict[any, float]}
+        Amplitude damping probabilities for `circuit`. If probs is a single
+        `float`, the same probability is applied to all qubits. If `probs` is a
+        list, the k-th value is used as the probability for the k-th qubit. If
+        probs is a `dict`, `probs[q]` will be used as probability for the qubit
+        `q`. If `probs[q]` is missing, the probability for a qubit `q` will
+        fallback to `probs[any]` (if provided).
+    where: {'before', 'after', 'both'}
+        Add noise either `'before'` or `'after'` every gate (default: `after`).
+    verbose: bool, optional
+        Verbose output.
+    """
+    from hybridq.circuit import Circuit
 
-    # Try to convert to float
-    if _args is None:
-        try:
-            _args = {any: value_type(args)}
-        except:
-            pass
+    # Check 'where'
+    if where not in ['before', 'after']:
+        raise ValueError("'where' can only be either 'before' or 'after'")
 
-    # Try to convert to dict
-    if _args is None:
-        try:
-            _args = to_dict(args, key_type=key_type, value_type=value_type)
-        except:
-            pass
+    # Convert circuit
+    circuit = Circuit(circuit)
 
-    # Try to convert to list
-    if _args is None:
-        try:
-            # Convert to list
-            _args = to_list(args, value_type=value_type)
+    # Get all qubits
+    qubits = circuit.all_qubits()
 
-        except:
-            pass
+    # Convert gammas and probs
+    gammas = channel.__get_params(qubits, gammas, value_type=float)
+    probs = channel.__get_params(qubits, probs, value_type=float)
 
-        else:
-            # Check number of keys
-            if len(_args) != len(keys):
-                raise ValueError("Must have exactly one value per qubit")
+    # Define how to add noise
+    def _add_noise(g):
+        # Get gammas and probs
+        _gammas = {q: gammas[q] for q in g.qubits}
+        _probs = {q: probs[q] for q in g.qubits}
 
-            # Get dict
-            _args = {key_type(k): x for k, x in zip(keys, _args)}
+        # Get noise
+        noise = channel.AmplitudeDampingChannel(g.qubits,
+                                                gamma=_gammas,
+                                                p=_probs)
 
-    # If _args is still None, raise
-    if _args is None:
-        raise TypeError(f"'{args}' not supported")
+        # Return gates
+        return [g] if isinstance(
+            g, BaseChannel) else ((g,) + noise if where == 'after' else noise +
+                                  (g,))
 
-    # Check keys
-    if any not in _args and set(keys) != set(_args):
-        raise ValueError("All keys must be specified")
-
-    # Return
-    return _args
+    # Update circuit
+    return SuperCircuit(g for w in tqdm(
+        circuit, disable=not verbose, desc='Add amplitude damping noise')
+                        for g in _add_noise(w))

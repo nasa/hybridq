@@ -139,6 +139,7 @@ def MatrixChannel(LMatrices: tuple[array, ...],
                   name: str = 'MATRIX_CHANNEL',
                   copy: bool = True,
                   atol: float = 1e-8,
+                  methods: dict[any, any] = None,
                   use_cache: bool = True):
     """
     Return a channel described by `LMatrices` and `RMatrices`. More precisely,
@@ -171,6 +172,8 @@ def MatrixChannel(LMatrices: tuple[array, ...],
         instead of passed by reference (default: `True`).
     atol: float, optional
         Use `atol` as absolute tollerance while checking.
+    methods: dict[any, any]
+        Add extra methods to the object.
     use_cache: bool, optional
         If `True`, extra memory is used to store a cached `Matrix`.
 
@@ -268,7 +271,7 @@ def MatrixChannel(LMatrices: tuple[array, ...],
                  _use_cache=use_cache)
 
     # Initialize methods
-    methods = {}
+    _methods = {}
 
     # Check if all matrices are unitaries
     if s.ndim == 1 and RMatrices is None and np.isclose(np.sum(s), 1,
@@ -296,7 +299,7 @@ def MatrixChannel(LMatrices: tuple[array, ...],
         sdict.update(gates=None)
 
         # Add sample
-        methods.update(sample=__sample__)
+        _methods.update(sample=__sample__)
 
     # Otherwise, add apply
     else:
@@ -306,10 +309,14 @@ def MatrixChannel(LMatrices: tuple[array, ...],
         # Add update
         sdict.update(apply=__apply__)
 
+    # Merge extra methods
+    if methods is not None:
+        _methods.update(methods)
+
     # Generate gate
     return generate(''.join(name.title().split('_')),
                     mro,
-                    methods=methods,
+                    methods=_methods,
                     **sdict)(qubits=qubits, tags=tags)
 
 
@@ -319,6 +326,7 @@ def GlobalPauliChannel(qubits: tuple[any, ...],
                        name: str = 'GLOBAL_PAULI_CHANNEL',
                        copy: bool = True,
                        atol: float = 1e-8,
+                       methods: dict[any, any] = None,
                        use_cache: bool = True) -> GlobalPauliChannel:
     """
     Return a `GlobalPauliChannel`s acting on `qubits`.
@@ -352,6 +360,8 @@ def GlobalPauliChannel(qubits: tuple[any, ...],
         (default: `True`).
     atol: float, optional
         Use `atol` as absolute tollerance while checking.
+    methods: dict[any, any]
+        Add extra methods to the object.
     use_cache: bool, optional
         If `True`, extra memory is used to store a cached `Matrix`.
     """
@@ -424,6 +434,7 @@ def GlobalPauliChannel(qubits: tuple[any, ...],
                          name=name,
                          copy=False,
                          atol=atol,
+                         methods=methods,
                          use_cache=use_cache)
 
 
@@ -433,6 +444,7 @@ def LocalPauliChannel(qubits: tuple[any, ...],
                       name: str = 'LOCAL_PAULI_CHANNEL',
                       copy: bool = True,
                       atol: float = 1e-8,
+                      methods: dict[any, any] = None,
                       use_cache: bool = True) -> tuple[LocalPauliChannel, ...]:
     """
     Return a `tuple` of `LocalPauliChannel`s acting independently on `qubits`.
@@ -461,6 +473,10 @@ def LocalPauliChannel(qubits: tuple[any, ...],
         (default: `True`).
     atol: float, optional
         Use `atol` as absolute tolerance while checking.
+    methods: dict[any, any]
+        Add extra methods to the object.
+    use_cache: bool, optional
+        If `True`, extra memory is used to store a cached `Matrix`.
     """
 
     return tuple(
@@ -470,6 +486,7 @@ def LocalPauliChannel(qubits: tuple[any, ...],
                            tags=tags,
                            copy=copy,
                            atol=atol,
+                           methods=methods,
                            use_cache=use_cache) for q in qubits)
 
 
@@ -478,9 +495,8 @@ def LocalDepolarizingChannel(qubits: tuple[any, ...],
                              name: str = 'LOCAL_DEPOLARIZING_CHANNEL',
                              **kwargs) -> tuple[LocalDepolarizingChannel, ...]:
     """
-    Return a `tuple` of `LocalDepolarizingChannel`s acting independently
-    on `qubits`.
-    More precisely, each channel has the form:
+    Return a `tuple` of `LocalDepolarizingChannel`s acting independently on
+    `qubits`.  More precisely, each channel has the form:
 
         rho -> E_i(rho) = (1-p_i) rho + p_i * I/2
 
@@ -502,14 +518,12 @@ def LocalDepolarizingChannel(qubits: tuple[any, ...],
         Alternative name for channel.
     kwargs: kwargs for GlobalPauliChannel
     """
-    p = __convert_to_dict(qubits, p)
+    # Get probs
+    p = __get_params(keys=qubits, args=p, key_name='qubit', value_type=float)
 
-    def s_p(pi):
-        # s array for p, for a single qubit
-        return [pi / 4 if i > 0 else 1 - 0.75 * pi for i in range(4)]
-
+    # Return gates
     return tuple(
-        GlobalPauliChannel(qubits=(q,), name=name, s=s_p(p[q]), **kwargs)
+        GlobalDepolarizingChannel(qubits=(q,), name=name, p=p[q], **kwargs)
         for q in qubits)
 
 
@@ -536,11 +550,22 @@ def GlobalDepolarizingChannel(qubits: tuple[any, ...],
         Alternative name for channel.
     kwargs: kwargs for GlobalPauliChannel
     """
-    nq = len(qubits)
-    pi = p / 4**nq
-    s = [pi if i > 0 else 1 - p + pi for i in range(4**nq)]
+    # Convert p to float
+    p = float(p)
 
-    return GlobalPauliChannel(qubits=qubits, name=name, s=s, **kwargs)
+    # Get size of s
+    ns = 4**len(qubits)
+
+    # Get s
+    s = [1 - p + p / ns] + [p / ns] * (ns - 1)
+
+    # Return gate
+    return GlobalPauliChannel(
+        qubits=qubits,
+        name=name,
+        s=s,
+        methods=dict(__print__=lambda self: {'p': (400, f'p={p}', 0)}),
+        **kwargs)
 
 
 def LocalDephasingChannel(qubits: tuple[any, ...],
@@ -571,23 +596,47 @@ def LocalDephasingChannel(qubits: tuple[any, ...],
         can be given.
     pauli_index: int
         Integer in {0,1,2,3} representing the dephasing axis (Pauli marix).
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length of
+        `qubits`, which corresponds to each dephasing axis.  Otherwise a
+        dictionary mapping from `qubit`s to axis can be given.
     name: str, optional
         Alternative name for channel.
     kwargs: kwargs for GlobalPauliChannel
     """
-    p = __convert_to_dict(qubits, p)
+    # Get probs and pauli_index
+    p = __get_params(keys=qubits, args=p, key_name='qubit', value_type=float)
+    pauli_index = __get_params(keys=qubits,
+                               args=pauli_index,
+                               key_name='qubit',
+                               value_type=int)
 
-    if pauli_index not in range(4):
+    # Check pauli_index
+    if any(v not in range(4) for v in pauli_index.values()):
         raise ValueError("`pauli_index` must be in {0,1,2,3}")
 
-    def s_p(pi):
-        s = [1 - pi, 0, 0, 0]
-        s[pauli_index] += pi
-        return s
+    # Get gate
+    def _get_gate(q):
+        # Get probability and axis
+        _p = p[q]
+        _x = pauli_index[q]
+        _xl = {0: 'I', 1: 'X', 2: 'Y', 3: 'Z'}[_x]
 
-    return tuple(
-        GlobalPauliChannel(qubits=(q,), name=name, s=s_p(p[q]), **kwargs)
-        for q in qubits)
+        # Get s
+        s = [1 - _p, 0, 0, 0]
+        s[_x] += _p
+
+        # Return gate
+        return GlobalPauliChannel(
+            qubits=(q,),
+            name=name,
+            s=s,
+            methods=dict(__print__=lambda self: dict(
+                p=(400, f'p={_p}', 0), axis=(401, f'axis={_xl}', 0))),
+            **kwargs)
+
+    # Return gate
+    return tuple(map(_get_gate, qubits))
 
 
 def AmplitudeDampingChannel(qubits: tuple[any, ...],
@@ -628,75 +677,93 @@ def AmplitudeDampingChannel(qubits: tuple[any, ...],
         Use `atol` as absolute tolerance while checking.
     kwargs: kwargs for MatrixChannel
     """
-    gamma = __convert_to_dict(qubits, gamma)
-    p = __convert_to_dict(qubits, p)
+    # Get gammas and probs
+    gamma = __get_params(keys=qubits,
+                         args=gamma,
+                         key_name='qubit',
+                         value_type=float)
+    p = __get_params(keys=qubits, args=p, key_name='qubit', value_type=float)
 
-    def adc_kraus(gamma_i, pi):
-        E0 = np.sqrt(pi) * np.diag([1, np.sqrt(1 - gamma_i)])
-        E1 = np.sqrt(pi) * np.array([[0, np.sqrt(gamma_i)], [0, 0]])
-        E2 = np.sqrt(1 - pi) * np.diag([np.sqrt(1 - gamma_i), 1])
-        E3 = np.sqrt(1 - pi) * np.array([[0, 0], [np.sqrt(gamma_i), 0]])
+    def _get_gate(q):
+        # Get gamma and p
+        _gamma = gamma[q]
+        _p = p[q]
+
+        E0 = np.sqrt(_p) * np.diag([1, np.sqrt(1 - _gamma)])
+        E1 = np.sqrt(_p) * np.array([[0, np.sqrt(_gamma)], [0, 0]])
+        E2 = np.sqrt(1 - _p) * np.diag([np.sqrt(1 - _gamma), 1])
+        E3 = np.sqrt(1 - _p) * np.array([[0, 0], [np.sqrt(_gamma), 0]])
 
         mats = []
         # drop zero operators
         for m in [E0, E1, E2, E3]:
             if not np.allclose(m, 0, atol=atol):
                 mats += [m]
-        return tuple(mats)
 
-    return tuple(
-        MatrixChannel(LMatrices=adc_kraus(gamma[q], p[q]),
-                      qubits=(q,),
-                      s=1,
-                      name=name,
-                      atol=atol,
-                      **kwargs) for q in qubits)
+        # Return gate
+        return MatrixChannel(
+            LMatrices=tuple(mats),
+            qubits=(q,),
+            s=1,
+            name=name,
+            atol=atol,
+            methods=dict(__print__=lambda self: dict(
+                gamma=(400, f'gamma={_gamma}', 0), p=(401, f'p={_p}', 0))),
+            **kwargs)
+
+    # Return gate
+    return tuple(map(_get_gate, qubits))
 
 
-def __convert_to_dict(qubits, arg):
+def __get_params(keys,
+                 args,
+                 key_type: callable = lambda x: x,
+                 value_type: callable = lambda x: x,
+                 key_name: str = 'key'):
     from hybridq.utils import to_dict, to_list
+    from collections import defaultdict
 
     # Initialize output
-    _arg = None
+    _args = None
 
     # Try to convert to float
-    if _arg is None:
+    if _args is None:
         try:
-            _arg = {q: float(arg) for q in qubits}
+            _args = {any: value_type(args)}
         except:
             pass
 
     # Try to convert to dict
-    if _arg is None:
+    if _args is None:
         try:
-            _arg = to_dict(arg, value_type=float)
+            _args = to_dict(args, key_type=key_type, value_type=value_type)
         except:
             pass
 
     # Try to convert to list
-    if _arg is None:
+    if _args is None:
         try:
             # Convert to list
-            _arg = to_list(arg, value_type=float)
+            _args = to_list(args, value_type=value_type)
 
         except:
             pass
 
         else:
-            # Check number of qubits
-            if len(_arg) != len(qubits):
-                raise ValueError("Must have exactly one value per qubit")
+            # Check number of keys
+            if len(_args) != len(keys):
+                raise ValueError(f"Must have exactly one value per {key_name}")
 
             # Get dict
-            _arg = {q: x for q, x in zip(qubits, _arg)}
+            _args = {key_type(k): x for k, x in zip(keys, _args)}
 
-    # If _arg is still None, raise
-    if _arg is None:
-        raise TypeError(f"'{arg}' not supported")
+    # If _args is still None, raise
+    if _args is None:
+        raise TypeError(f"'{args}' not supported")
 
-    # Check qubits
-    if set(qubits) != set(_arg):
-        raise ValueError("All qubits must be specified")
+    # Check keys
+    if any not in _args and set(keys) != set(_args):
+        raise ValueError(f"All {key_name}s must be specified")
 
     # Return
-    return _arg
+    return defaultdict(lambda: _args[any], _args) if any in _args else _args
