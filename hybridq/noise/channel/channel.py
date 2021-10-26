@@ -595,7 +595,7 @@ def LocalDephasingChannel(qubits: tuple[any, ...],
         Otherwise a dictionary mapping from `qubit`s to probability
         can be given.
     pauli_index: int
-        Integer in {0,1,2,3} representing the dephasing axis (Pauli marix).
+        Integer in {0,1,2,3} representing the dephasing axis (Pauli matrix).
         If a single value is passed, the same is used for all qubits.
         If a one dimensional array is passed, it must be the same length of
         `qubits`, which corresponds to each dephasing axis.  Otherwise a
