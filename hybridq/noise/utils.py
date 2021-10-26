@@ -28,9 +28,9 @@ def add_depolarizing_noise(circuit: Circuit,
                            where: {'before', 'after'} = 'after',
                            verbose: bool = False):
     """
-    Given a `Circuit`, add depolarizing noise after each instance of a `Gate`,
-    with the same locality as the gate.  Note, noise will not be added after an
-    instance of `BaseChannel`
+    Given a `Circuit`, add global depolarizing noise after each instance
+    of a `Gate`, with the same locality as the gate.
+    Note, noise will not be added after an instance of `BaseChannel`
 
     circuit: Circuit
         The `Circuit` which will be modified. Note, a new `Circuit` is
@@ -87,9 +87,9 @@ def add_dephasing_noise(circuit: Circuit,
                         where: {'before', 'after'} = 'after',
                         verbose: bool = False):
     """
-    Given a `Circuit`, add amplitude damping noise after each instance of a `Gate`,
-    with the same locality as the gate.  Note, noise will not be added after an
-    instance of `BaseChannel`
+    Given a `Circuit`, add dephasing noise after each instance of a `Gate`,
+    which acts independently on the qubits of the gate.
+    Note, noise will not be added after an instance of `BaseChannel`
 
     circuit: Circuit
         The `Circuit` which will be modified. Note, a new `Circuit` is
@@ -159,9 +159,9 @@ def add_amplitude_damping_noise(
         where: {'before', 'after'} = 'after',
         verbose: bool = False):
     """
-    Given a `Circuit`, add amplitude damping noise after each instance of a `Gate`,
-    with the same locality as the gate.  Note, noise will not be added after an
-    instance of `BaseChannel`
+    Given a `Circuit`, add amplitude damping noise after each instance of a
+     `Gate`. The noise will act independently on the qubits in the gate.
+    Note, noise will not be added after an instance of `BaseChannel`
 
     circuit: Circuit
         The `Circuit` which will be modified. Note, a new `Circuit` is
