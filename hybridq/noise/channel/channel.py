@@ -502,7 +502,7 @@ def LocalDepolarizingChannel(qubits: tuple[any, ...],
         Alternative name for channel.
     kwargs: kwargs for GlobalPauliChannel
     """
-    p = _convert_to_dict(qubits, p)
+    p = __convert_to_dict(qubits, p)
 
     def s_p(pi):
         # s array for p, for a single qubit
@@ -575,7 +575,7 @@ def LocalDephasingChannel(qubits: tuple[any, ...],
         Alternative name for channel.
     kwargs: kwargs for GlobalPauliChannel
     """
-    p = _convert_to_dict(qubits, p)
+    p = __convert_to_dict(qubits, p)
 
     if pauli_index not in range(4):
         raise ValueError("`pauli_index` must be in {0,1,2,3}")
@@ -628,8 +628,8 @@ def AmplitudeDampingChannel(qubits: tuple[any, ...],
         Use `atol` as absolute tolerance while checking.
     kwargs: kwargs for MatrixChannel
     """
-    gamma = _convert_to_dict(qubits, gamma)
-    p = _convert_to_dict(qubits, p)
+    gamma = __convert_to_dict(qubits, gamma)
+    p = __convert_to_dict(qubits, p)
 
     def adc_kraus(gamma_i, pi):
         E0 = np.sqrt(pi) * np.diag([1, np.sqrt(1 - gamma_i)])
@@ -653,21 +653,50 @@ def AmplitudeDampingChannel(qubits: tuple[any, ...],
                       **kwargs) for q in qubits)
 
 
-def _convert_to_dict(qubits, arg):
-    if isinstance(arg, (float, int)):
-        arg = {q: arg for q in qubits}
-    elif isinstance(arg, dict):
-        pass
-    else:
+def __convert_to_dict(qubits, arg):
+    from hybridq.utils import to_dict, to_list
+
+    # Initialize output
+    _arg = None
+
+    # Try to convert to float
+    if _arg is None:
         try:
-            arg = list(arg)
-            if len(arg) != len(qubits):
+            _arg = {q: float(arg) for q in qubits}
+        except:
+            pass
+
+    # Try to convert to dict
+    if _arg is None:
+        try:
+            _arg = to_dict(arg, value_type=float)
+        except:
+            pass
+
+    # Try to convert to list
+    if _arg is None:
+        try:
+            # Convert to list
+            _arg = to_list(arg, value_type=float)
+
+        except:
+            pass
+
+        else:
+            # Check number of qubits
+            if len(_arg) != len(qubits):
                 raise ValueError("Must have exactly one value per qubit")
 
-            arg = {q: arg[i] for (i, q) in enumerate(qubits)}
-        except TypeError:
-            raise ValueError("Must be convertible to list")
+            # Get dict
+            _arg = {q: x for q, x in zip(qubits, _arg)}
 
-    if set(arg.keys()) != set(qubits):
-        raise ValueError("Each qubit must be assigned")
-    return arg
+    # If _arg is still None, raise
+    if _arg is None:
+        raise TypeError(f"'{arg}' not supported")
+
+    # Check qubits
+    if set(qubits) != set(_arg):
+        raise ValueError("All qubits must be specified")
+
+    # Return
+    return _arg
