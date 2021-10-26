@@ -665,7 +665,8 @@ def AmplitudeDampingChannel(qubits: tuple[any, ...],
         Otherwise a dictionary mapping from `qubit`s to gamma
         can be given.
     p: {float, array, dict}
-        1-p is probability for the 'excitation' channel (1->0).
+        p is the probability for the 'damping' channel (governing 1->0), and
+        1-p is probability for the 'excitation' channel (0->1).
         If a single value is passed, the same is used for all qubits.
         If a one dimensional array is passed, it must be the same length
         of `qubits`, which corresponds to the value for each qubit.
