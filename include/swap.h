@@ -81,7 +81,7 @@ int swap_array(float_type* array, index_type* pos, const std::size_t size,
   }
 
 #pragma omp parallel for private(_array)
-  for (std::size_t i = 0; i<size>> n_pos; ++i) {
+  for (std::size_t i = 0; i < size >> n_pos; ++i) {
     // Load buffer
     for (std::size_t j = 0; j < swap_size; ++j)
       _array[j] = array[_swap_pos[j] ^ (i << n_pos)];
