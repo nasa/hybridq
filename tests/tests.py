@@ -24,6 +24,7 @@ from hybridq.dm.circuit import simulation as dm_simulation
 from hybridq.noise.channel import GlobalDepolarizingChannel, \
     LocalDepolarizingChannel, LocalPauliChannel, AmplitudeDampingChannel, \
     LocalDephasingChannel
+from hybridq.noise.utils import add_dephasing_noise, add_depolarizing_noise
 from hybridq.noise.channel.utils import ptrace, choi_matrix, is_channel
 from hybridq.circuit import Circuit, simulation, utils
 from hybridq.circuit.simulation import clifford
@@ -2788,6 +2789,33 @@ def test_noise_1__choi(n):
     rho_t_choi = ptrace(np.kron(np.eye(d), rho.T) @ C, list(range(n)))
 
     np.testing.assert_array_almost_equal(rho_t, rho_t_choi)
+
+
+@pytest.mark.parametrize('n_cycles', [1, 5, 10, 20])
+@pytest.mark.parametrize('p_depol', [0.0, 0.25, 0.5, 1.0])
+def test_noise_1__add_noise(p_depol, n_cycles):
+    """
+    This tests adding noise to an ideal circuit.
+    Here we consider a case which rotates around the Z axis, and
+    so starting in the + state should give the same result for
+    both depolarizing and dephasing channels.
+    """
+    theta = 0.01
+    c = Circuit([Gate('RZ', qubits=[0], params=[theta])] * n_cycles)
+    c_depol = add_depolarizing_noise(c, [p_depol])
+    c_dephase = add_dephasing_noise(c, [0.5 * p_depol])  # conversion factor
+
+    rho_depol = dm_simulation.simulate(c_depol, '+')
+    rho_dephase = dm_simulation.simulate(c_dephase, '+')
+
+    Theta = theta * n_cycles / 2
+    psi = [np.exp(-1j * Theta), np.exp(1j * Theta)] / np.sqrt(2)
+    rho_ideal = np.outer(psi, psi.conj().T)
+    P_ideal = (1 - p_depol)**n_cycles
+    rho_expected = P_ideal * rho_ideal + ((1 - P_ideal) / 2) * np.eye(2)
+
+    np.testing.assert_array_almost_equal(rho_depol, rho_expected)
+    np.testing.assert_array_almost_equal(rho_depol, rho_dephase)
 
 
 def test_noise_1__is_channel():
