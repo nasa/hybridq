@@ -395,6 +395,38 @@ def svd(a, axes: iter[int], sort: bool = False, atol: float = 1e-8, **kwargs):
     return s, uh, vh
 
 
+def isunitary(m: np.ndarray, atol: float = 1e-8) -> bool:
+    """
+    Check if `m` is a unitary matrix.
+
+    Parameters
+    ----------
+    m: np.ndarray
+        Matrix to check if unitary.
+    atol: float, optional
+        Absolute tollerance.
+
+    Returns
+    -------
+    bool
+        `True` if `m` is a unitary matrix, `False` otherwise
+    """
+    # Convert to np.ndarray
+    m = np.asarray(m)
+
+    # If m is not a square matrix, cannot be unitary
+    if m.ndim != 2 or m.shape[0] != m.shape[1]:
+        return False
+
+    # Multiply with adjoint
+    m1 = m.T.conj() @ m
+    m2 = m @ m.T.conj()
+
+    # Check if unitary
+    return np.allclose(m1, m2, atol=atol) and np.allclose(
+        m1, np.eye(m1.shape[0]), atol=atol)
+
+
 def kron(a: np.ndarray, *cs: tuple[np.ndarray, ...], **kwargs):
     """
     Compute the Kronecker product among multiple arrays.
