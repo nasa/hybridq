@@ -273,6 +273,10 @@ def MatrixChannel(LMatrices: tuple[array, ...],
     # Initialize methods
     _methods = {}
 
+    # Initialize _stochastic and _functional
+    _stochastic = False
+    _functional = False
+
     # Check if all matrices are unitaries
     if s.ndim == 1 and RMatrices is None and np.isclose(np.sum(s), 1,
                                                         atol=atol):
@@ -287,8 +291,6 @@ def MatrixChannel(LMatrices: tuple[array, ...],
 
         # Check if stochasticity can be applied
         _stochastic = all(map(_is_unitary, LMatrices))
-    else:
-        _stochastic = False
 
     # If all unitaries, add sample
     if _stochastic:
@@ -301,8 +303,8 @@ def MatrixChannel(LMatrices: tuple[array, ...],
         # Add sample
         _methods.update(sample=__sample__)
 
-    # Otherwise, add apply
-    else:
+    # Add apply
+    elif _functional:
         # Update mro
         mro = mro + (pr.FunctionalGate,)
 
