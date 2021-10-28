@@ -12,6 +12,10 @@ allows seamless switching from one technique to another as well as from one
 hardware to the next, without the need to write lengthy translations, thus
 greatly simplifying the development of new hybrid algorithms and techniques.
 
+## Getting Started
+
+Tutorials on how to use **HybridQ** can be found in [hybridq/tutorials](https://github.com/nasa/hybridq/tree/main/tutorials).
+
 ## Contributors
 
 [Salvatore Mandrà](https://github.com/s-mandra)<br>
@@ -20,10 +24,6 @@ greatly simplifying the development of new hybrid algorithms and techniques.
 ## Publications
 
 [1] S. Mandrà, J. Marshall, E. Rieffel, and R. Biswas, *"HybridQ: A Hybrid Simulator for Quantum Circuits"*, arXiv (2021)
-
-## Tutorials
-
-Tutorials on how to use **HybridQ** can be found in [hybridq/tutorials](https://github.com/nasa/hybridq/tree/main/tutorials).
 
 ## Documentation
 
