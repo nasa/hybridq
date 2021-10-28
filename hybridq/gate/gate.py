@@ -701,6 +701,13 @@ def StochasticGate(gates: iter[BaseGate],
                 if self.p is not None else "", 0),
         }
 
+    # Define qubits and n_qubits
+    def __qubits__(self):
+        return self.gates.qubits
+
+    def __n_qubits__(self):
+        return self.gates.n_qubits
+
     # Return Gate
     return pr.generate('StochasticGate',
                        (_StochasticGate, pr.TagGate, pr.NameGate),
@@ -708,7 +715,9 @@ def StochasticGate(gates: iter[BaseGate],
                        gates=gates,
                        p=p,
                        methods=dict(sample=__sample__,
-                                    __print__=__print__))(tags=tags)
+                                    __print__=__print__,
+                                    qubits=property(__qubits__),
+                                    n_qubits=property(__n_qubits__)))(tags=tags)
 
 
 def SchmidtGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
@@ -773,13 +782,23 @@ def SchmidtGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
     if set(l_gates.qubits).intersection(r_gates.qubits):
         raise ValueError("Left and right gates should not share any qubits.")
 
+    # Define qubits and n_qubits method
+    def __qubits__(self):
+        return self.gates[0].qubits + self.gates[1].qubits
+
+    def __n_qubits__(self):
+        return self.gates[0].n_qubits + self.gates[1].n_qubits
+
     # Return SchmidtGate
-    return pr.generate('SchmidtGate',
-                       (BaseGate, pr.SchmidtGate, pr.TagGate, pr.NameGate),
-                       gates=(l_gates, r_gates),
-                       s=s,
-                       _use_cache=use_cache,
-                       name='SCHMIDT')(tags=tags)
+    return pr.generate(
+        'SchmidtGate',
+        (BaseGate, pr.SchmidtGate, pr.PowerMatrixGate, pr.TagGate, pr.NameGate),
+        gates=(l_gates, r_gates),
+        s=s,
+        _use_cache=use_cache,
+        methods=dict(qubits=property(__qubits__),
+                     n_qubits=property(__n_qubits__)),
+        name='SCHMIDT')(tags=tags)
 
 
 def Control(c_qubits: iter[any],
