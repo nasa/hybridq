@@ -688,9 +688,8 @@ class RotationGate(
     def __print__(self) -> dict[str, tuple[int, str, int]]:
         _params = ''
         if self.params:
-            if any(
-                    isinstance(self.params[0], t)
-                    for t in (int, float, np.floating, np.integer)):
+            from hybridq.utils import isnumber
+            if isnumber(self.params[0]):
                 _params = f'φ={np.round(self.params[0]/np.pi, 5)}π'
             else:
                 _params = f'φ={self.params[0]}'
@@ -949,7 +948,7 @@ class SchmidtGate(__Base__):
         # Get s
         s = self.s
 
-        def _merge(l_g, r_g, c):
+        def _merge(l_g, r_g):
             from hybridq.gate.utils import merge
 
             # Left qubits
@@ -965,26 +964,26 @@ class SchmidtGate(__Base__):
             m_q += tuple((1, q) for q in r_qubits if q not in r_g.qubits)
 
             # Merge gates
-            map_gate = merge(l_g.on(l_q), r_g.on(r_q), NamedGate('I',
-                                                                 qubits=m_q))
+            merged_gate = merge(l_g.on(l_q), r_g.on(r_q),
+                                NamedGate('I', qubits=m_q))
 
             # Get right order (all left qubits first, then all right qubits)
             order = [(0, q) for q in l_qubits] + [(1, q) for q in r_qubits]
 
             # Return right matrix
-            return c * map_gate.matrix(order=order)
+            return merged_gate.matrix(order=order)
 
         # Get \sum_i X_i L_i R_i
         if s.ndim == 0:
             # Return Matrix
             Matrix = np.sum(
-                [_merge(l_g, r_g, s) for l_g, r_g in zip(l_gates, r_gates)],
+                [s * _merge(l_g, r_g) for l_g, r_g in zip(l_gates, r_gates)],
                 axis=0)
 
         elif s.ndim == 1:
             # Return Matrix
             Matrix = np.sum([
-                _merge(l_g, r_g, s)
+                s * _merge(l_g, r_g)
                 for s, l_g, r_g in zip(s, l_gates, r_gates)
                 if not np.isclose(s, 0)
             ],
@@ -999,7 +998,7 @@ class SchmidtGate(__Base__):
 
             # Return Matrix
             Matrix = np.sum([
-                _merge(l_gates[i], r_gates[j], s[i, j])
+                s[i, j] * _merge(l_gates[i], r_gates[j])
                 for i, j in zip(*s.nonzero())
                 if not np.isclose(s[i, j], 0)
             ],
