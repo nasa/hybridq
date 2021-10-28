@@ -184,23 +184,23 @@ def MatrixChannel(LMatrices: tuple[array, ...],
 
     from hybridq.utils import isintegral, isnumber
 
-    # Define sample
-    def __sample__(self, size: int = None, replace: bool = True):
-        from hybridq.utils import isintegral
-
-        # It is assumed here that s.ndim == 1
-        assert (s.ndim == 1)
-
-        # Get number of elements
-        idxs = np.random.choice(range(len(s)), size=size, replace=replace, p=s)
-
-        # Get gates (it is assumed here that left and right gates are the same)
-        return self.Kraus.gates[0][idxs] if isintegral(idxs) else tuple(
-            self.Kraus.gates[0][x] for x in idxs)
-
-    # Define apply
-    def __apply__(self, psi, order):
-        raise NotImplementedError
+    ## # Define sample
+    ## def __sample__(self, size: int = None, replace: bool = True):
+    ##     from hybridq.utils import isintegral
+    ##
+    ##     # It is assumed here that s.ndim == 1
+    ##     assert (s.ndim == 1)
+    ##
+    ##     # Get number of elements
+    ##     idxs = np.random.choice(range(len(s)), size=size, replace=replace, p=s)
+    ##
+    ##     # Get gates (it is assumed here that left and right gates are the same)
+    ##     return self.Kraus.gates[0][idxs] if isintegral(idxs) else tuple(
+    ##         self.Kraus.gates[0][x] for x in idxs)
+    ##
+    ## # Define apply
+    ## def __apply__(self, psi, order):
+    ##     raise NotImplementedError
 
     # Get matrices, and copy if needed
     LMatrices = tuple(map(np.array if copy else np.asarray, LMatrices))
@@ -273,43 +273,36 @@ def MatrixChannel(LMatrices: tuple[array, ...],
     # Initialize methods
     _methods = {}
 
-    # Initialize _stochastic and _functional
-    _stochastic = False
-    _functional = False
-
-    # Check if all matrices are unitaries
-    if s.ndim == 1 and RMatrices is None and np.isclose(np.sum(s), 1,
-                                                        atol=atol):
-        # Check if matrix is unitaries
-        def _is_unitary(m):
-            # Get multiplications
-            p1 = m.conj().T @ m
-            p2 = m @ m.conj().T
-            # Check
-            return np.allclose(p1, p2, atol=atol) and np.allclose(
-                p1, np.eye(p1.shape[0]))
-
-        # Check if stochasticity can be applied
-        _stochastic = all(map(_is_unitary, LMatrices))
-
-    # If all unitaries, add sample
-    if _stochastic:
-        # Update mro
-        mro = mro + (pr.StochasticGate,)
-
-        # Add gates
-        sdict.update(gates=None)
-
-        # Add sample
-        _methods.update(sample=__sample__)
-
-    # Add apply
-    elif _functional:
-        # Update mro
-        mro = mro + (pr.FunctionalGate,)
-
-        # Add update
-        sdict.update(apply=__apply__)
+    ## # Initialize _stochastic and _functional
+    ## _stochastic = False
+    ## _functional = False
+    ##
+    ## # Check if all matrices are unitaries
+    ## if s.ndim == 1 and RMatrices is None and np.isclose(np.sum(s), 1,
+    ##                                                     atol=atol):
+    ##     from hybridq.utils import isunitary
+    ##
+    ##     # Check if matrix is unitaries
+    ##     _stochastic = all(map(isunitary, LMatrices))
+    ##
+    ## # If all unitaries, add sample
+    ## if _stochastic:
+    ##     # Update mro
+    ##     mro = mro + (pr.StochasticGate,)
+    ##
+    ##     # Add gates
+    ##     sdict.update(gates=None)
+    ##
+    ##     # Add sample
+    ##     _methods.update(sample=__sample__)
+    ##
+    ## # Add apply
+    ## elif _functional:
+    ##     # Update mro
+    ##     mro = mro + (pr.FunctionalGate,)
+    ##
+    ##     # Add update
+    ##     sdict.update(apply=__apply__)
 
     # Merge extra methods
     if methods is not None:
