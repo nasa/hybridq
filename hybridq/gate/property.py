@@ -929,6 +929,15 @@ class SchmidtGate(__Base__):
         # Get left and right gates
         l_gates, r_gates = self.gates
 
+        # Cannot build map if qubits are not specified
+        if not (l_gates.qubits and r_gates.qubits):
+            raise ValueError(
+                "Cannot build 'Matrix' if 'qubits' are not specified.")
+
+        # Get order
+        order = tuple((0, q) for q in l_gates.qubits) + tuple(
+            (1, q) for q in r_gates.qubits)
+
         # Convert to MatrixGate (to speedup calculation)
         l_gates = TupleGate(
             MatrixGate(U=g.matrix(), qubits=((0, q)
@@ -937,14 +946,6 @@ class SchmidtGate(__Base__):
         r_gates = TupleGate(
             MatrixGate(U=(g.conj() if self._conj_rgates else g).matrix(),
                        qubits=((1, q) for q in g.qubits)) for g in r_gates)
-
-        # Cannot build map if qubits are not specified
-        if not (l_gates.qubits and r_gates.qubits):
-            raise ValueError(
-                "Cannot build 'Matrix' if 'qubits' are not specified.")
-
-        # Get order
-        order = l_gates.qubits + r_gates.qubits
 
         # Define how to merge gates
         def _merge(l_g, r_g):
