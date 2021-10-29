@@ -963,9 +963,20 @@ class SchmidtGate(__Base__):
                 self.s).todok() if self.s.ndim == 1 else dok_matrix(self.s)
 
         # Merge all gates
-        return np.sum(
+        Matrix = np.sum(
             [s * _merge(l_gates[x], r_gates[y]) for (x, y), s in s.items()],
             axis=0)
+
+        # Save cache
+        if self._use_cache:
+            # Cache hash
+            self._cached_hash = new_hash
+
+            # Cache Matrix
+            self._cached_Matrix = Matrix
+
+        # Return Matrix
+        return Matrix
 
 
 @requires('sample')
