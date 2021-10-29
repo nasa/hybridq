@@ -733,8 +733,55 @@ def test_gates__cgates_2(n_qubits, depth):
     assert (np.allclose(psi2, psi1, atol=1e-3))
 
 
+@pytest.mark.parametrize('dummy', [_ for _ in range(20)])
+def test_gates__schmidt_gate_1(dummy):
+    # Import SchmidtGate
+    from hybridq.gate import utils as gate_utils
+    from hybridq.gate import SchmidtGate, MatrixGate, Gate
+
+    # Let's create some random gates ...
+    G1 = [
+        MatrixGate(np.random.random((4, 4)), qubits='ab'),
+        MatrixGate(np.random.random((4, 4)), qubits='cb'),
+        MatrixGate(np.random.random((2, 2)), qubits='b'),
+    ]
+    G2 = [
+        MatrixGate(np.random.random((4, 4)), qubits=[2, 3]),
+        MatrixGate(np.random.random((4, 4)), qubits=[5, 3]),
+        MatrixGate(np.random.random((4, 4)), qubits=[(0, 1), 2]),
+        MatrixGate(np.random.random((2, 2)), qubits=[2]),
+    ]
+
+    # ... and random weights
+    w = np.random.random((3, 4))
+
+    # Create SchmidtGate
+    S = SchmidtGate(gates=(G1, G2), s=w)
+
+    # Qubits in SchmidtGate's are ordered so that "left" qubits
+    # appear before than the "right" qubits
+    assert (S.qubits == S.gates[0].qubits + S.gates[1].qubits)
+
+    # Let's check the SchmidtGate by manually merging the gates
+    #
+    # First, we need to extend all gates in G1 and G2 to the right number of qubits, ...
+    _G1 = [gate_utils.merge(g, Gate('I', qubits=S.qubits)) for g in G1]
+    _G2 = [gate_utils.merge(g, Gate('I', qubits=S.qubits)) for g in G2]
+
+    # ... we can then sum all matrices using the right order ...
+    U = np.sum([
+        S.s[i, j] * gate_utils.merge(_G1[i], _G2[j]).matrix(order=S.qubits)
+        for i in range(len(G1))
+        for j in range(len(G2))
+    ],
+               axis=0)
+
+    # ... and check that everything is ok
+    np.testing.assert_allclose(U, S.matrix())
+
+
 @pytest.mark.parametrize('nq', [8 for _ in range(20)])
-def test_gates__schmidt_gate(nq):
+def test_gates__schmidt_gate_2(nq):
     from hybridq.gate import MatrixGate, SchmidtGate
     from hybridq.gate.utils import decompose
 
