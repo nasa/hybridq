@@ -838,7 +838,8 @@ def simplify(circuit: list[BaseGate],
     # Remove gates if required
     if remove_id_gates:
         rev_circuit = (g for g in reversed(circuit) if g.name != 'I' and (
-            g.n_qubits > max_n_qubits_matrix or not isidentity([g], atol=atol)))
+            not g.provides('matrix') or g.n_qubits > max_n_qubits_matrix or
+            not isidentity([g], atol=atol)))
     else:
         rev_circuit = reversed(circuit)
 
