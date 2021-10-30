@@ -22,7 +22,7 @@ from hybridq.circuit import Circuit
 import numpy as np
 
 
-def get_random_indexes(n_qubits: int, *, use_random_indexes: bool = False):
+def get_indexes(n_qubits: int, *, use_random_indexes: bool = False):
     # Initialize
     indexes = []
 
@@ -134,9 +134,8 @@ def get_rqc(n_qubits: int,
     circuit = Circuit()
 
     # If not provided, generate indexes
-    indexes = get_random_indexes(n_qubits,
-                                 use_random_indexes=use_random_indexes
-                                ) if indexes is None else list(indexes)
+    indexes = get_indexes(n_qubits, use_random_indexes=use_random_indexes
+                         ) if indexes is None else list(indexes)
 
     # Check that size is correct
     assert (len(indexes) == n_qubits)
