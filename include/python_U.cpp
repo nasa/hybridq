@@ -60,7 +60,7 @@ int apply_U(float_type *psi_re_ptr, float_type *psi_im_ptr,
 }
 
 template <typename X, typename... Y>
-auto min(X &&x, Y &&... y) {
+auto min(X &&x, Y &&...y) {
   if constexpr (sizeof...(y)) {
     const auto _y = min(y...);
     return x < _y ? x : _y;
@@ -69,7 +69,7 @@ auto min(X &&x, Y &&... y) {
 }
 
 template <typename X, typename... Y>
-auto max(X &&x, Y &&... y) {
+auto max(X &&x, Y &&...y) {
   if constexpr (sizeof...(y)) {
     const auto _y = min(y...);
     return x > _y ? x : _y;

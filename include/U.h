@@ -29,7 +29,7 @@ template <std::size_t log2_pack_size, typename float_type,
           typename... Positions>
 int apply(float_type *psi_re_ptr, float_type *psi_im_ptr,
           const float_type *U_ptr, const std::size_t state_size_ptr,
-          Positions &&... pos) {
+          Positions &&...pos) {
   // Check if pointer are correctly aligned
   if (reinterpret_cast<std::size_t>(psi_re_ptr) % 32 or
       reinterpret_cast<std::size_t>(psi_im_ptr) % 32)
@@ -45,10 +45,10 @@ int apply(float_type *psi_re_ptr, float_type *psi_im_ptr,
   static const std::size_t n_pos = sizeof...(pos);
 
   // Check that all positions are positive numbers
-  if (not[](auto &&... x) { return ((x >= 0) & ...); }(pos...)) return 1;
+  if (not [](auto &&...x) { return ((x >= 0) & ...); }(pos...)) return 1;
 
   // Check that all positions are above log2_pack_size
-  if ([](auto &&... x) {
+  if ([](auto &&...x) {
         return ((static_cast<std::size_t>(x) < log2_pack_size) + ...);
       }(pos...) != 0)
     return 1;

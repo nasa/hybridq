@@ -25,17 +25,53 @@ import numpy as np
 
 def flatten(a: Circuit) -> Circuit:
     """
-    Return a flattened circuit.
+    Return a flattened circuit. More precisely, `flatten` iteratively looks for
+    gates that provide `flatten` in order to return a flattened circuit.
+
+    Parameters
+    ----------
+    a: Circuit
+        Circuit to flatten.
+
+    Returns
+    -------
+    Circuit
+        Flattened circuit.
     """
     return Circuit(
         g for gs in a for g in (gs if gs.provides('flatten') else (gs,)))
 
 
+def isidentity(a: Circuit, atol: float = 1e-8) -> bool:
+    """
+    Check if `a` is close to identity within an absolute tollerance of `atol`.
+    The check is done by getting the matrix representation of the circuit `a`.
+
+    Parameters
+    ----------
+    a: Circuit
+        Circuit to check.
+    atol: float, optional
+        Absolute tollerance.
+
+    Returns
+    -------
+    bool
+        `True` if `a` is close to the identity, otherwise `False`.
+    """
+    # Get matrix
+    M = matrix(a)
+
+    # Check if close to identity
+    return np.allclose(M, np.eye(M.shape[0]), atol=atol)
+
+
 def isclose(a: Circuit,
             b: Circuit,
             use_matrix_commutation: bool = True,
+            max_n_qubits_matrix: int = 10,
             atol: float = 1e-8,
-            verbose: bool = False):
+            verbose: bool = False) -> bool:
     """
     Check if `a` is close to `b` within the absolute tollerance
     `atol`.
@@ -44,8 +80,11 @@ def isclose(a: Circuit,
     ----------
     circuit: Circuit[BaseGate]
         `Circuit` to compare with.
-    use_matrix_commutation: bool
+    use_matrix_commutation: bool, optional
         Use commutation rules. See `hybridq.circuit.utils.simplify`.
+    max_n_qubits_matrix: int, optional
+        Matrices are computes for gates with up to `max_n_qubits_matrix` qubits
+        (default: 10).
     atol: float, optional
         Absolute tollerance.
 
@@ -71,11 +110,12 @@ def isclose(a: Circuit,
     # Get simplified circuit
     s = simplify(a + b.inv(),
                  use_matrix_commutation=use_matrix_commutation,
+                 max_n_qubits_matrix=max_n_qubits_matrix,
                  atol=atol,
                  verbose=verbose)
 
     return not s or all(
-        np.allclose(g.matrix(), np.eye(2**len(g.qubits)), atol=atol)
+        isidentity([g], atol=atol)
         for g in tqdm(s, disable=not verbose, desc='Check'))
 
 
@@ -84,12 +124,42 @@ def insert_from_left(circuit: iter[BaseGate],
                      atol: float = 1e-8,
                      *,
                      use_matrix_commutation: bool = True,
+                     max_n_qubits_matrix: int = 10,
                      simplify: bool = True,
                      pop: bool = False,
                      pinned_qubits: list[any] = None,
                      inplace: bool = False) -> Circuit:
     """
-    Add a gate to circuit starting from the left, commuting with existing gates if necessary.
+    Add a gate to circuit starting from the left, commuting with existing gates
+    if necessary.
+
+    Parameters
+    ----------
+    circuit: Circuit
+        `gate` will be added to `circuit`.
+    gate: Gate
+        Gate to add to `circuit`.
+    atol: float, optional
+        Absolute tollerance while simplifying.
+    use_matrix_commutation: bool, optional
+        Use matrix commutation while simplifying `circuit`.
+    max_n_qubits_matrix: int, optional
+        Matrices are computes for gates with up to `max_n_qubits_matrix` qubits
+        (default: 10).
+    simplify: bool, optional
+        Simplify `circuit` while adding `gate` (default: `True`).
+    pop: bool, optional
+        Remove `gate` if it commutes with all gates in `circuit` (default: `False`).
+    pinned_qubits: list[any], optional
+        If `pop` is `True`, remove gates unless `gate` share qubits with
+        `pinned_qubits` (default: `None`).
+    inplace: bool, optional
+        If `True`, add `gate` to `circuit` in-place (default: `False`)
+
+    Returns
+    -------
+    Circuit
+        Circuit with `gate` added to it.
     """
     from copy import deepcopy
 
@@ -119,9 +189,10 @@ def insert_from_left(circuit: iter[BaseGate],
         # and exit loop.
         _commute = False
         try:
-            _commute |= not _qubits.intersection(_g.qubits)
-            _commute |= use_matrix_commutation and gate.commutes_with(_g,
-                                                                      atol=atol)
+            if _g.n_qubits <= max_n_qubits_matrix:
+                _commute |= not _qubits.intersection(_g.qubits)
+                _commute |= use_matrix_commutation and gate.commutes_with(
+                    _g, atol=atol)
         except:
             pass
         finally:
@@ -418,7 +489,7 @@ def compress(circuit: iter[BaseGate],
     use_matrix_commutation: bool, optional
         If `True`, use commutation to maximize compression.
     max_n_qubits_matrix: int, optional
-        Limit the size of unitaries when checking for commutation.
+        Limit the size of matrices when checking for commutation.
     skip_compression: iter[{type, str}], optional
         If `BaseGate` is either an instance of any types in `skip_compression`,
         it provides any methods in `skip_compression`, or `BaseGate` name will
@@ -754,6 +825,7 @@ def unitary(*args, **kwargs):
 def simplify(circuit: list[BaseGate],
              atol: float = 1e-8,
              use_matrix_commutation: bool = True,
+             max_n_qubits_matrix: int = 10,
              remove_id_gates: bool = True,
              verbose: bool = False) -> Circuit:
     """
@@ -765,7 +837,9 @@ def simplify(circuit: list[BaseGate],
 
     # Remove gates if required
     if remove_id_gates:
-        rev_circuit = (g for g in reversed(circuit) if g.name != 'I')
+        rev_circuit = (g for g in reversed(circuit) if g.name != 'I' and (
+            not g.provides('matrix') or g.n_qubits > max_n_qubits_matrix or
+            not isidentity([g], atol=atol)))
     else:
         rev_circuit = reversed(circuit)
 
@@ -778,6 +852,7 @@ def simplify(circuit: list[BaseGate],
                          gate,
                          atol=atol,
                          use_matrix_commutation=use_matrix_commutation,
+                         max_n_qubits_matrix=max_n_qubits_matrix,
                          simplify=True,
                          pop=False,
                          pinned_qubits=None,
@@ -791,6 +866,7 @@ def popright(circuit: list[BaseGate],
              pinned_qubits: list[any],
              atol: float = 1e-8,
              use_matrix_commutation: bool = True,
+             max_n_qubits_matrix: int = 10,
              simplify: bool = True,
              verbose: bool = False) -> Circuit:
     """
@@ -809,6 +885,7 @@ def popright(circuit: list[BaseGate],
                          gate,
                          atol=atol,
                          use_matrix_commutation=use_matrix_commutation,
+                         max_n_qubits_matrix=max_n_qubits_matrix,
                          simplify=simplify,
                          pop=True,
                          pinned_qubits=pinned_qubits,

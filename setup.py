@@ -44,7 +44,7 @@ class MyInstall(DistutilsInstall):
 here = path.abspath(path.dirname(__file__))
 
 # Version
-version = '0.7.7-5'
+version = '0.8.0'
 
 # Get the long description from the README file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
@@ -59,16 +59,24 @@ setup(
     version=version,
     description='Hybrid Simulator for Quantum Circuits',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     url='https://github.com/s-mandra/hybridq',
     author='Salvatore Mandrà',
+    author_email = 'salvatore.mandra@nasa.gov',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python :: 3.6',
+        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Artificial Intelligence',
+        'Topic :: Scientific/Engineering :: Mathematics',
+        'Topic :: Scientific/Engineering :: Physics',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3 :: Only'
     ],
-    keywords='simulator quantum circuits',
+    python_requires='>=3.7, <3.9',
+    keywords=['simulator quantum circuits', 'quantum computing'],
     packages=find_packages(exclude=['docs', 'tests']),
     install_requires=install_requires,
     project_urls={  # Optional

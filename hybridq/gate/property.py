@@ -317,6 +317,9 @@ class PowerMatrixGate(PowerGate, __Base__):
         else:
             return super().__eq__(other)
 
+    def __hash__(self) -> int:
+        return super().__hash__()
+
     def __print__(self):
         return {
             'ct': (0, '^+' if self.__conj and self.__T else
@@ -685,9 +688,8 @@ class RotationGate(
     def __print__(self) -> dict[str, tuple[int, str, int]]:
         _params = ''
         if self.params:
-            if any(
-                    isinstance(self.params[0], t)
-                    for t in (int, float, np.floating, np.integer)):
+            from hybridq.utils import isnumber
+            if isnumber(self.params[0]):
                 _params = f'φ={np.round(self.params[0]/np.pi, 5)}π'
             else:
                 _params = f'φ={self.params[0]}'
@@ -817,8 +819,10 @@ def _s_transform(s):
 
     # If diagonal, just return the diagonal
     elif s.ndim == 2:
-        return _s_transform(np.diag(s)) if np.allclose(s, np.diag(
-            np.diag(s))) else s
+        # Return
+        return _s_transform(
+            np.diag(s)) if s.shape[0] == s.shape[1] and np.allclose(
+                s, np.diag(np.diag(s))) else s
 
     # Raise an implementation error
     else:
@@ -826,9 +830,12 @@ def _s_transform(s):
 
 
 @compare('gates,s,_conj_rgates')
-@staticvars('gates,s,_conj_rgates',
+@staticvars('gates,s,_conj_rgates,_use_cache',
             _conj_rgates=False,
-            transform=dict(gates=_gate_transform, s=_s_transform),
+            _use_cache=True,
+            transform=dict(gates=_gate_transform,
+                           s=_s_transform,
+                           _use_cache=lambda x: bool(x)),
             check=dict(s=(lambda s: s is None or 0 <= s.ndim <= 2,
                           "'s' cannot have more than two dimensions.")))
 class SchmidtGate(__Base__):
@@ -847,7 +854,8 @@ class SchmidtGate(__Base__):
 
         # If s is scalar, skip control
         if s.ndim == 0:
-            pass
+            if nr != nl:
+                _err = True
 
         # s is a vector
         elif s.ndim == 1:
@@ -882,94 +890,100 @@ class SchmidtGate(__Base__):
                 0)
         }
 
+    def __reduce__(self,
+                   *,
+                   ignore_sdict: tuple[str, ...] = tuple(),
+                   ignore_methods: tuple[str, ...] = tuple(),
+                   ignore_keys: tuple[str, ...] = tuple()):
+        return super().__reduce__(ignore_sdict=ignore_sdict,
+                                  ignore_methods=ignore_methods,
+                                  ignore_keys=ignore_keys +
+                                  ('_cached_hash', '_cached_Matrix'))
+
     @property
     def Matrix(self):
         """
         Construct Matrix representing the Map. Order of qubits for `Matrix`
-        will be `SchmidtGate.gates[0].qubits + SchmidtGate.gates[1].qubits`.
+        will be `SchmidtGate.gates[0].qubits + SchmidtGate.gates[1].qubits`,
+        even if left and right gates have overlapping qubits.
         """
         from hybridq.gate import TupleGate, MatrixGate, NamedGate
+        from scipy.sparse import dok_matrix, diags
         from hybridq.utils import sort
+
+        # Check if a cached value is already present. If yes, return it
+        if self._use_cache:
+            # Get cached hash
+            cached_hash = getattr(self, '_cached_hash', None)
+
+            # Get cached Matrix
+            cached_Matrix = getattr(self, '_cached_Matrix', None)
+
+            # Compute new hash
+            new_hash = hash(self)
+
+            # Return cached matrix
+            if new_hash == cached_hash and cached_Matrix is not None:
+                return cached_Matrix
 
         # Get left and right gates
         l_gates, r_gates = self.gates
 
-        # Convert to MatrixGate (to speedup calculation)
-        l_gates = TupleGate(
-            MatrixGate(U=g.matrix(), qubits=g.qubits) for g in l_gates)
-        r_gates = TupleGate(
-            MatrixGate(U=(g.conj() if self._conj_rgates else g).matrix(),
-                       qubits=g.qubits) for g in r_gates)
-
-        # Get left and right qubits
-        l_qubits, r_qubits = l_gates.qubits, r_gates.qubits
-
         # Cannot build map if qubits are not specified
-        if not (l_qubits and r_qubits):
+        if not (l_gates.qubits and r_gates.qubits):
             raise ValueError(
                 "Cannot build 'Matrix' if 'qubits' are not specified.")
 
-        # Get number of qubits
-        nl, nr = len(l_qubits), len(r_qubits)
+        # Get order
+        order = tuple((0, q) for q in l_gates.qubits) + tuple(
+            (1, q) for q in r_gates.qubits)
+
+        # Convert to MatrixGate (to speedup calculation)
+        l_gates = TupleGate(
+            MatrixGate(U=g.matrix(), qubits=((0, q)
+                                             for q in g.qubits))
+            for g in l_gates)
+        r_gates = TupleGate(
+            MatrixGate(U=(g.conj() if self._conj_rgates else g).matrix(),
+                       qubits=((1, q) for q in g.qubits)) for g in r_gates)
+
+        # Define how to merge gates
+        def _merge(l_g, r_g):
+            from hybridq.gate.utils import merge, pad
+
+            # Merge the two gates and pad to the right number of qubits
+            return pad(merge(l_g, r_g),
+                       qubits=order,
+                       order=order,
+                       return_matrix_only=True)
 
         # Get s
-        s = self.s
+        s = diags(
+            [self.s] * len(l_gates)).todok() if self.s.ndim == 0 else diags(
+                self.s).todok() if self.s.ndim == 1 else dok_matrix(self.s)
 
-        def _merge(l_g, r_g, c):
-            from hybridq.gate.utils import merge
+        # Merge all gates
+        Matrix = np.sum(
+            [s * _merge(l_gates[x], r_gates[y]) for (x, y), s in s.items()],
+            axis=0)
 
-            # Left qubits
-            l_q = tuple((0, q) for q in l_g.qubits)
+        # Save cache
+        if self._use_cache:
+            # Cache hash
+            self._cached_hash = new_hash
 
-            # Right qubits
-            r_q = tuple((1, q) for q in r_g.qubits)
+            # Cache Matrix
+            self._cached_Matrix = Matrix
 
-            # Get qubits missing in left gate
-            m_q = tuple((0, q) for q in l_qubits if q not in l_g.qubits)
-
-            # Get qubits missing in right gate
-            m_q += tuple((1, q) for q in r_qubits if q not in r_g.qubits)
-
-            # Merge gates
-            map_gate = merge(l_g.on(l_q), r_g.on(r_q), NamedGate('I',
-                                                                 qubits=m_q))
-
-            # Get right order (all left qubits first, then all right qubits)
-            order = [(0, q) for q in l_qubits] + [(1, q) for q in r_qubits]
-
-            # Return right matrix
-            return c * map_gate.matrix(order=order)
-
-        # Get \sum_i X_i L_i R_i
-        if s.ndim == 0:
-            # Return Matrix
-            return np.sum(
-                [_merge(l_g, r_g, s) for l_g, r_g in zip(l_gates, r_gates)],
-                axis=0)
-
-        elif s.ndim == 1:
-            # Return Matrix
-            return np.sum([
-                _merge(l_g, r_g, c) for c, l_g, r_g in zip(s, l_gates, r_gates)
-            ],
-                          axis=0)
-
-        # Get \sum_ij s_ij L_i R_j
-        elif s.ndim == 2:
-            # Return Matrix
-            return np.sum([
-                _merge(l_gates[i], r_gates[j], s[i, j])
-                for i in range(len(s))
-                for j in range(len(s))
-            ],
-                          axis=0)
-
-        else:
-            raise NotImplementedError
+        # Return Matrix
+        return Matrix
 
 
 @requires('sample')
-@staticvars('gates', transform=dict(gates=lambda gates: BaseTupleGate(gates)))
+@staticvars(
+    'gates',
+    transform=dict(
+        gates=lambda gates: None if gates is None else BaseTupleGate(gates)))
 class StochasticGate(__Base__):
     pass
 

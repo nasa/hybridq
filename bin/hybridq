@@ -242,8 +242,7 @@ if __name__ == '__main__':
     if params['verbose'] and (not params['use_mpi'] or mpi_rank == 0):
         if 'evolution' in params['optimize']:
             psi = results['simulate'][0] if params['return_info'] else results[
-                'simulate']
-            psi = np.reshape(psi, np.prod(psi.shape))
+                'simulate'].ravel()
             for x in range(8):
                 _nq = len(params['initial_state'])
                 x = int(''.join(reversed(bin(x)[2:].zfill(_nq))), 2)

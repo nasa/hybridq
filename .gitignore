@@ -5,6 +5,8 @@ __*__
 __*__.ipynb
 *.so
 *.x
+.DS_Store
+.idea
 dask-worker-space/
 build/
 dist/

@@ -1,4 +1,4 @@
-name: Python Check Format
+name: Python PyTest - noise_1
 
 on:
   push:
@@ -20,10 +20,9 @@ jobs:
 
       - name: Build HybridQ container
         run: |
-          docker-compose build --build-arg SKIP_PRE_CACHING=true --build-arg HYBRIDQ_DISABLE_CPP_CORE=true hybridq
+          docker-compose build --build-arg ARCH=x86-64 hybridq
 
-      - name: Check format
+      - name: Run tests
         run: |
-          docker run --rm hybridq -c 'pip install yapf==0.31.0 clang-format==13.0.0 && \
-            cd /opt/hybridq && \
-            bash scripts/check_format.sh'
+          docker run --rm hybridq -c 'pip install pytest-random-order && \
+            pytest -sv --random-order -k 'noise_1__' /opt/hybridq/tests/tests.py'

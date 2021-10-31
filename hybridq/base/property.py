@@ -309,6 +309,13 @@ class Params(__Base__):
 
 
 @compare('elements')
+@staticvars('_base_check',
+            _base_check=None,
+            check=dict(_base_check=lambda ts: ts is None or all(
+                callable(k) and all(type(t) == type for t in ts) for k, ts in ts
+                .items())),
+            transform=dict(_base_check=lambda ts: None if ts is None else dict(
+                (k, tuple(ts)) for k, ts in dict(ts).items())))
 class Tuple(Tags, __Base__):
     """
     Tuple class for `__Base__`.
@@ -324,6 +331,18 @@ class Tuple(Tags, __Base__):
         # Check that all elements are __Base__
         if not all(isinstance(el, __Base__) for el in elements):
             raise TypeError(f"Only '__Base__' elements are supported")
+
+        # Get possible basis
+        _base_check = self.__get_staticvar__('_base_check')
+
+        if _base_check and not all(
+                f(isinstance(el, t)
+                  for t in ts)
+                for el in elements
+                for f, ts in _base_check.items()):
+            raise TypeError(
+                f"Only {self.__get_staticvar__('_base_check')} elements are supported"
+            )
 
         # Initialize elements
         self.__elements = elements
