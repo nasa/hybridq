@@ -159,6 +159,73 @@ def merge(a: Gate, *bs) -&gt; Gate:
         return merge(gate, *bs)
 
 
+def pad(gate: Gate,
+        qubits: iter[any],
+        order: iter[any] = None,
+        return_matrix_only: bool = False) -&gt; {MatrixGate, np.ndarray}:
+    &#34;&#34;&#34;
+    Pad `gate` to act on `qubits`. More precisely, if `gate` is acting on a
+    subset of `qubits`, extend `gate` with identities to act on all `qubits`.
+
+    Parameters
+    ----------
+    gate: Gate
+        The gate to pad.
+    qubits: iter[any]
+        Qubits used to pad `gate`. If `gate.qubits` is not a subset of
+        `qubits`, raise an error.
+    order: iter[any], optional
+        If provided, reorder qubits in the final gate accordingly to `qubits`.
+    return_matrix_only: bool, optional
+        If `True`, the matrix representing the state is returned instead of
+        `MatrixGate` (default: `False`).
+
+    Returns
+    -------
+    MatrixGate
+        The padded gate acting on `qubits`.
+    &#34;&#34;&#34;
+    from hybridq.gate import MatrixGate
+    from hybridq.utils import sort
+
+    # Convert qubits to tuple
+    qubits = tuple(qubits)
+
+    # Convert order to tuple if provided
+    order = None if order is None else tuple(order)
+
+    # Check that order is a permutation of qubits
+    if order and sort(qubits) != sort(order):
+        raise ValueError(&#34;&#39;order&#39; must be a permutation of &#39;qubits&#39;&#34;)
+
+    # &#39;gate&#39; must have qubits and it must be a subset of &#39;qubits&#39;
+    if not gate.provides(&#39;qubits&#39;) or set(gate.qubits).difference(qubits):
+        raise ValueError(&#34;&#39;gate&#39; must provide qubits and those &#34;
+                         &#34;qubits must be a subset of &#39;qubits&#39;.&#34;)
+
+    # Get matrix
+    M = gate.matrix()
+
+    # Pad matrix with identity
+    if gate.n_qubits != len(qubits):
+        M = np.kron(M, np.eye(2**(len(qubits) - gate.n_qubits)))
+
+    # Get new qubits
+    qubits = gate.qubits + tuple(set(qubits).difference(gate.qubits))
+
+    # Reorder if required
+    if order and order != qubits:
+        # Get new matrix
+        M = MatrixGate(M, qubits=qubits).matrix(order=order)
+
+        # Set new qubits
+        qubits = order
+
+    # Return gate
+    return M if return_matrix_only else MatrixGate(
+        M, qubits=qubits, tags=gate.tags if gate.provides(&#39;tags&#39;) else {})
+
+
 def decompose(gate: Gate,
               qubits: iter[any],
               return_matrices: bool = False,
@@ -364,7 +431,7 @@ def decompose(gate: Gate,
 </details>
 </dd>
 <dt id="hybridq.gate.utils.merge"><code class="name flex">
-<span>def <span class="ident">merge</span></span>(<span>a: Gate, *bs) ‑> <function Gate at 0x7f521e62aa70></span>
+<span>def <span class="ident">merge</span></span>(<span>a: Gate, *bs) ‑> <function Gate at 0x7f34f84f9d40></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Merge two gates <code>a</code> and <code>b</code>. The merged <code>Gate</code> will be equivalent to apply</p>
@@ -469,6 +536,101 @@ def decompose(gate: Gate,
         return merge(gate, *bs)</code></pre>
 </details>
 </dd>
+<dt id="hybridq.gate.utils.pad"><code class="name flex">
+<span>def <span class="ident">pad</span></span>(<span>gate: Gate, qubits: iter[any], order: iter[any] = None, return_matrix_only: bool = False) ‑> {MatrixGate, np.ndarray}</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Pad <code>gate</code> to act on <code>qubits</code>. More precisely, if <code>gate</code> is acting on a
+subset of <code>qubits</code>, extend <code>gate</code> with identities to act on all <code>qubits</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>gate</code></strong> :&ensp;<code>Gate</code></dt>
+<dd>The gate to pad.</dd>
+<dt><strong><code>qubits</code></strong> :&ensp;<code>iter[any]</code></dt>
+<dd>Qubits used to pad <code>gate</code>. If <code>gate.qubits</code> is not a subset of
+<code>qubits</code>, raise an error.</dd>
+<dt><strong><code>order</code></strong> :&ensp;<code>iter[any]</code>, optional</dt>
+<dd>If provided, reorder qubits in the final gate accordingly to <code>qubits</code>.</dd>
+<dt><strong><code>return_matrix_only</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, the matrix representing the state is returned instead of
+<code>MatrixGate</code> (default: <code>False</code>).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>MatrixGate</code></dt>
+<dd>The padded gate acting on <code>qubits</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pad(gate: Gate,
+        qubits: iter[any],
+        order: iter[any] = None,
+        return_matrix_only: bool = False) -&gt; {MatrixGate, np.ndarray}:
+    &#34;&#34;&#34;
+    Pad `gate` to act on `qubits`. More precisely, if `gate` is acting on a
+    subset of `qubits`, extend `gate` with identities to act on all `qubits`.
+
+    Parameters
+    ----------
+    gate: Gate
+        The gate to pad.
+    qubits: iter[any]
+        Qubits used to pad `gate`. If `gate.qubits` is not a subset of
+        `qubits`, raise an error.
+    order: iter[any], optional
+        If provided, reorder qubits in the final gate accordingly to `qubits`.
+    return_matrix_only: bool, optional
+        If `True`, the matrix representing the state is returned instead of
+        `MatrixGate` (default: `False`).
+
+    Returns
+    -------
+    MatrixGate
+        The padded gate acting on `qubits`.
+    &#34;&#34;&#34;
+    from hybridq.gate import MatrixGate
+    from hybridq.utils import sort
+
+    # Convert qubits to tuple
+    qubits = tuple(qubits)
+
+    # Convert order to tuple if provided
+    order = None if order is None else tuple(order)
+
+    # Check that order is a permutation of qubits
+    if order and sort(qubits) != sort(order):
+        raise ValueError(&#34;&#39;order&#39; must be a permutation of &#39;qubits&#39;&#34;)
+
+    # &#39;gate&#39; must have qubits and it must be a subset of &#39;qubits&#39;
+    if not gate.provides(&#39;qubits&#39;) or set(gate.qubits).difference(qubits):
+        raise ValueError(&#34;&#39;gate&#39; must provide qubits and those &#34;
+                         &#34;qubits must be a subset of &#39;qubits&#39;.&#34;)
+
+    # Get matrix
+    M = gate.matrix()
+
+    # Pad matrix with identity
+    if gate.n_qubits != len(qubits):
+        M = np.kron(M, np.eye(2**(len(qubits) - gate.n_qubits)))
+
+    # Get new qubits
+    qubits = gate.qubits + tuple(set(qubits).difference(gate.qubits))
+
+    # Reorder if required
+    if order and order != qubits:
+        # Get new matrix
+        M = MatrixGate(M, qubits=qubits).matrix(order=order)
+
+        # Set new qubits
+        qubits = order
+
+    # Return gate
+    return M if return_matrix_only else MatrixGate(
+        M, qubits=qubits, tags=gate.tags if gate.provides(&#39;tags&#39;) else {})</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -491,6 +653,7 @@ def decompose(gate: Gate,
 <li><code><a title="hybridq.gate.utils.get_available_gates" href="#hybridq.gate.utils.get_available_gates">get_available_gates</a></code></li>
 <li><code><a title="hybridq.gate.utils.get_clifford_gates" href="#hybridq.gate.utils.get_clifford_gates">get_clifford_gates</a></code></li>
 <li><code><a title="hybridq.gate.utils.merge" href="#hybridq.gate.utils.merge">merge</a></code></li>
+<li><code><a title="hybridq.gate.utils.pad" href="#hybridq.gate.utils.pad">pad</a></code></li>
 </ul>
 </li>
 </ul>

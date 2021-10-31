@@ -60,46 +60,106 @@ from hybridq.circuit import Circuit
 import numpy as np
 
 
-def __convert(circuit: iter) -&gt; Circuit:
+def __transform(gate):
+    &#34;&#34;&#34;
+    Convert SuperCircuit -&gt; Circuit
+    &#34;&#34;&#34;
     from hybridq.dm.gate import BaseSuperGate
     from hybridq.gate import BaseGate
+    from hybridq.gate import MatrixGate
 
-    def _transform(gate):
-        &#34;&#34;&#34;
-        Convert SuperCircuit -&gt; Circuit
-        &#34;&#34;&#34;
-        from hybridq.gate import MatrixGate
+    # If gate is a BaseSuperGate
+    if isinstance(gate, BaseSuperGate):
+        # Get left and right qubits
+        l_qubits, r_qubits = (gate.qubits, gate.qubits) if isinstance(
+            gate, BaseGate) else gate.qubits
 
-        # If gate is a BaseSuperGate
-        if isinstance(gate, BaseSuperGate):
-            # Get left and right qubits
-            l_qubits, r_qubits = (gate.qubits, gate.qubits) if isinstance(
-                gate, BaseGate) else gate.qubits
+        # Return a MatrixGate which uses map as Matrix and left/right
+        # qubits as qubits
+        return MatrixGate(gate.map(), [(0, q) for q in l_qubits] +
+                          [(1, q) for q in r_qubits])
 
-            # Return a MatrixGate which uses map as Matrix and left/right
-            # qubits as qubits
-            return MatrixGate(gate.map(), [(0, q) for q in l_qubits] +
-                              [(1, q) for q in r_qubits])
+    # If gate is a regular BaseGate
+    elif isinstance(gate, BaseGate):
+        # Apply the gate to both left and right qubits
+        return (gate.on((0, q) for q in gate.qubits), gate.conj().on(
+            (1, q) for q in gate.qubits))
 
-        # If gate is a regular BaseGate
-        elif isinstance(gate, BaseGate):
-            # Apply the gate to both left and right qubits
-            return (gate.on((0, q) for q in gate.qubits), gate.conj().on(
-                (1, q) for q in gate.qubits))
+    # Only BaseGate&#39;s and BaseSuperGate&#39;s are supported
+    else:
+        raise TypeError(f&#34;{type(gate).__name__} not supported.&#34;)
 
-        # Only BaseGate&#39;s and BaseSuperGate&#39;s are supported
+
+def __convert(circuit: iter,
+              parallel: {bool, int} = False,
+              verbose: bool = False) -&gt; Circuit:
+    from tqdm.auto import tqdm
+
+    # Get lenght
+    try:
+        total = len(circuit)
+    except:
+        total = None
+
+    # Flatten circuit
+    circuit = tuple(
+        g for w in circuit for g in (w if isinstance(w, tuple) else [w]))
+
+    # Parallelize if requested
+    if parallel:
+        from hybridq.utils import isintegral
+        from multiprocessing import Pool
+        from time import sleep
+
+        # Get number of parallel threads
+        if isinstance(parallel, bool):
+            from os import cpu_count
+            parallel = cpu_count()
+        elif isintegral(parallel) and parallel &gt; 0:
+            parallel = int(parallel)
         else:
-            raise TypeError(f&#34;{type(gate).__name__} not supported.&#34;)
+            raise ValueError(&#34;&#39;parallel&#39; must be a positive integer&#34;)
 
-    # Return circuit
-    return Circuit(g for w in map(_transform, circuit)
-                   for g in (w if isinstance(w, tuple) else [w]))
+        with Pool(parallel) as pool, tqdm(total=len(circuit),
+                                          desc=&#39;Converting circuit&#39;,
+                                          disable=not verbose) as pbar:
+            # Get map
+            _map = [pool.apply_async(__transform, (g,)) for g in circuit]
+
+            # Wait till ready
+            while 1:
+                # Count number of complete
+                c = sum(m.ready() for m in _map)
+
+                # Update pbar
+                pbar.n = c
+                pbar.update()
+
+                # Break if all complete
+                if c == len(_map):
+                    break
+
+                # Sleep for a while
+                sleep(0.1)
+
+            # Return circuit
+            return Circuit(m.get() for m in _map)
+
+    # Otherwise, transform one by one
+    else:
+        return Circuit(
+            tqdm(map(__transform, circuit),
+                 total=total,
+                 desc=&#39;Converting circuit&#39;,
+                 disable=not verbose))
 
 
 def simulate(circuit: SuperCircuit,
              initial_state: any,
              final_state: any = None,
              optimize: any = &#39;evolution&#39;,
+             parallel: {bool, int} = False,
+             verbose: bool = False,
              **kwargs):
     &#34;&#34;&#34;
     Frontend to simulate `rho` using different optimization models and
@@ -124,9 +184,6 @@ def simulate(circuit: SuperCircuit,
     `hybridq.circuit.simulation` and `hybridq.circuit.simulation.clifford`
     &#34;&#34;&#34;
     from hybridq.circuit import Circuit
-
-    # Set defaults
-    kwargs.setdefault(&#39;force_supercircuit&#39;, False)
 
     # Convert circuit to list
     circuit = list(circuit)
@@ -157,6 +214,8 @@ def simulate(circuit: SuperCircuit,
         # Return Clifford expandion
         return update_pauli_string(circuit=circuit,
                                    pauli_string=initial_state,
+                                   parallel=parallel,
+                                   verbose=verbose,
                                    **kwargs)
 
     else:
@@ -170,7 +229,7 @@ def simulate(circuit: SuperCircuit,
         l_qubits, r_qubits = circuit.all_qubits()
 
         # Convert SuperCircuit to Circuit
-        circuit = __convert(circuit)
+        circuit = __convert(circuit, parallel=parallel, verbose=verbose)
 
         # Get number of qubits
         nl = len(l_qubits)
@@ -249,6 +308,8 @@ def simulate(circuit: SuperCircuit,
                         initial_state=initial_state,
                         final_state=final_state,
                         optimize=optimize,
+                        parallel=parallel,
+                        verbose=verbose,
                         **kwargs)</code></pre>
 </details>
 </section>
@@ -260,7 +321,7 @@ def simulate(circuit: SuperCircuit,
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="hybridq.dm.circuit.simulation.simulate"><code class="name flex">
-<span>def <span class="ident">simulate</span></span>(<span>circuit: SuperCircuit, initial_state: any, final_state: any = None, optimize: any = 'evolution', **kwargs)</span>
+<span>def <span class="ident">simulate</span></span>(<span>circuit: SuperCircuit, initial_state: any, final_state: any = None, optimize: any = 'evolution', parallel: {bool, int} = False, verbose: bool = False, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Frontend to simulate <code>rho</code> using different optimization models and
@@ -289,6 +350,8 @@ backends.</p>
              initial_state: any,
              final_state: any = None,
              optimize: any = &#39;evolution&#39;,
+             parallel: {bool, int} = False,
+             verbose: bool = False,
              **kwargs):
     &#34;&#34;&#34;
     Frontend to simulate `rho` using different optimization models and
@@ -313,9 +376,6 @@ backends.</p>
     `hybridq.circuit.simulation` and `hybridq.circuit.simulation.clifford`
     &#34;&#34;&#34;
     from hybridq.circuit import Circuit
-
-    # Set defaults
-    kwargs.setdefault(&#39;force_supercircuit&#39;, False)
 
     # Convert circuit to list
     circuit = list(circuit)
@@ -346,6 +406,8 @@ backends.</p>
         # Return Clifford expandion
         return update_pauli_string(circuit=circuit,
                                    pauli_string=initial_state,
+                                   parallel=parallel,
+                                   verbose=verbose,
                                    **kwargs)
 
     else:
@@ -359,7 +421,7 @@ backends.</p>
         l_qubits, r_qubits = circuit.all_qubits()
 
         # Convert SuperCircuit to Circuit
-        circuit = __convert(circuit)
+        circuit = __convert(circuit, parallel=parallel, verbose=verbose)
 
         # Get number of qubits
         nl = len(l_qubits)
@@ -438,6 +500,8 @@ backends.</p>
                         initial_state=initial_state,
                         final_state=final_state,
                         optimize=optimize,
+                        parallel=parallel,
+                        verbose=verbose,
                         **kwargs)</code></pre>
 </details>
 </dd>

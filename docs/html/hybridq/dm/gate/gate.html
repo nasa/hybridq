@@ -83,11 +83,14 @@ def TupleSuperGate(gates: iter[{BaseGate, BaseSuperGate}] = tuple(),
     -------
     TupleSuperGate
     &#34;&#34;&#34;
+    from hybridq.gate.gate import BaseGate
 
     # Return gate
     return pr.generate(&#39;TupleSuperGate&#39;,
                        (BaseSuperGate, dm_pr.BaseTupleSuperGate, pr.NameGate),
-                       name=&#39;STUPLE&#39;)(gates, tags=tags)
+                       name=&#39;STUPLE&#39;,
+                       _base_check={any: [BaseGate, BaseSuperGate]})(gates,
+                                                                     tags=tags)
 
 
 @dm_pr.staticvars(&#39;l_qubits,r_qubits&#39;)
@@ -159,7 +162,8 @@ def MatrixSuperGate(Map: np.ndarray,
 def KrausSuperGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
                    s: any = 1,
                    tags: dict[any, any] = None,
-                   copy: bool = True) -&gt; KrausSuperGate:
+                   copy: bool = True,
+                   use_cache: bool = True) -&gt; KrausSuperGate:
     &#34;&#34;&#34;
     Return a KrausSuperGate.
 
@@ -186,6 +190,8 @@ def KrausSuperGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
     copy: bool, optional
         A copy of `gates` and `s` is used instead of a reference if `copy` is
         `True` (default: True).
+    use_cache: bool, optional
+        If `True`, extra memory is used to store a cached `Matrix`.
 
     Returns
     -------
@@ -243,7 +249,8 @@ def KrausSuperGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
         gates=(l_gates, r_gates),
         s=(np.array if copy else np.asarray)(s),
         _conj_rgates=True,
-        name=&#39;KRAUS&#39;)(tags=tags)
+        name=&#39;KRAUS&#39;,
+        _use_cache=use_cache)(tags=tags)
 
 
 # Define gate aliases
@@ -312,7 +319,7 @@ def Gate(name: str, **kwargs):
 </details>
 </dd>
 <dt id="hybridq.dm.gate.gate.KrausSuperGate"><code class="name flex">
-<span>def <span class="ident">KrausSuperGate</span></span>(<span>gates: {iter[<a title="hybridq.dm.gate.gate.Gate" href="#hybridq.dm.gate.gate.Gate">Gate()</a>], tuple[iter[<a title="hybridq.dm.gate.gate.Gate" href="#hybridq.dm.gate.gate.Gate">Gate()</a>], iter[<a title="hybridq.dm.gate.gate.Gate" href="#hybridq.dm.gate.gate.Gate">Gate()</a>]]}, s: any = 1, tags: dict[any, any] = None, copy: bool = True) ‑> <a title="hybridq.dm.gate.gate.KrausSuperGate" href="#hybridq.dm.gate.gate.KrausSuperGate">KrausSuperGate()</a></span>
+<span>def <span class="ident">KrausSuperGate</span></span>(<span>gates: {iter[<a title="hybridq.dm.gate.gate.Gate" href="#hybridq.dm.gate.gate.Gate">Gate()</a>], tuple[iter[<a title="hybridq.dm.gate.gate.Gate" href="#hybridq.dm.gate.gate.Gate">Gate()</a>], iter[<a title="hybridq.dm.gate.gate.Gate" href="#hybridq.dm.gate.gate.Gate">Gate()</a>]]}, s: any = 1, tags: dict[any, any] = None, copy: bool = True, use_cache: bool = True) ‑> <a title="hybridq.dm.gate.gate.KrausSuperGate" href="#hybridq.dm.gate.gate.KrausSuperGate">KrausSuperGate()</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return a KrausSuperGate.</p>
@@ -337,6 +344,8 @@ number of gates.</dd>
 <dt><strong><code>copy</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>A copy of <code>gates</code> and <code>s</code> is used instead of a reference if <code>copy</code> is
 <code>True</code> (default: True).</dd>
+<dt><strong><code>use_cache</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, extra memory is used to store a cached <code>Matrix</code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -350,7 +359,8 @@ number of gates.</dd>
 <pre><code class="python">def KrausSuperGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
                    s: any = 1,
                    tags: dict[any, any] = None,
-                   copy: bool = True) -&gt; KrausSuperGate:
+                   copy: bool = True,
+                   use_cache: bool = True) -&gt; KrausSuperGate:
     &#34;&#34;&#34;
     Return a KrausSuperGate.
 
@@ -377,6 +387,8 @@ number of gates.</dd>
     copy: bool, optional
         A copy of `gates` and `s` is used instead of a reference if `copy` is
         `True` (default: True).
+    use_cache: bool, optional
+        If `True`, extra memory is used to store a cached `Matrix`.
 
     Returns
     -------
@@ -434,7 +446,8 @@ number of gates.</dd>
         gates=(l_gates, r_gates),
         s=(np.array if copy else np.asarray)(s),
         _conj_rgates=True,
-        name=&#39;KRAUS&#39;)(tags=tags)</code></pre>
+        name=&#39;KRAUS&#39;,
+        _use_cache=use_cache)(tags=tags)</code></pre>
 </details>
 </dd>
 <dt id="hybridq.dm.gate.gate.MatrixSuperGate"><code class="name flex">
@@ -562,11 +575,14 @@ provided, <code>r_qubits</code> is assumed to be equal to <code>l_qubits</code>.
     -------
     TupleSuperGate
     &#34;&#34;&#34;
+    from hybridq.gate.gate import BaseGate
 
     # Return gate
     return pr.generate(&#39;TupleSuperGate&#39;,
                        (BaseSuperGate, dm_pr.BaseTupleSuperGate, pr.NameGate),
-                       name=&#39;STUPLE&#39;)(gates, tags=tags)</code></pre>
+                       name=&#39;STUPLE&#39;,
+                       _base_check={any: [BaseGate, BaseSuperGate]})(gates,
+                                                                     tags=tags)</code></pre>
 </details>
 </dd>
 </dl>
@@ -596,6 +612,7 @@ provided, <code>r_qubits</code> is assumed to be equal to <code>l_qubits</code>.
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li>hybridq.dm.gate.gate._MatrixSuperGate</li>
+<li>hybridq.noise.channel.channel._MatrixChannel</li>
 </ul>
 </dd>
 </dl>

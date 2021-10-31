@@ -147,7 +147,7 @@ def _ProjectionGateApply(self, psi, order, renormalize: bool = True):
 
         # Renormalize if needed
         if renormalize:
-            norm = np.linalg.norm(np.reshape(new_psi, np.prod(new_psi.shape)))
+            norm = np.linalg.norm(new_psi.ravel())
             if norm != 0:
                 new_psi /= norm
 

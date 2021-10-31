@@ -115,6 +115,11 @@ class Map(__Base__):
     def map(self, order: iter[any] = None):
         &#34;&#34;&#34;
         Return map.
+
+        Parameters
+        ----------
+        order: tuple[any, ...], optional
+            If provided, Kraus&#39; map is ordered accordingly to `order`.
         &#34;&#34;&#34;
         # Get left and right qubits
         l_qubits, r_qubits = self.qubits
@@ -368,6 +373,11 @@ def qubits(self) -&gt; tuple[tuple[any, ...], tuple[any, ...]]:
     def map(self, order: iter[any] = None):
         &#34;&#34;&#34;
         Return map.
+
+        Parameters
+        ----------
+        order: tuple[any, ...], optional
+            If provided, Kraus&#39; map is ordered accordingly to `order`.
         &#34;&#34;&#34;
         # Get left and right qubits
         l_qubits, r_qubits = self.qubits
@@ -523,7 +533,12 @@ def qubits(self) -&gt; tuple[tuple[any, ...], tuple[any, ...]]:
 <span>def <span class="ident">map</span></span>(<span>self, order: iter[any] = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Return map.</p></div>
+<div class="desc"><p>Return map.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>order</code></strong> :&ensp;<code>tuple[any, &hellip;]</code>, optional</dt>
+<dd>If provided, Kraus' map is ordered accordingly to <code>order</code>.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -531,6 +546,11 @@ def qubits(self) -&gt; tuple[tuple[any, ...], tuple[any, ...]]:
 <pre><code class="python">def map(self, order: iter[any] = None):
     &#34;&#34;&#34;
     Return map.
+
+    Parameters
+    ----------
+    order: tuple[any, ...], optional
+        If provided, Kraus&#39; map is ordered accordingly to `order`.
     &#34;&#34;&#34;
     # Get left and right qubits
     l_qubits, r_qubits = self.qubits
