@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.10.0" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>hybridq.base.base API documentation</title>
 <meta name="description" content="Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -56,7 +56,7 @@ specific language governing permissions and limitations under the License.
 
 from __future__ import annotations
 from copy import deepcopy
-import dill as pickle
+import dill as Pickler
 import numpy as np
 
 
@@ -154,20 +154,8 @@ def compare(staticvars: {str, tuple[str, ...]}, cmp: dict[str, any] = None):
 
     # Get decorator
     def decorator(cls):
-        # Generate comparing function
-        def __gen_compare__():
-            # Get comparison function
-            def __compare__(self, other):
-                # Check that all cmp&#39;s are satisfied
-                return isinstance(other, cls) and all(
-                    np.all(c(getattr(self, k), getattr(other, k)))
-                    for k, c in cmp.items())
-
-            # Return comparison function
-            return __compare__
-
         # Assign compare
-        cls.__compare__ = __gen_compare__()
+        cls.__compare__ = cmp
 
         # Return class
         return cls
@@ -415,17 +403,17 @@ class __Base__:
     ##################################### METHODS FOR PICKLE ###################################
 
     def __getstate__(self):
-        return pickle.dumps(self.__dict__)
+        return Pickler.dumps(self.__dict__)
 
     def __setstate__(self, state):
-        self.__dict__ = pickle.loads(state)
+        self.__dict__ = Pickler.loads(state)
 
     @staticmethod
     def __generate__(class_name: str, mro: list[type], staticvars, methods):
         return generate(class_name=class_name,
                         mro=mro,
-                        methods=dict(pickle.loads(methods)),
-                        **pickle.loads(staticvars))()
+                        methods=dict(Pickler.loads(methods)),
+                        **Pickler.loads(staticvars))()
 
     def __reduce__(self):
         # Get class
@@ -433,8 +421,8 @@ class __Base__:
 
         # Return reduction
         return (cls.__generate__, (cls.__name__, cls.__get_mro__(),
-                                   pickle.dumps(self.__static_dict__),
-                                   pickle.dumps(self.__methods_dict__)),
+                                   Pickler.dumps(self.__static_dict__),
+                                   Pickler.dumps(self.__methods_dict__)),
                 self.__getstate__())
 
     #################################### STRING REPRESENTATION #################################
@@ -504,10 +492,51 @@ class __Base__:
 
     ######################################### COMPARISON #######################################
 
+    @classmethod
+    def __get_compare__(cls, *, force: bool = False):
+        # Get values
+        vs = None if force else getattr(cls, &#39;__all_compare__&#39;, None)
+
+        # If &#39;__all_compare__&#39; is present, return it
+        if vs is not None:
+            return vs
+
+        # Otherwise, recompute it
+        else:
+            return tuple(
+                d for d in (getattr(c, &#39;__compare__&#39;, {})
+                            for c in cls.mro()
+                            if not getattr(c, &#39;__virtual__&#39;, False)) if d)
+
     def __eq__(self, other) -&gt; bool:
+        # If &#39;other&#39; is not an instance of &#39;__Base__&#39;, return False
+        if not isinstance(other, __Base__):
+            return False
+
+        # If type(self) != type(other), we must using comparison from both
+        # &#39;self&#39; and &#39;other&#39;
+        elif type(self) != type(other):
+            # Get all comparisons
+            compare_1 = self.__get_compare__()
+            compare_2 = other.__get_compare__()
+
+            # If the compared variables are different, return False
+            if set(k for c in compare_1 for k in c) != set(
+                    k for c in compare_2 for k in c):
+                return False
+
+            # Merge
+            compare = compare_1 + compare_2
+
+        # Otherwise, just use &#39;self&#39;
+        else:
+            compare = self.__get_compare__()
+
+        # Perform all checks
         return all(
-            getattr(cls, &#39;__compare__&#39;, lambda self, other: True)(self, other)
-            for cls in type(self).mro())
+            np.all(cmp(getattr(self, k), getattr(other, k)))
+            for c in compare
+            for k, cmp in c.items())
 
 
 def generate(class_name: str,
@@ -549,6 +578,9 @@ def generate(class_name: str,
             &#39;__staticvars__&#39;: tuple(staticvars)
         }, **staticvars)
 
+    # Add virtual flag
+    new_type.__virtual__ = True
+
     # Add all static variables
     new_type.__all_staticvars__ = new_type.__get_staticvars__(force=True)
 
@@ -561,8 +593,8 @@ def generate(class_name: str,
     # Add all required variables
     new_type.__all_required__ = new_type.__get_required__(force=True)
 
-    # Add virtual flag
-    new_type.__virtual__ = True
+    # Add all comparison
+    new_type.__all_compare__ = new_type.__get_compare__(force=True)
 
     # Return new_type
     return new_type</code></pre>
@@ -597,20 +629,8 @@ def generate(class_name: str,
 
     # Get decorator
     def decorator(cls):
-        # Generate comparing function
-        def __gen_compare__():
-            # Get comparison function
-            def __compare__(self, other):
-                # Check that all cmp&#39;s are satisfied
-                return isinstance(other, cls) and all(
-                    np.all(c(getattr(self, k), getattr(other, k)))
-                    for k, c in cmp.items())
-
-            # Return comparison function
-            return __compare__
-
         # Assign compare
-        cls.__compare__ = __gen_compare__()
+        cls.__compare__ = cmp
 
         # Return class
         return cls
@@ -681,6 +701,9 @@ def generate(class_name: str,
             &#39;__staticvars__&#39;: tuple(staticvars)
         }, **staticvars)
 
+    # Add virtual flag
+    new_type.__virtual__ = True
+
     # Add all static variables
     new_type.__all_staticvars__ = new_type.__get_staticvars__(force=True)
 
@@ -693,8 +716,8 @@ def generate(class_name: str,
     # Add all required variables
     new_type.__all_required__ = new_type.__get_required__(force=True)
 
-    # Add virtual flag
-    new_type.__virtual__ = True
+    # Add all comparison
+    new_type.__all_compare__ = new_type.__get_compare__(force=True)
 
     # Return new_type
     return new_type</code></pre>
@@ -839,7 +862,7 @@ def generate(class_name: str,
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>
