@@ -18,9 +18,14 @@ specific language governing permissions and limitations under the License.
 from hybridq.gate import Gate
 from hybridq.utils import kron
 from hybridq.gate.utils import get_available_gates
-from hybridq.extras.random import get_random_gate, get_rqc, get_random_indexes
+from hybridq.extras.random import get_random_gate, get_rqc
 from hybridq.dm.circuit import Circuit as SuperCircuit
 from hybridq.dm.circuit import simulation as dm_simulation
+from hybridq.noise.channel import GlobalDepolarizingChannel, \
+    LocalDepolarizingChannel, LocalPauliChannel, AmplitudeDampingChannel, \
+    LocalDephasingChannel
+from hybridq.noise.utils import add_dephasing_noise, add_depolarizing_noise
+from hybridq.noise.channel.utils import ptrace, choi_matrix, is_channel
 from hybridq.circuit import Circuit, simulation, utils
 from hybridq.circuit.simulation import clifford
 from hybridq.extras.io.cirq import to_cirq
@@ -30,7 +35,7 @@ from hybridq.utils.utils import _type
 from functools import partial as partial_func
 from opt_einsum import get_symbol, contract
 from more_itertools import flatten
-from itertools import chain
+from itertools import chain, permutations
 from tqdm.auto import tqdm
 from warnings import warn
 import numpy as np
@@ -71,6 +76,38 @@ def set_seed():
 
 
 ################################ TEST UTILS ################################
+
+
+@pytest.mark.parametrize('n_qubits,n_gates', [(50, 200) for _ in range(10)])
+def test_utils__hash(n_qubits, n_gates):
+    # Get random circuit
+    circuit = _get_rqc_non_unitary(n_qubits, n_gates)
+
+    # Get hash of all gates
+    _hash = tuple(map(hash, circuit))
+
+    # Calling it twice should give the same hash
+    assert (all(x == y for x, y in zip(_hash, map(hash, circuit))))
+
+    # Add tags to circuit
+    circuit_tags = Circuit(g.set_tags({'a': 1}) for g in circuit)
+
+    # By default, the full object is used to compute the hash. Therefore,
+    # adding tags should change the hash
+    assert (all(x != y for x, y in zip(_hash, map(hash, circuit_tags))))
+
+    # Howerver, tags can be ignored
+    assert (all(
+        x == y for x, y in zip((g.__get_hash__(ignore_keys=['_Tags__tags'])
+                                for g in circuit), (g.__get_hash__(
+                                    ignore_keys=['_Tags__tags'])
+                                                    for g in circuit_tags))))
+
+    # Similarly for qubits
+    circuit_no_qubits = Circuit(g.on() for g in circuit)
+    assert (all(x == y for x, y in zip((g.__get_hash__(
+        ignore_keys=['_QubitGate__qubits']) for g in circuit), (g.__get_hash__(
+            ignore_keys=['_QubitGate__qubits']) for g in circuit_no_qubits))))
 
 
 @pytest.mark.parametrize(
@@ -187,7 +224,7 @@ def test_utils__aligned_array(order, alignment):
         # These should be different from a
         _c1_dtype = next(t for t in dtypes if np.dtype(t) != a.dtype)
         c1 = asarray(a, dtype=_c1_dtype, alignment=alignment)
-        c2 = asarray(a, order='C' if order is 'F' else 'F', alignment=alignment)
+        c2 = asarray(a, order='C' if order == 'F' else 'F', alignment=alignment)
 
         # Checks
         assert (c1.shape == a.shape)
@@ -202,7 +239,7 @@ def test_utils__aligned_array(order, alignment):
             assert (c2.shape == a.shape)
             assert (c2.dtype == a.dtype)
             assert ((c2.ctypes.data % alignment) == 0)
-            assert (('C' if order is 'F' else 'F') in _get_order(c2))
+            assert (('C' if order == 'F' else 'F') in _get_order(c2))
             assert (not np.may_share_memory(c2, a))
 
 
@@ -450,6 +487,54 @@ def test_gates__gates(dummy):
         assert (np.allclose(_U1, _U3))
 
 
+@pytest.mark.parametrize('n_qubits,pad_size',
+                         [(5, q) for _ in range(10) for q in range(1, 4)])
+def test_gates__pad(n_qubits, pad_size):
+    from hybridq.extras.random import get_indexes
+    from hybridq.gate import MatrixGate
+    from hybridq.gate.utils import pad
+
+    # Get random qubits
+    qubits = get_indexes(n_qubits, use_random_indexes=True)
+
+    # Get qubits to pad
+    while 1:
+        qubits_pad = get_indexes(pad_size, use_random_indexes=True)
+        if not set(qubits_pad).intersection(qubits):
+            break
+
+    # Get random gate
+    gate = MatrixGate(np.random.random((2**n_qubits, 2**n_qubits)),
+                      qubits=qubits)
+
+    # Get random order
+    order = tuple(
+        np.random.permutation(np.array(qubits + qubits_pad, dtype=object)))
+
+    # Pad gate and set order
+    padded_gate = pad(gate, qubits=qubits + qubits_pad, order=order)
+
+    # Check order
+    assert (padded_gate.qubits == order)
+
+    # Get transposition
+    _tr = [order.index(q) for q in gate.qubits + tuple(qubits_pad)]
+    _tr += [q + len(order) for q in _tr]
+
+    # Invert
+    _tr = [_tr.index(q) for q in range(2 * (n_qubits + pad_size))]
+
+    # Construct matrix
+    M = np.reshape(
+        np.transpose(
+            np.reshape(np.kron(gate.matrix(), np.eye(2**pad_size)),
+                       (2,) * 2 * (n_qubits + pad_size)), _tr),
+        (2**(n_qubits + pad_size),) * 2)
+
+    # Check
+    np.testing.assert_allclose(M, padded_gate.matrix())
+
+
 @pytest.mark.parametrize('dummy', [_ for _ in range(50)])
 def test_gates__gate_power(dummy):
 
@@ -648,8 +733,55 @@ def test_gates__cgates_2(n_qubits, depth):
     assert (np.allclose(psi2, psi1, atol=1e-3))
 
 
+@pytest.mark.parametrize('dummy', [_ for _ in range(20)])
+def test_gates__schmidt_gate_1(dummy):
+    # Import SchmidtGate
+    from hybridq.gate import utils as gate_utils
+    from hybridq.gate import SchmidtGate, MatrixGate, Gate
+
+    # Let's create some random gates ...
+    G1 = [
+        MatrixGate(np.random.random((4, 4)), qubits='ab'),
+        MatrixGate(np.random.random((4, 4)), qubits='cb'),
+        MatrixGate(np.random.random((2, 2)), qubits='b'),
+    ]
+    G2 = [
+        MatrixGate(np.random.random((4, 4)), qubits=[2, 3]),
+        MatrixGate(np.random.random((4, 4)), qubits=[5, 3]),
+        MatrixGate(np.random.random((4, 4)), qubits=[(0, 1), 2]),
+        MatrixGate(np.random.random((2, 2)), qubits=[2]),
+    ]
+
+    # ... and random weights
+    w = np.random.random((3, 4))
+
+    # Create SchmidtGate
+    S = SchmidtGate(gates=(G1, G2), s=w)
+
+    # Qubits in SchmidtGate's are ordered so that "left" qubits
+    # appear before than the "right" qubits
+    assert (S.qubits == S.gates[0].qubits + S.gates[1].qubits)
+
+    # Let's check the SchmidtGate by manually merging the gates
+    #
+    # First, we need to extend all gates in G1 and G2 to the right number of qubits, ...
+    _G1 = [gate_utils.merge(g, Gate('I', qubits=S.qubits)) for g in G1]
+    _G2 = [gate_utils.merge(g, Gate('I', qubits=S.qubits)) for g in G2]
+
+    # ... we can then sum all matrices using the right order ...
+    U = np.sum([
+        S.s[i, j] * gate_utils.merge(_G1[i], _G2[j]).matrix(order=S.qubits)
+        for i in range(len(G1))
+        for j in range(len(G2))
+    ],
+               axis=0)
+
+    # ... and check that everything is ok
+    np.testing.assert_allclose(U, S.matrix())
+
+
 @pytest.mark.parametrize('nq', [8 for _ in range(20)])
-def test_gates__schmidt_gate(nq):
+def test_gates__schmidt_gate_2(nq):
     from hybridq.gate import MatrixGate, SchmidtGate
     from hybridq.gate.utils import decompose
 
@@ -2300,6 +2432,7 @@ def test_simulation_5__iswap(n_qubits, depth):
 def test_dm_0__supergate_1(n_qubits, k, ndim):
     from hybridq.dm.gate.utils import to_matrix_supergate
     from hybridq.dm.gate import KrausSuperGate
+    from time import time
 
     # Generate some random gates
     gates = tuple(_get_rqc_unitary(n_qubits, k))
@@ -2320,11 +2453,26 @@ def test_dm_0__supergate_1(n_qubits, k, ndim):
         raise NotImplementedError
 
     # Get Kraus operator
-    K = KrausSuperGate(gates=gates, s=s_1)
-    K = to_matrix_supergate(K)
+    K = KrausSuperGate(gates=gates, s=s_1, use_cache=True)
 
     # Get matrix corresponding to the operator
+    _time_1 = time()
     M1 = K.Matrix
+    _time_1 = time() - _time_1
+
+    # Get cached
+    _time_2 = time()
+    _M1 = K.Matrix
+    _time_2 = time() - _time_2
+
+    # Check that the time to get cached matrix is always smaller
+    assert (_time_1 < 0.2 or _time_1 >= _time_2)
+
+    # Check that time is always smaller than 200ms
+    assert (_time_2 < 0.2)
+
+    # Check that cached matrix is stored properly
+    assert (np.allclose(_M1, M1))
 
     # Get left/right qubits
     l_qubits, r_qubits = K.qubits
@@ -2635,6 +2783,145 @@ def test_dm_3__simulation_3(n_qubits, n_gates):
 
     # Check
     assert (np.allclose(np.diag(_rho_1), probs, atol=1e-3))
+
+
+@pytest.mark.parametrize('nq', [1, 2, 3])
+@pytest.mark.parametrize('p', [0.0, 0.25, 0.5, 1.0])
+def test_noise_1__GlobalDepolarizingChannel(nq, p):
+    np.random.seed(1)
+    d = 2**nq
+    psi = np.random.rand(d) + 1j * np.random.rand(d)
+    psi = psi / np.linalg.norm(psi)
+    rho = np.outer(psi, psi.conj())
+    Id = np.eye(d)
+
+    expected = (1 - p) * rho + (p / d) * Id
+
+    gpc = GlobalDepolarizingChannel(tuple(range(nq)), p)
+    E = gpc.map()
+    rho_v = np.reshape(rho, (d**2, 1))
+    rho_t = np.reshape(E @ rho_v, (d, d))
+
+    np.testing.assert_array_almost_equal(expected, rho_t, decimal=6)
+
+
+def test_noise_1__local_channels():
+    """
+    This test checks local channels are simulated correctly,
+    in both the tensor network backend, and evolution-einsum.
+    """
+    d = 2**4
+    adc_gamma = 0.75
+    q0, q1, q2, q3 = 0, 1, 2, 3
+
+    c = SuperCircuit()
+    c += LocalPauliChannel((q0,), s=[0.25, 0.0, 0, 0.75])
+    c += AmplitudeDampingChannel((q1,), gamma=adc_gamma)
+    c += LocalDepolarizingChannel((q2,), p=0.1)
+    c += LocalDephasingChannel((q3,), p=0.15, pauli_index=2)
+
+    rho = np.reshape(
+        dm_simulation.simulate(c, '+', optimize='evolution-einsum'), (d, d))
+
+    # state is product state from the above channels
+    rho0_expected = np.array([[0.5, -0.25], [-0.25, 0.5]])
+    rho1_expected = 0.5 * np.array([[1 + adc_gamma,
+                                     np.sqrt(1 - adc_gamma)],
+                                    [np.sqrt(1 - adc_gamma), 1 - adc_gamma]])
+    rho2_expected = np.array([[0.5, 0.5 * 0.9], [0.5 * 0.9, 0.5]])
+    rho3_expected = np.array([[1, 0.85 - 0.15], [0.85 - 0.15, 1]]) / 2
+
+    rho0 = ptrace(rho, q0)
+    rho1 = ptrace(rho, q1)
+    rho2 = ptrace(rho, q2)
+    rho3 = ptrace(rho, q3)
+
+    rho0_tn = dm_simulation.simulate(c,
+                                     '+',
+                                     final_state='.abc.abc',
+                                     optimize='tn')
+    rho1_tn = dm_simulation.simulate(c,
+                                     '+',
+                                     final_state='a.bca.bc',
+                                     optimize='tn')
+    rho2_tn = dm_simulation.simulate(c,
+                                     '+',
+                                     final_state='ab.cab.c',
+                                     optimize='tn')
+    rho3_tn = dm_simulation.simulate(c,
+                                     '+',
+                                     final_state='abc.abc.',
+                                     optimize='tn')
+
+    np.testing.assert_array_almost_equal(rho0, rho0_expected)
+    np.testing.assert_array_almost_equal(rho1, rho1_expected)
+    np.testing.assert_array_almost_equal(rho2, rho2_expected)
+    np.testing.assert_array_almost_equal(rho3, rho3_expected)
+
+    np.testing.assert_array_almost_equal(rho0_tn, rho0_expected)
+    np.testing.assert_array_almost_equal(rho1_tn, rho1_expected)
+    np.testing.assert_array_almost_equal(rho2_tn, rho2_expected)
+    np.testing.assert_array_almost_equal(rho3_tn, rho3_expected)
+
+
+@pytest.mark.parametrize('n', [1, 2])
+def test_noise_1__choi(n):
+    """
+    Choi matrix acts to produce the output state as
+    rho = Tr_0[ (I ⊗ rho_0^T) C)
+    """
+    np.random.seed(1)
+    d = 2**n
+    psi = np.random.rand(d) + 1j * np.random.rand(d)
+    psi = psi / np.linalg.norm(psi)
+    rho = np.outer(psi, psi.conj())
+
+    g = GlobalDepolarizingChannel(tuple(range(n)), p=0.15)
+    rho_t = np.reshape(g.map() @ np.reshape(rho, (d**2, 1)), (d, d))
+
+    C = choi_matrix(g)
+    # trace out first n qubits representing the identity part
+    rho_t_choi = ptrace(np.kron(np.eye(d), rho.T) @ C, list(range(n)))
+
+    np.testing.assert_array_almost_equal(rho_t, rho_t_choi)
+
+
+@pytest.mark.parametrize('n_cycles', [1, 5, 10, 20])
+@pytest.mark.parametrize('p_depol', [0.0, 0.25, 0.5, 1.0])
+def test_noise_1__add_noise(p_depol, n_cycles):
+    """
+    This tests adding noise to an ideal circuit.
+    Here we consider a case which rotates around the Z axis, and
+    so starting in the + state should give the same result for
+    both depolarizing and dephasing channels.
+    """
+    theta = 0.01
+    c = Circuit([Gate('RZ', qubits=[0], params=[theta])] * n_cycles)
+    c_depol = add_depolarizing_noise(c, [p_depol])
+    c_dephase = add_dephasing_noise(c, [0.5 * p_depol])  # conversion factor
+
+    rho_depol = dm_simulation.simulate(c_depol, '+')
+    rho_dephase = dm_simulation.simulate(c_dephase, '+')
+
+    Theta = theta * n_cycles / 2
+    psi = [np.exp(-1j * Theta), np.exp(1j * Theta)] / np.sqrt(2)
+    rho_ideal = np.outer(psi, psi.conj().T)
+    P_ideal = (1 - p_depol)**n_cycles
+    rho_expected = P_ideal * rho_ideal + ((1 - P_ideal) / 2) * np.eye(2)
+
+    np.testing.assert_array_almost_equal(rho_depol, rho_expected)
+    np.testing.assert_array_almost_equal(rho_depol, rho_dephase)
+
+
+def test_noise_1__is_channel():
+    # check the first channel fails the test
+    ldc = LocalDephasingChannel((0, 1), {0: 1.01, 1: 0.99})
+
+    invalid_channel = ldc[0]
+    valid_channel = ldc[1]
+
+    assert not is_channel(invalid_channel)
+    assert is_channel(valid_channel)
 
 
 #########################################################################

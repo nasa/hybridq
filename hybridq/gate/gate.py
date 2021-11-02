@@ -577,7 +577,8 @@ def TupleGate(gates: iter[BaseGate] = tuple(),
 
     # Return gate
     return pr.generate('TupleGate', (BaseGate, pr.BaseTupleGate, pr.NameGate),
-                       name='TUPLE')(gates, tags=tags)
+                       name='TUPLE',
+                       _base_check={all: [BaseGate]})(gates, tags=tags)
 
 
 def FunctionalGate(f: callable,
@@ -659,7 +660,7 @@ def StochasticGate(gates: iter[BaseGate],
 
     See Also
     --------
-    BaseTupleGate, TagGate, NameGate
+    TupleGate, TagGate, NameGate
     """
 
     # Get gates and probabilities
@@ -700,6 +701,13 @@ def StochasticGate(gates: iter[BaseGate],
                 if self.p is not None else "", 0),
         }
 
+    # Define qubits and n_qubits
+    def __qubits__(self):
+        return self.gates.qubits
+
+    def __n_qubits__(self):
+        return self.gates.n_qubits
+
     # Return Gate
     return pr.generate('StochasticGate',
                        (_StochasticGate, pr.TagGate, pr.NameGate),
@@ -707,13 +715,16 @@ def StochasticGate(gates: iter[BaseGate],
                        gates=gates,
                        p=p,
                        methods=dict(sample=__sample__,
-                                    __print__=__print__))(tags=tags)
+                                    __print__=__print__,
+                                    qubits=property(__qubits__),
+                                    n_qubits=property(__n_qubits__)))(tags=tags)
 
 
 def SchmidtGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
                 s=None,
                 tags: dict[any, any] = None,
-                copy: bool = True) -> SchmidtGate:
+                copy: bool = True,
+                use_cache: bool = True) -> SchmidtGate:
     """
     Return a SchmidtGate.
 
@@ -733,27 +744,33 @@ def SchmidtGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
     tags: dict[any, any], optional
         Dictionary of tags.
     copy: bool, optional
-        A copy of `s` is used instead of a reference if `copy` is True
-        (default: True).
+        If `True`, a copy of `gates` and `s` is used instead of a reference
+        (default: `True`).
+    use_cache: bool, optional
+        If `True`, extra memory is used to store a cached `Matrix`.
 
     Returns
     -------
     SchmidtGate
     """
 
+    # Copy if needed
+    def _copy(x: iter[any, ...]):
+        from copy import deepcopy
+        return (deepcopy(y) for y in x) if copy else x
+
     # Get s
     s = None if s is None else (np.array if copy else np.asarray)(s)
 
     # Get left/right gates
     try:
-        gates = tuple(gates)
         l_gates, r_gates = gates
-        l_gates, r_gates = TupleGate(l_gates), TupleGate(r_gates)
+        l_gates = TupleGate(_copy(l_gates))
+        r_gates = TupleGate(_copy(r_gates))
 
-        # All gates must have qubits and matrix
+        # Check all gates have qubits and matrix
         if any(
-                any(not isinstance(g, BaseGate) or
-                    not g.provides('qubits,matrix') or g.qubits is None
+                any(not g.provides('qubits,matrix') or g.qubits is None
                     for g in gs)
                 for gs in [l_gates, r_gates]):
             raise
@@ -765,12 +782,23 @@ def SchmidtGate(gates: {iter[Gate], tuple[iter[Gate], iter[Gate]]},
     if set(l_gates.qubits).intersection(r_gates.qubits):
         raise ValueError("Left and right gates should not share any qubits.")
 
+    # Define qubits and n_qubits method
+    def __qubits__(self):
+        return self.gates[0].qubits + self.gates[1].qubits
+
+    def __n_qubits__(self):
+        return self.gates[0].n_qubits + self.gates[1].n_qubits
+
     # Return SchmidtGate
-    return pr.generate('SchmidtGate',
-                       (BaseGate, pr.SchmidtGate, pr.TagGate, pr.NameGate),
-                       gates=(l_gates, r_gates),
-                       s=s,
-                       name='SCHMIDT')(tags=tags)
+    return pr.generate(
+        'SchmidtGate',
+        (BaseGate, pr.SchmidtGate, pr.PowerMatrixGate, pr.TagGate, pr.NameGate),
+        gates=(l_gates, r_gates),
+        s=s,
+        _use_cache=use_cache,
+        methods=dict(qubits=property(__qubits__),
+                     n_qubits=property(__n_qubits__)),
+        name='SCHMIDT')(tags=tags)
 
 
 def Control(c_qubits: iter[any],

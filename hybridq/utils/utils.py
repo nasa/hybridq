@@ -134,6 +134,152 @@ def isnumber(x: any):
         return True
 
 
+def isdict(x: any,
+           key_type: callable = lambda x: x,
+           value_type: callable = lambda x: x,
+           *,
+           return_dict: bool = False):
+    """
+    Check if `x` is a dictionary. If `key_type` (`value_type`) is provided,
+    check if every key (value) is convertible to `key_type` (`value_type`).
+
+    Parameters
+    ----------
+    x: any
+        Object to convert
+    key_type: callable, optional
+        If provided, convert keys using `key_type`.
+    value_type: callable, optional
+        If provided, convert values using `value_type`.
+    return_dict: bool, optional
+        If `True`, the converted `dict` is returned (instead of
+        `True`/`False`), and an error is raised if `x` cannot be converted.
+
+    Returns
+    -------
+    {bool, dict}
+        If `return_dict` is `False`, `True` is returned if `x` can be converted
+        to `dict` and `False` otherwise. If `return_dict` is `True`, the
+        converted dictionary is returned and an error is raised if impossible
+        to convert.
+    """
+
+    try:
+        # Try to convert to dict
+        x = {key_type(k): value_type(v) for k, v in dict(x).items()}
+
+        # Return
+        return x if return_dict else True
+
+    except Exception as e:
+        # If 'isdict' should return the dict, raise instead
+        if return_dict:
+            raise e
+
+        # Otherwise, just return False
+        else:
+            return False
+
+
+def islist(x: any,
+           value_type: any = lambda x: x,
+           *,
+           list_type: type = list,
+           return_list: bool = False):
+    """
+    Check if `x` is a list. If `value_type` is provided, check if every value
+    is convertible to `value_type`.
+
+    Parameters
+    ----------
+    x: any
+        Object to convert
+    value_type: callable, optional
+        If provided, convert values using `value_type`.
+    list_type: type, optional,
+        Use `list_type` as list if provided (`list_type=list` by default).
+    return_list: bool, optional
+        If `True`, the converted `list` is returned (instead of
+        `True`/`False`), and an error is raised if `x` cannot be converted.
+
+    Returns
+    -------
+    {bool, list_type}
+        If `return_list` is `False`, `True` is returned if `x` can be converted
+        to `list_type` and `False` otherwise. If `return_list` is `True`, the
+        converted list is returned and an error is raised if impossible to
+        convert.
+    """
+
+    try:
+        # Try to convert to list
+        x = list_type(map(value_type, x))
+
+        # Return
+        return x if return_list else True
+
+    except Exception as e:
+        # If 'islist' should return the list, raise instead
+        if return_list:
+            raise e
+
+        # Otherwise, just return False
+        else:
+            return False
+
+
+def to_dict(x: any, key_type: any = lambda x: x, value_type: any = lambda x: x):
+    """
+    Convert `x` to a dictionary. If `key_type` (`value_type`) is provided,
+    convert every key (value) to `key_type` (`value_type`).
+
+    Parameters
+    ----------
+    x: any
+        Object to convert
+    key_type: callable, optional
+        If provided, convert keys using `key_type`.
+    value_type: callable, optional
+        If provided, convert values using `value_type`.
+
+    Returns
+    -------
+    dict
+        The converted dictionary is returned and an error is raised if
+        impossible to convert.
+    """
+    return isdict(x=x,
+                  key_type=key_type,
+                  value_type=value_type,
+                  return_dict=True)
+
+
+def to_list(x: any, value_type: any = lambda x: x, list_type: type = list):
+    """
+    Convert `x` to list. If `value_type` is provided, convert every value to
+    `value_type`.
+
+    Parameters
+    ----------
+    x: any
+        Object to convert
+    value_type: callable, optional
+        If provided, convert values using `value_type`.
+    list_type: type, optional,
+        Use `list_type` as list if provided (`list_type=list` by default).
+
+    Returns
+    -------
+    list_type
+        The converted list is returned and an error is raised if impossible to
+        convert.
+    """
+    return islist(x=x,
+                  value_type=value_type,
+                  list_type=list_type,
+                  return_list=True)
+
+
 def sort(iterable, *, key=None, reverse=False):
     """
     Sort heterogeneous list.
@@ -247,6 +393,38 @@ def svd(a, axes: iter[int], sort: bool = False, atol: float = 1e-8, **kwargs):
     vh = np.reshape(vh, [len(s)] + [shape[x] for x in alt_axes])
 
     return s, uh, vh
+
+
+def isunitary(m: np.ndarray, atol: float = 1e-8) -> bool:
+    """
+    Check if `m` is a unitary matrix.
+
+    Parameters
+    ----------
+    m: np.ndarray
+        Matrix to check if unitary.
+    atol: float, optional
+        Absolute tollerance.
+
+    Returns
+    -------
+    bool
+        `True` if `m` is a unitary matrix, `False` otherwise
+    """
+    # Convert to np.ndarray
+    m = np.asarray(m)
+
+    # If m is not a square matrix, cannot be unitary
+    if m.ndim != 2 or m.shape[0] != m.shape[1]:
+        return False
+
+    # Multiply with adjoint
+    m1 = m.T.conj() @ m
+    m2 = m @ m.T.conj()
+
+    # Check if unitary
+    return np.allclose(m1, m2, atol=atol) and np.allclose(
+        m1, np.eye(m1.shape[0]), atol=atol)
 
 
 def kron(a: np.ndarray, *cs: tuple[np.ndarray, ...], **kwargs):

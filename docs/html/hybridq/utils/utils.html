@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.10.0" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>hybridq.utils.utils API documentation</title>
 <meta name="description" content="Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -173,6 +173,152 @@ def isnumber(x: any):
         return True
 
 
+def isdict(x: any,
+           key_type: callable = lambda x: x,
+           value_type: callable = lambda x: x,
+           *,
+           return_dict: bool = False):
+    &#34;&#34;&#34;
+    Check if `x` is a dictionary. If `key_type` (`value_type`) is provided,
+    check if every key (value) is convertible to `key_type` (`value_type`).
+
+    Parameters
+    ----------
+    x: any
+        Object to convert
+    key_type: callable, optional
+        If provided, convert keys using `key_type`.
+    value_type: callable, optional
+        If provided, convert values using `value_type`.
+    return_dict: bool, optional
+        If `True`, the converted `dict` is returned (instead of
+        `True`/`False`), and an error is raised if `x` cannot be converted.
+
+    Returns
+    -------
+    {bool, dict}
+        If `return_dict` is `False`, `True` is returned if `x` can be converted
+        to `dict` and `False` otherwise. If `return_dict` is `True`, the
+        converted dictionary is returned and an error is raised if impossible
+        to convert.
+    &#34;&#34;&#34;
+
+    try:
+        # Try to convert to dict
+        x = {key_type(k): value_type(v) for k, v in dict(x).items()}
+
+        # Return
+        return x if return_dict else True
+
+    except Exception as e:
+        # If &#39;isdict&#39; should return the dict, raise instead
+        if return_dict:
+            raise e
+
+        # Otherwise, just return False
+        else:
+            return False
+
+
+def islist(x: any,
+           value_type: any = lambda x: x,
+           *,
+           list_type: type = list,
+           return_list: bool = False):
+    &#34;&#34;&#34;
+    Check if `x` is a list. If `value_type` is provided, check if every value
+    is convertible to `value_type`.
+
+    Parameters
+    ----------
+    x: any
+        Object to convert
+    value_type: callable, optional
+        If provided, convert values using `value_type`.
+    list_type: type, optional,
+        Use `list_type` as list if provided (`list_type=list` by default).
+    return_list: bool, optional
+        If `True`, the converted `list` is returned (instead of
+        `True`/`False`), and an error is raised if `x` cannot be converted.
+
+    Returns
+    -------
+    {bool, list_type}
+        If `return_list` is `False`, `True` is returned if `x` can be converted
+        to `list_type` and `False` otherwise. If `return_list` is `True`, the
+        converted list is returned and an error is raised if impossible to
+        convert.
+    &#34;&#34;&#34;
+
+    try:
+        # Try to convert to list
+        x = list_type(map(value_type, x))
+
+        # Return
+        return x if return_list else True
+
+    except Exception as e:
+        # If &#39;islist&#39; should return the list, raise instead
+        if return_list:
+            raise e
+
+        # Otherwise, just return False
+        else:
+            return False
+
+
+def to_dict(x: any, key_type: any = lambda x: x, value_type: any = lambda x: x):
+    &#34;&#34;&#34;
+    Convert `x` to a dictionary. If `key_type` (`value_type`) is provided,
+    convert every key (value) to `key_type` (`value_type`).
+
+    Parameters
+    ----------
+    x: any
+        Object to convert
+    key_type: callable, optional
+        If provided, convert keys using `key_type`.
+    value_type: callable, optional
+        If provided, convert values using `value_type`.
+
+    Returns
+    -------
+    dict
+        The converted dictionary is returned and an error is raised if
+        impossible to convert.
+    &#34;&#34;&#34;
+    return isdict(x=x,
+                  key_type=key_type,
+                  value_type=value_type,
+                  return_dict=True)
+
+
+def to_list(x: any, value_type: any = lambda x: x, list_type: type = list):
+    &#34;&#34;&#34;
+    Convert `x` to list. If `value_type` is provided, convert every value to
+    `value_type`.
+
+    Parameters
+    ----------
+    x: any
+        Object to convert
+    value_type: callable, optional
+        If provided, convert values using `value_type`.
+    list_type: type, optional,
+        Use `list_type` as list if provided (`list_type=list` by default).
+
+    Returns
+    -------
+    list_type
+        The converted list is returned and an error is raised if impossible to
+        convert.
+    &#34;&#34;&#34;
+    return islist(x=x,
+                  value_type=value_type,
+                  list_type=list_type,
+                  return_list=True)
+
+
 def sort(iterable, *, key=None, reverse=False):
     &#34;&#34;&#34;
     Sort heterogeneous list.
@@ -286,6 +432,38 @@ def svd(a, axes: iter[int], sort: bool = False, atol: float = 1e-8, **kwargs):
     vh = np.reshape(vh, [len(s)] + [shape[x] for x in alt_axes])
 
     return s, uh, vh
+
+
+def isunitary(m: np.ndarray, atol: float = 1e-8) -&gt; bool:
+    &#34;&#34;&#34;
+    Check if `m` is a unitary matrix.
+
+    Parameters
+    ----------
+    m: np.ndarray
+        Matrix to check if unitary.
+    atol: float, optional
+        Absolute tollerance.
+
+    Returns
+    -------
+    bool
+        `True` if `m` is a unitary matrix, `False` otherwise
+    &#34;&#34;&#34;
+    # Convert to np.ndarray
+    m = np.asarray(m)
+
+    # If m is not a square matrix, cannot be unitary
+    if m.ndim != 2 or m.shape[0] != m.shape[1]:
+        return False
+
+    # Multiply with adjoint
+    m1 = m.T.conj() @ m
+    m2 = m @ m.T.conj()
+
+    # Check if unitary
+    return np.allclose(m1, m2, atol=atol) and np.allclose(
+        m1, np.eye(m1.shape[0]), atol=atol)
 
 
 def kron(a: np.ndarray, *cs: tuple[np.ndarray, ...], **kwargs):
@@ -438,6 +616,81 @@ def load_library(libname: str,
     ]</code></pre>
 </details>
 </dd>
+<dt id="hybridq.utils.utils.isdict"><code class="name flex">
+<span>def <span class="ident">isdict</span></span>(<span>x: any, key_type: callable = &lt;function &lt;lambda&gt;&gt;, value_type: callable = &lt;function &lt;lambda&gt;&gt;, *, return_dict: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if <code>x</code> is a dictionary. If <code>key_type</code> (<code>value_type</code>) is provided,
+check if every key (value) is convertible to <code>key_type</code> (<code>value_type</code>).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>any</code></dt>
+<dd>Object to convert</dd>
+<dt><strong><code>key_type</code></strong> :&ensp;<code>callable</code>, optional</dt>
+<dd>If provided, convert keys using <code>key_type</code>.</dd>
+<dt><strong><code>value_type</code></strong> :&ensp;<code>callable</code>, optional</dt>
+<dd>If provided, convert values using <code>value_type</code>.</dd>
+<dt><strong><code>return_dict</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, the converted <code>dict</code> is returned (instead of
+<code>True</code>/<code>False</code>), and an error is raised if <code>x</code> cannot be converted.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>{bool, dict}
+If <code>return_dict</code> is <code>False</code>, <code>True</code> is returned if <code>x</code> can be converted
+to <code>dict</code> and <code>False</code> otherwise. If <code>return_dict</code> is <code>True</code>, the
+converted dictionary is returned and an error is raised if impossible
+to convert.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isdict(x: any,
+           key_type: callable = lambda x: x,
+           value_type: callable = lambda x: x,
+           *,
+           return_dict: bool = False):
+    &#34;&#34;&#34;
+    Check if `x` is a dictionary. If `key_type` (`value_type`) is provided,
+    check if every key (value) is convertible to `key_type` (`value_type`).
+
+    Parameters
+    ----------
+    x: any
+        Object to convert
+    key_type: callable, optional
+        If provided, convert keys using `key_type`.
+    value_type: callable, optional
+        If provided, convert values using `value_type`.
+    return_dict: bool, optional
+        If `True`, the converted `dict` is returned (instead of
+        `True`/`False`), and an error is raised if `x` cannot be converted.
+
+    Returns
+    -------
+    {bool, dict}
+        If `return_dict` is `False`, `True` is returned if `x` can be converted
+        to `dict` and `False` otherwise. If `return_dict` is `True`, the
+        converted dictionary is returned and an error is raised if impossible
+        to convert.
+    &#34;&#34;&#34;
+
+    try:
+        # Try to convert to dict
+        x = {key_type(k): value_type(v) for k, v in dict(x).items()}
+
+        # Return
+        return x if return_dict else True
+
+    except Exception as e:
+        # If &#39;isdict&#39; should return the dict, raise instead
+        if return_dict:
+            raise e
+
+        # Otherwise, just return False
+        else:
+            return False</code></pre>
+</details>
+</dd>
 <dt id="hybridq.utils.utils.isintegral"><code class="name flex">
 <span>def <span class="ident">isintegral</span></span>(<span>x: any)</span>
 </code></dt>
@@ -461,6 +714,81 @@ def load_library(libname: str,
         return int(x) == x</code></pre>
 </details>
 </dd>
+<dt id="hybridq.utils.utils.islist"><code class="name flex">
+<span>def <span class="ident">islist</span></span>(<span>x: any, value_type: any = &lt;function &lt;lambda&gt;&gt;, *, list_type: type = builtins.list, return_list: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if <code>x</code> is a list. If <code>value_type</code> is provided, check if every value
+is convertible to <code>value_type</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>any</code></dt>
+<dd>Object to convert</dd>
+<dt><strong><code>value_type</code></strong> :&ensp;<code>callable</code>, optional</dt>
+<dd>If provided, convert values using <code>value_type</code>.</dd>
+<dt><strong><code>list_type</code></strong> :&ensp;<code>type</code>, optional<code>,</code></dt>
+<dd>Use <code>list_type</code> as list if provided (<code>list_type=list</code> by default).</dd>
+<dt><strong><code>return_list</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, the converted <code>list</code> is returned (instead of
+<code>True</code>/<code>False</code>), and an error is raised if <code>x</code> cannot be converted.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>{bool, list_type}
+If <code>return_list</code> is <code>False</code>, <code>True</code> is returned if <code>x</code> can be converted
+to <code>list_type</code> and <code>False</code> otherwise. If <code>return_list</code> is <code>True</code>, the
+converted list is returned and an error is raised if impossible to
+convert.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def islist(x: any,
+           value_type: any = lambda x: x,
+           *,
+           list_type: type = list,
+           return_list: bool = False):
+    &#34;&#34;&#34;
+    Check if `x` is a list. If `value_type` is provided, check if every value
+    is convertible to `value_type`.
+
+    Parameters
+    ----------
+    x: any
+        Object to convert
+    value_type: callable, optional
+        If provided, convert values using `value_type`.
+    list_type: type, optional,
+        Use `list_type` as list if provided (`list_type=list` by default).
+    return_list: bool, optional
+        If `True`, the converted `list` is returned (instead of
+        `True`/`False`), and an error is raised if `x` cannot be converted.
+
+    Returns
+    -------
+    {bool, list_type}
+        If `return_list` is `False`, `True` is returned if `x` can be converted
+        to `list_type` and `False` otherwise. If `return_list` is `True`, the
+        converted list is returned and an error is raised if impossible to
+        convert.
+    &#34;&#34;&#34;
+
+    try:
+        # Try to convert to list
+        x = list_type(map(value_type, x))
+
+        # Return
+        return x if return_list else True
+
+    except Exception as e:
+        # If &#39;islist&#39; should return the list, raise instead
+        if return_list:
+            raise e
+
+        # Otherwise, just return False
+        else:
+            return False</code></pre>
+</details>
+</dd>
 <dt id="hybridq.utils.utils.isnumber"><code class="name flex">
 <span>def <span class="ident">isnumber</span></span>(<span>x: any)</span>
 </code></dt>
@@ -482,6 +810,59 @@ def load_library(libname: str,
         return False
     else:
         return True</code></pre>
+</details>
+</dd>
+<dt id="hybridq.utils.utils.isunitary"><code class="name flex">
+<span>def <span class="ident">isunitary</span></span>(<span>m: np.ndarray, atol: float = 1e-08) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if <code>m</code> is a unitary matrix.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>m</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Matrix to check if unitary.</dd>
+<dt><strong><code>atol</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Absolute tollerance.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd><code>True</code> if <code>m</code> is a unitary matrix, <code>False</code> otherwise</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isunitary(m: np.ndarray, atol: float = 1e-8) -&gt; bool:
+    &#34;&#34;&#34;
+    Check if `m` is a unitary matrix.
+
+    Parameters
+    ----------
+    m: np.ndarray
+        Matrix to check if unitary.
+    atol: float, optional
+        Absolute tollerance.
+
+    Returns
+    -------
+    bool
+        `True` if `m` is a unitary matrix, `False` otherwise
+    &#34;&#34;&#34;
+    # Convert to np.ndarray
+    m = np.asarray(m)
+
+    # If m is not a square matrix, cannot be unitary
+    if m.ndim != 2 or m.shape[0] != m.shape[1]:
+        return False
+
+    # Multiply with adjoint
+    m1 = m.T.conj() @ m
+    m2 = m @ m.T.conj()
+
+    # Check if unitary
+    return np.allclose(m1, m2, atol=atol) and np.allclose(
+        m1, np.eye(m1.shape[0]), atol=atol)</code></pre>
 </details>
 </dd>
 <dt id="hybridq.utils.utils.kron"><code class="name flex">
@@ -696,6 +1077,108 @@ are the weights of the decomposition.</dd>
     return s, uh, vh</code></pre>
 </details>
 </dd>
+<dt id="hybridq.utils.utils.to_dict"><code class="name flex">
+<span>def <span class="ident">to_dict</span></span>(<span>x: any, key_type: any = &lt;function &lt;lambda&gt;&gt;, value_type: any = &lt;function &lt;lambda&gt;&gt;)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert <code>x</code> to a dictionary. If <code>key_type</code> (<code>value_type</code>) is provided,
+convert every key (value) to <code>key_type</code> (<code>value_type</code>).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>any</code></dt>
+<dd>Object to convert</dd>
+<dt><strong><code>key_type</code></strong> :&ensp;<code>callable</code>, optional</dt>
+<dd>If provided, convert keys using <code>key_type</code>.</dd>
+<dt><strong><code>value_type</code></strong> :&ensp;<code>callable</code>, optional</dt>
+<dd>If provided, convert values using <code>value_type</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>The converted dictionary is returned and an error is raised if
+impossible to convert.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_dict(x: any, key_type: any = lambda x: x, value_type: any = lambda x: x):
+    &#34;&#34;&#34;
+    Convert `x` to a dictionary. If `key_type` (`value_type`) is provided,
+    convert every key (value) to `key_type` (`value_type`).
+
+    Parameters
+    ----------
+    x: any
+        Object to convert
+    key_type: callable, optional
+        If provided, convert keys using `key_type`.
+    value_type: callable, optional
+        If provided, convert values using `value_type`.
+
+    Returns
+    -------
+    dict
+        The converted dictionary is returned and an error is raised if
+        impossible to convert.
+    &#34;&#34;&#34;
+    return isdict(x=x,
+                  key_type=key_type,
+                  value_type=value_type,
+                  return_dict=True)</code></pre>
+</details>
+</dd>
+<dt id="hybridq.utils.utils.to_list"><code class="name flex">
+<span>def <span class="ident">to_list</span></span>(<span>x: any, value_type: any = &lt;function &lt;lambda&gt;&gt;, list_type: type = builtins.list)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert <code>x</code> to list. If <code>value_type</code> is provided, convert every value to
+<code>value_type</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>any</code></dt>
+<dd>Object to convert</dd>
+<dt><strong><code>value_type</code></strong> :&ensp;<code>callable</code>, optional</dt>
+<dd>If provided, convert values using <code>value_type</code>.</dd>
+<dt><strong><code>list_type</code></strong> :&ensp;<code>type</code>, optional<code>,</code></dt>
+<dd>Use <code>list_type</code> as list if provided (<code>list_type=list</code> by default).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list_type</code></dt>
+<dd>The converted list is returned and an error is raised if impossible to
+convert.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_list(x: any, value_type: any = lambda x: x, list_type: type = list):
+    &#34;&#34;&#34;
+    Convert `x` to list. If `value_type` is provided, convert every value to
+    `value_type`.
+
+    Parameters
+    ----------
+    x: any
+        Object to convert
+    value_type: callable, optional
+        If provided, convert values using `value_type`.
+    list_type: type, optional,
+        Use `list_type` as list if provided (`list_type=list` by default).
+
+    Returns
+    -------
+    list_type
+        The converted list is returned and an error is raised if impossible to
+        convert.
+    &#34;&#34;&#34;
+    return islist(x=x,
+                  value_type=value_type,
+                  list_type=list_type,
+                  return_list=True)</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -857,12 +1340,17 @@ def namespace(self):
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="two-column">
 <li><code><a title="hybridq.utils.utils.argsort" href="#hybridq.utils.utils.argsort">argsort</a></code></li>
+<li><code><a title="hybridq.utils.utils.isdict" href="#hybridq.utils.utils.isdict">isdict</a></code></li>
 <li><code><a title="hybridq.utils.utils.isintegral" href="#hybridq.utils.utils.isintegral">isintegral</a></code></li>
+<li><code><a title="hybridq.utils.utils.islist" href="#hybridq.utils.utils.islist">islist</a></code></li>
 <li><code><a title="hybridq.utils.utils.isnumber" href="#hybridq.utils.utils.isnumber">isnumber</a></code></li>
+<li><code><a title="hybridq.utils.utils.isunitary" href="#hybridq.utils.utils.isunitary">isunitary</a></code></li>
 <li><code><a title="hybridq.utils.utils.kron" href="#hybridq.utils.utils.kron">kron</a></code></li>
 <li><code><a title="hybridq.utils.utils.load_library" href="#hybridq.utils.utils.load_library">load_library</a></code></li>
 <li><code><a title="hybridq.utils.utils.sort" href="#hybridq.utils.utils.sort">sort</a></code></li>
 <li><code><a title="hybridq.utils.utils.svd" href="#hybridq.utils.utils.svd">svd</a></code></li>
+<li><code><a title="hybridq.utils.utils.to_dict" href="#hybridq.utils.utils.to_dict">to_dict</a></code></li>
+<li><code><a title="hybridq.utils.utils.to_list" href="#hybridq.utils.utils.to_list">to_list</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
@@ -884,7 +1372,7 @@ def namespace(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

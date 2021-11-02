@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.10.0" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>hybridq.extras.random API documentation</title>
 <meta name="description" content="Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -61,7 +61,7 @@ from hybridq.circuit import Circuit
 import numpy as np
 
 
-def get_random_indexes(n_qubits: int, *, use_random_indexes: bool = False):
+def get_indexes(n_qubits: int, *, use_random_indexes: bool = False):
     # Initialize
     indexes = []
 
@@ -101,8 +101,8 @@ def get_random_gate(randomize_power: bool = True,
                     use_clifford_only: bool = False,
                     use_unitary_only: bool = True):
     &#34;&#34;&#34;
-  Generate random gate.
-  &#34;&#34;&#34;
+    Generate random gate.
+    &#34;&#34;&#34;
     # Get available gates
     avail_gates = get_clifford_gates(
     ) if use_clifford_only else get_available_gates()
@@ -162,36 +162,39 @@ def get_rqc(n_qubits: int,
             randomize_power: bool = True,
             use_clifford_only: bool = False,
             use_unitary_only: bool = True,
-            use_random_indexes: bool = False):
+            use_random_indexes: bool = False,
+            verbose: bool = False):
     &#34;&#34;&#34;
   Generate random quantum circuit.
   &#34;&#34;&#34;
+    from tqdm.auto import tqdm
 
     # Initialize circuit
     circuit = Circuit()
 
     # If not provided, generate indexes
-    indexes = get_random_indexes(n_qubits,
-                                 use_random_indexes=use_random_indexes
-                                ) if indexes is None else list(indexes)
+    indexes = get_indexes(n_qubits, use_random_indexes=use_random_indexes
+                         ) if indexes is None else list(indexes)
 
     # Check that size is correct
     assert (len(indexes) == n_qubits)
 
-    # Add random gates
-    for _ in range(n_gates):
-        gate = get_random_gate(randomize_power=randomize_power,
-                               use_unitary_only=use_unitary_only,
-                               use_clifford_only=use_clifford_only)
+    # Get random gates
+    gates = (get_random_gate(randomize_power=randomize_power,
+                             use_unitary_only=use_unitary_only,
+                             use_clifford_only=use_clifford_only)
+             for _ in range(n_gates))
+
+    # Assign random qubits, and return circuit
+    return Circuit(
         gate.on([
             indexes[i]
             for i in np.random.choice(n_qubits, gate.n_qubits, replace=False)
-        ],
-                inplace=True)
-        circuit.append(gate)
-
-    # Return rqc
-    return circuit</code></pre>
+        ])
+        for gate in tqdm(gates,
+                         disable=not verbose,
+                         total=n_gates,
+                         desc=&#39;Generating random circuit&#39;))</code></pre>
 </details>
 </section>
 <section>
@@ -201,6 +204,51 @@ def get_rqc(n_qubits: int,
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="hybridq.extras.random.get_indexes"><code class="name flex">
+<span>def <span class="ident">get_indexes</span></span>(<span>n_qubits: int, *, use_random_indexes: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_indexes(n_qubits: int, *, use_random_indexes: bool = False):
+    # Initialize
+    indexes = []
+
+    # Randomize indexes
+    if use_random_indexes:
+
+        # Add strings
+        indexes = []
+        while len(indexes) &lt; n_qubits // 3:
+            indexes += [
+                &#39;&#39;.join(
+                    np.random.choice(list(&#39;abcdefghijklmnopqrstuvwxyz&#39;),
+                                     size=20))
+                for _ in range(n_qubits // 3 - len(indexes))
+            ]
+
+        # Add tuples
+        while len(indexes) &lt; n_qubits:
+            indexes += [
+                tuple(x) for x in np.unique(np.random.randint(
+                    -2**32 + 1, 2**32 - 1, size=(n_qubits - len(indexes), 2)),
+                                            axis=0)
+            ]
+
+        # Random permutation
+        indexes = [indexes[i] for i in np.random.permutation(n_qubits)]
+
+    # Use sequential
+    else:
+        indexes = np.arange(n_qubits)
+
+    # Return indexes
+    return indexes</code></pre>
+</details>
+</dd>
 <dt id="hybridq.extras.random.get_random_gate"><code class="name flex">
 <span>def <span class="ident">get_random_gate</span></span>(<span>randomize_power: bool = True, use_clifford_only: bool = False, use_unitary_only: bool = True)</span>
 </code></dt>
@@ -214,8 +262,8 @@ def get_rqc(n_qubits: int,
                     use_clifford_only: bool = False,
                     use_unitary_only: bool = True):
     &#34;&#34;&#34;
-  Generate random gate.
-  &#34;&#34;&#34;
+    Generate random gate.
+    &#34;&#34;&#34;
     # Get available gates
     avail_gates = get_clifford_gates(
     ) if use_clifford_only else get_available_gates()
@@ -268,53 +316,8 @@ def get_rqc(n_qubits: int,
     return gate</code></pre>
 </details>
 </dd>
-<dt id="hybridq.extras.random.get_random_indexes"><code class="name flex">
-<span>def <span class="ident">get_random_indexes</span></span>(<span>n_qubits: int, *, use_random_indexes: bool = False)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_random_indexes(n_qubits: int, *, use_random_indexes: bool = False):
-    # Initialize
-    indexes = []
-
-    # Randomize indexes
-    if use_random_indexes:
-
-        # Add strings
-        indexes = []
-        while len(indexes) &lt; n_qubits // 3:
-            indexes += [
-                &#39;&#39;.join(
-                    np.random.choice(list(&#39;abcdefghijklmnopqrstuvwxyz&#39;),
-                                     size=20))
-                for _ in range(n_qubits // 3 - len(indexes))
-            ]
-
-        # Add tuples
-        while len(indexes) &lt; n_qubits:
-            indexes += [
-                tuple(x) for x in np.unique(np.random.randint(
-                    -2**32 + 1, 2**32 - 1, size=(n_qubits - len(indexes), 2)),
-                                            axis=0)
-            ]
-
-        # Random permutation
-        indexes = [indexes[i] for i in np.random.permutation(n_qubits)]
-
-    # Use sequential
-    else:
-        indexes = np.arange(n_qubits)
-
-    # Return indexes
-    return indexes</code></pre>
-</details>
-</dd>
 <dt id="hybridq.extras.random.get_rqc"><code class="name flex">
-<span>def <span class="ident">get_rqc</span></span>(<span>n_qubits: int, n_gates: int, *, indexes: list[int] = None, randomize_power: bool = True, use_clifford_only: bool = False, use_unitary_only: bool = True, use_random_indexes: bool = False)</span>
+<span>def <span class="ident">get_rqc</span></span>(<span>n_qubits: int, n_gates: int, *, indexes: list[int] = None, randomize_power: bool = True, use_clifford_only: bool = False, use_unitary_only: bool = True, use_random_indexes: bool = False, verbose: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generate random quantum circuit.</p></div>
@@ -329,36 +332,39 @@ def get_rqc(n_qubits: int,
             randomize_power: bool = True,
             use_clifford_only: bool = False,
             use_unitary_only: bool = True,
-            use_random_indexes: bool = False):
+            use_random_indexes: bool = False,
+            verbose: bool = False):
     &#34;&#34;&#34;
   Generate random quantum circuit.
   &#34;&#34;&#34;
+    from tqdm.auto import tqdm
 
     # Initialize circuit
     circuit = Circuit()
 
     # If not provided, generate indexes
-    indexes = get_random_indexes(n_qubits,
-                                 use_random_indexes=use_random_indexes
-                                ) if indexes is None else list(indexes)
+    indexes = get_indexes(n_qubits, use_random_indexes=use_random_indexes
+                         ) if indexes is None else list(indexes)
 
     # Check that size is correct
     assert (len(indexes) == n_qubits)
 
-    # Add random gates
-    for _ in range(n_gates):
-        gate = get_random_gate(randomize_power=randomize_power,
-                               use_unitary_only=use_unitary_only,
-                               use_clifford_only=use_clifford_only)
+    # Get random gates
+    gates = (get_random_gate(randomize_power=randomize_power,
+                             use_unitary_only=use_unitary_only,
+                             use_clifford_only=use_clifford_only)
+             for _ in range(n_gates))
+
+    # Assign random qubits, and return circuit
+    return Circuit(
         gate.on([
             indexes[i]
             for i in np.random.choice(n_qubits, gate.n_qubits, replace=False)
-        ],
-                inplace=True)
-        circuit.append(gate)
-
-    # Return rqc
-    return circuit</code></pre>
+        ])
+        for gate in tqdm(gates,
+                         disable=not verbose,
+                         total=n_gates,
+                         desc=&#39;Generating random circuit&#39;))</code></pre>
 </details>
 </dd>
 </dl>
@@ -379,8 +385,8 @@ def get_rqc(n_qubits: int,
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="hybridq.extras.random.get_indexes" href="#hybridq.extras.random.get_indexes">get_indexes</a></code></li>
 <li><code><a title="hybridq.extras.random.get_random_gate" href="#hybridq.extras.random.get_random_gate">get_random_gate</a></code></li>
-<li><code><a title="hybridq.extras.random.get_random_indexes" href="#hybridq.extras.random.get_random_indexes">get_random_indexes</a></code></li>
 <li><code><a title="hybridq.extras.random.get_rqc" href="#hybridq.extras.random.get_rqc">get_rqc</a></code></li>
 </ul>
 </li>
@@ -388,7 +394,7 @@ def get_rqc(n_qubits: int,
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

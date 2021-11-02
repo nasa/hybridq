@@ -24,6 +24,6 @@ jobs:
 
       - name: Check format
         run: |
-          docker run --rm hybridq -c 'pip install yapf==0.31.0 clang-format==9.0.0 && \
+          docker run --rm hybridq -c 'pip install yapf==0.31.0 clang-format==13.0.0 && \
             cd /opt/hybridq && \
             bash scripts/check_format.sh'
