@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.10.0" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>hybridq.circuit.utils API documentation</title>
 <meta name="description" content="Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -64,17 +64,53 @@ import numpy as np
 
 def flatten(a: Circuit) -&gt; Circuit:
     &#34;&#34;&#34;
-    Return a flattened circuit.
+    Return a flattened circuit. More precisely, `flatten` iteratively looks for
+    gates that provide `flatten` in order to return a flattened circuit.
+
+    Parameters
+    ----------
+    a: Circuit
+        Circuit to flatten.
+
+    Returns
+    -------
+    Circuit
+        Flattened circuit.
     &#34;&#34;&#34;
     return Circuit(
         g for gs in a for g in (gs if gs.provides(&#39;flatten&#39;) else (gs,)))
 
 
+def isidentity(a: Circuit, atol: float = 1e-8) -&gt; bool:
+    &#34;&#34;&#34;
+    Check if `a` is close to identity within an absolute tollerance of `atol`.
+    The check is done by getting the matrix representation of the circuit `a`.
+
+    Parameters
+    ----------
+    a: Circuit
+        Circuit to check.
+    atol: float, optional
+        Absolute tollerance.
+
+    Returns
+    -------
+    bool
+        `True` if `a` is close to the identity, otherwise `False`.
+    &#34;&#34;&#34;
+    # Get matrix
+    M = matrix(a)
+
+    # Check if close to identity
+    return np.allclose(M, np.eye(M.shape[0]), atol=atol)
+
+
 def isclose(a: Circuit,
             b: Circuit,
             use_matrix_commutation: bool = True,
+            max_n_qubits_matrix: int = 10,
             atol: float = 1e-8,
-            verbose: bool = False):
+            verbose: bool = False) -&gt; bool:
     &#34;&#34;&#34;
     Check if `a` is close to `b` within the absolute tollerance
     `atol`.
@@ -83,8 +119,11 @@ def isclose(a: Circuit,
     ----------
     circuit: Circuit[BaseGate]
         `Circuit` to compare with.
-    use_matrix_commutation: bool
+    use_matrix_commutation: bool, optional
         Use commutation rules. See `hybridq.circuit.utils.simplify`.
+    max_n_qubits_matrix: int, optional
+        Matrices are computes for gates with up to `max_n_qubits_matrix` qubits
+        (default: 10).
     atol: float, optional
         Absolute tollerance.
 
@@ -110,11 +149,12 @@ def isclose(a: Circuit,
     # Get simplified circuit
     s = simplify(a + b.inv(),
                  use_matrix_commutation=use_matrix_commutation,
+                 max_n_qubits_matrix=max_n_qubits_matrix,
                  atol=atol,
                  verbose=verbose)
 
     return not s or all(
-        np.allclose(g.matrix(), np.eye(2**len(g.qubits)), atol=atol)
+        isidentity([g], atol=atol)
         for g in tqdm(s, disable=not verbose, desc=&#39;Check&#39;))
 
 
@@ -123,12 +163,42 @@ def insert_from_left(circuit: iter[BaseGate],
                      atol: float = 1e-8,
                      *,
                      use_matrix_commutation: bool = True,
+                     max_n_qubits_matrix: int = 10,
                      simplify: bool = True,
                      pop: bool = False,
                      pinned_qubits: list[any] = None,
                      inplace: bool = False) -&gt; Circuit:
     &#34;&#34;&#34;
-    Add a gate to circuit starting from the left, commuting with existing gates if necessary.
+    Add a gate to circuit starting from the left, commuting with existing gates
+    if necessary.
+
+    Parameters
+    ----------
+    circuit: Circuit
+        `gate` will be added to `circuit`.
+    gate: Gate
+        Gate to add to `circuit`.
+    atol: float, optional
+        Absolute tollerance while simplifying.
+    use_matrix_commutation: bool, optional
+        Use matrix commutation while simplifying `circuit`.
+    max_n_qubits_matrix: int, optional
+        Matrices are computes for gates with up to `max_n_qubits_matrix` qubits
+        (default: 10).
+    simplify: bool, optional
+        Simplify `circuit` while adding `gate` (default: `True`).
+    pop: bool, optional
+        Remove `gate` if it commutes with all gates in `circuit` (default: `False`).
+    pinned_qubits: list[any], optional
+        If `pop` is `True`, remove gates unless `gate` share qubits with
+        `pinned_qubits` (default: `None`).
+    inplace: bool, optional
+        If `True`, add `gate` to `circuit` in-place (default: `False`)
+
+    Returns
+    -------
+    Circuit
+        Circuit with `gate` added to it.
     &#34;&#34;&#34;
     from copy import deepcopy
 
@@ -158,9 +228,10 @@ def insert_from_left(circuit: iter[BaseGate],
         # and exit loop.
         _commute = False
         try:
-            _commute |= not _qubits.intersection(_g.qubits)
-            _commute |= use_matrix_commutation and gate.commutes_with(_g,
-                                                                      atol=atol)
+            if _g.n_qubits &lt;= max_n_qubits_matrix:
+                _commute |= not _qubits.intersection(_g.qubits)
+                _commute |= use_matrix_commutation and gate.commutes_with(
+                    _g, atol=atol)
         except:
             pass
         finally:
@@ -457,7 +528,7 @@ def compress(circuit: iter[BaseGate],
     use_matrix_commutation: bool, optional
         If `True`, use commutation to maximize compression.
     max_n_qubits_matrix: int, optional
-        Limit the size of unitaries when checking for commutation.
+        Limit the size of matrices when checking for commutation.
     skip_compression: iter[{type, str}], optional
         If `BaseGate` is either an instance of any types in `skip_compression`,
         it provides any methods in `skip_compression`, or `BaseGate` name will
@@ -793,6 +864,7 @@ def unitary(*args, **kwargs):
 def simplify(circuit: list[BaseGate],
              atol: float = 1e-8,
              use_matrix_commutation: bool = True,
+             max_n_qubits_matrix: int = 10,
              remove_id_gates: bool = True,
              verbose: bool = False) -&gt; Circuit:
     &#34;&#34;&#34;
@@ -804,7 +876,9 @@ def simplify(circuit: list[BaseGate],
 
     # Remove gates if required
     if remove_id_gates:
-        rev_circuit = (g for g in reversed(circuit) if g.name != &#39;I&#39;)
+        rev_circuit = (g for g in reversed(circuit) if g.name != &#39;I&#39; and (
+            not g.provides(&#39;matrix&#39;) or g.n_qubits &gt; max_n_qubits_matrix or
+            not isidentity([g], atol=atol)))
     else:
         rev_circuit = reversed(circuit)
 
@@ -817,6 +891,7 @@ def simplify(circuit: list[BaseGate],
                          gate,
                          atol=atol,
                          use_matrix_commutation=use_matrix_commutation,
+                         max_n_qubits_matrix=max_n_qubits_matrix,
                          simplify=True,
                          pop=False,
                          pinned_qubits=None,
@@ -830,6 +905,7 @@ def popright(circuit: list[BaseGate],
              pinned_qubits: list[any],
              atol: float = 1e-8,
              use_matrix_commutation: bool = True,
+             max_n_qubits_matrix: int = 10,
              simplify: bool = True,
              verbose: bool = False) -&gt; Circuit:
     &#34;&#34;&#34;
@@ -848,6 +924,7 @@ def popright(circuit: list[BaseGate],
                          gate,
                          atol=atol,
                          use_matrix_commutation=use_matrix_commutation,
+                         max_n_qubits_matrix=max_n_qubits_matrix,
                          simplify=simplify,
                          pop=True,
                          pinned_qubits=pinned_qubits,
@@ -1175,7 +1252,7 @@ is deterministic, so it can be reused elsewhere.</p>
 <dt><strong><code>use_matrix_commutation</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>If <code>True</code>, use commutation to maximize compression.</dd>
 <dt><strong><code>max_n_qubits_matrix</code></strong> :&ensp;<code>int</code>, optional</dt>
-<dd>Limit the size of unitaries when checking for commutation.</dd>
+<dd>Limit the size of matrices when checking for commutation.</dd>
 <dt><strong><code>skip_compression</code></strong> :&ensp;<code>iter[{type, str}]</code>, optional</dt>
 <dd>If <code>BaseGate</code> is either an instance of any types in <code>skip_compression</code>,
 it provides any methods in <code>skip_compression</code>, or <code>BaseGate</code> name will
@@ -1264,7 +1341,7 @@ against commutation.</dd>
     use_matrix_commutation: bool, optional
         If `True`, use commutation to maximize compression.
     max_n_qubits_matrix: int, optional
-        Limit the size of unitaries when checking for commutation.
+        Limit the size of matrices when checking for commutation.
     skip_compression: iter[{type, str}], optional
         If `BaseGate` is either an instance of any types in `skip_compression`,
         it provides any methods in `skip_compression`, or `BaseGate` name will
@@ -1616,24 +1693,75 @@ against commutation.</dd>
 <span>def <span class="ident">flatten</span></span>(<span>a: Circuit) ‑> <a title="hybridq.circuit.circuit.Circuit" href="circuit.html#hybridq.circuit.circuit.Circuit">Circuit</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Return a flattened circuit.</p></div>
+<div class="desc"><p>Return a flattened circuit. More precisely, <code><a title="hybridq.circuit.utils.flatten" href="#hybridq.circuit.utils.flatten">flatten()</a></code> iteratively looks for
+gates that provide <code><a title="hybridq.circuit.utils.flatten" href="#hybridq.circuit.utils.flatten">flatten()</a></code> in order to return a flattened circuit.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>a</code></strong> :&ensp;<code>Circuit</code></dt>
+<dd>Circuit to flatten.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Circuit</code></dt>
+<dd>Flattened circuit.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def flatten(a: Circuit) -&gt; Circuit:
     &#34;&#34;&#34;
-    Return a flattened circuit.
+    Return a flattened circuit. More precisely, `flatten` iteratively looks for
+    gates that provide `flatten` in order to return a flattened circuit.
+
+    Parameters
+    ----------
+    a: Circuit
+        Circuit to flatten.
+
+    Returns
+    -------
+    Circuit
+        Flattened circuit.
     &#34;&#34;&#34;
     return Circuit(
         g for gs in a for g in (gs if gs.provides(&#39;flatten&#39;) else (gs,)))</code></pre>
 </details>
 </dd>
 <dt id="hybridq.circuit.utils.insert_from_left"><code class="name flex">
-<span>def <span class="ident">insert_from_left</span></span>(<span>circuit: iter[BaseGate], gate: BaseGate, atol: float = 1e-08, *, use_matrix_commutation: bool = True, simplify: bool = True, pop: bool = False, pinned_qubits: list[any] = None, inplace: bool = False) ‑> Circuit</span>
+<span>def <span class="ident">insert_from_left</span></span>(<span>circuit: iter[BaseGate], gate: BaseGate, atol: float = 1e-08, *, use_matrix_commutation: bool = True, max_n_qubits_matrix: int = 10, simplify: bool = True, pop: bool = False, pinned_qubits: list[any] = None, inplace: bool = False) ‑> Circuit</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Add a gate to circuit starting from the left, commuting with existing gates if necessary.</p></div>
+<div class="desc"><p>Add a gate to circuit starting from the left, commuting with existing gates
+if necessary.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>circuit</code></strong> :&ensp;<code>Circuit</code></dt>
+<dd><code>gate</code> will be added to <code>circuit</code>.</dd>
+<dt><strong><code>gate</code></strong> :&ensp;<code>Gate</code></dt>
+<dd>Gate to add to <code>circuit</code>.</dd>
+<dt><strong><code>atol</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Absolute tollerance while simplifying.</dd>
+<dt><strong><code>use_matrix_commutation</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Use matrix commutation while simplifying <code>circuit</code>.</dd>
+<dt><strong><code>max_n_qubits_matrix</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Matrices are computes for gates with up to <code>max_n_qubits_matrix</code> qubits
+(default: 10).</dd>
+<dt><strong><code>simplify</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Simplify <code>circuit</code> while adding <code>gate</code> (default: <code>True</code>).</dd>
+<dt><strong><code>pop</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Remove <code>gate</code> if it commutes with all gates in <code>circuit</code> (default: <code>False</code>).</dd>
+<dt><strong><code>pinned_qubits</code></strong> :&ensp;<code>list[any]</code>, optional</dt>
+<dd>If <code><a title="hybridq.circuit.utils.pop" href="#hybridq.circuit.utils.pop">pop()</a></code> is <code>True</code>, remove gates unless <code>gate</code> share qubits with
+<code>pinned_qubits</code> (default: <code>None</code>).</dd>
+<dt><strong><code>inplace</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, add <code>gate</code> to <code>circuit</code> in-place (default: <code>False</code>)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Circuit</code></dt>
+<dd>Circuit with <code>gate</code> added to it.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1643,12 +1771,42 @@ against commutation.</dd>
                      atol: float = 1e-8,
                      *,
                      use_matrix_commutation: bool = True,
+                     max_n_qubits_matrix: int = 10,
                      simplify: bool = True,
                      pop: bool = False,
                      pinned_qubits: list[any] = None,
                      inplace: bool = False) -&gt; Circuit:
     &#34;&#34;&#34;
-    Add a gate to circuit starting from the left, commuting with existing gates if necessary.
+    Add a gate to circuit starting from the left, commuting with existing gates
+    if necessary.
+
+    Parameters
+    ----------
+    circuit: Circuit
+        `gate` will be added to `circuit`.
+    gate: Gate
+        Gate to add to `circuit`.
+    atol: float, optional
+        Absolute tollerance while simplifying.
+    use_matrix_commutation: bool, optional
+        Use matrix commutation while simplifying `circuit`.
+    max_n_qubits_matrix: int, optional
+        Matrices are computes for gates with up to `max_n_qubits_matrix` qubits
+        (default: 10).
+    simplify: bool, optional
+        Simplify `circuit` while adding `gate` (default: `True`).
+    pop: bool, optional
+        Remove `gate` if it commutes with all gates in `circuit` (default: `False`).
+    pinned_qubits: list[any], optional
+        If `pop` is `True`, remove gates unless `gate` share qubits with
+        `pinned_qubits` (default: `None`).
+    inplace: bool, optional
+        If `True`, add `gate` to `circuit` in-place (default: `False`)
+
+    Returns
+    -------
+    Circuit
+        Circuit with `gate` added to it.
     &#34;&#34;&#34;
     from copy import deepcopy
 
@@ -1678,9 +1836,10 @@ against commutation.</dd>
         # and exit loop.
         _commute = False
         try:
-            _commute |= not _qubits.intersection(_g.qubits)
-            _commute |= use_matrix_commutation and gate.commutes_with(_g,
-                                                                      atol=atol)
+            if _g.n_qubits &lt;= max_n_qubits_matrix:
+                _commute |= not _qubits.intersection(_g.qubits)
+                _commute |= use_matrix_commutation and gate.commutes_with(
+                    _g, atol=atol)
         except:
             pass
         finally:
@@ -1697,7 +1856,7 @@ against commutation.</dd>
 </details>
 </dd>
 <dt id="hybridq.circuit.utils.isclose"><code class="name flex">
-<span>def <span class="ident">isclose</span></span>(<span>a: Circuit, b: Circuit, use_matrix_commutation: bool = True, atol: float = 1e-08, verbose: bool = False)</span>
+<span>def <span class="ident">isclose</span></span>(<span>a: Circuit, b: Circuit, use_matrix_commutation: bool = True, max_n_qubits_matrix: int = 10, atol: float = 1e-08, verbose: bool = False) ‑> bool</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Check if <code>a</code> is close to <code>b</code> within the absolute tollerance
@@ -1706,8 +1865,11 @@ against commutation.</dd>
 <dl>
 <dt><strong><code>circuit</code></strong> :&ensp;<code>Circuit[BaseGate]</code></dt>
 <dd><code>Circuit</code> to compare with.</dd>
-<dt><strong><code>use_matrix_commutation</code></strong> :&ensp;<code>bool</code></dt>
+<dt><strong><code>use_matrix_commutation</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>Use commutation rules. See <code><a title="hybridq.circuit.utils.simplify" href="#hybridq.circuit.utils.simplify">simplify()</a></code>.</dd>
+<dt><strong><code>max_n_qubits_matrix</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Matrices are computes for gates with up to <code>max_n_qubits_matrix</code> qubits
+(default: 10).</dd>
 <dt><strong><code>atol</code></strong> :&ensp;<code>float</code>, optional</dt>
 <dd>Absolute tollerance.</dd>
 </dl>
@@ -1733,8 +1895,9 @@ True
 <pre><code class="python">def isclose(a: Circuit,
             b: Circuit,
             use_matrix_commutation: bool = True,
+            max_n_qubits_matrix: int = 10,
             atol: float = 1e-8,
-            verbose: bool = False):
+            verbose: bool = False) -&gt; bool:
     &#34;&#34;&#34;
     Check if `a` is close to `b` within the absolute tollerance
     `atol`.
@@ -1743,8 +1906,11 @@ True
     ----------
     circuit: Circuit[BaseGate]
         `Circuit` to compare with.
-    use_matrix_commutation: bool
+    use_matrix_commutation: bool, optional
         Use commutation rules. See `hybridq.circuit.utils.simplify`.
+    max_n_qubits_matrix: int, optional
+        Matrices are computes for gates with up to `max_n_qubits_matrix` qubits
+        (default: 10).
     atol: float, optional
         Absolute tollerance.
 
@@ -1770,12 +1936,59 @@ True
     # Get simplified circuit
     s = simplify(a + b.inv(),
                  use_matrix_commutation=use_matrix_commutation,
+                 max_n_qubits_matrix=max_n_qubits_matrix,
                  atol=atol,
                  verbose=verbose)
 
     return not s or all(
-        np.allclose(g.matrix(), np.eye(2**len(g.qubits)), atol=atol)
+        isidentity([g], atol=atol)
         for g in tqdm(s, disable=not verbose, desc=&#39;Check&#39;))</code></pre>
+</details>
+</dd>
+<dt id="hybridq.circuit.utils.isidentity"><code class="name flex">
+<span>def <span class="ident">isidentity</span></span>(<span>a: Circuit, atol: float = 1e-08) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if <code>a</code> is close to identity within an absolute tollerance of <code>atol</code>.
+The check is done by getting the matrix representation of the circuit <code>a</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>a</code></strong> :&ensp;<code>Circuit</code></dt>
+<dd>Circuit to check.</dd>
+<dt><strong><code>atol</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Absolute tollerance.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd><code>True</code> if <code>a</code> is close to the identity, otherwise <code>False</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isidentity(a: Circuit, atol: float = 1e-8) -&gt; bool:
+    &#34;&#34;&#34;
+    Check if `a` is close to identity within an absolute tollerance of `atol`.
+    The check is done by getting the matrix representation of the circuit `a`.
+
+    Parameters
+    ----------
+    a: Circuit
+        Circuit to check.
+    atol: float, optional
+        Absolute tollerance.
+
+    Returns
+    -------
+    bool
+        `True` if `a` is close to the identity, otherwise `False`.
+    &#34;&#34;&#34;
+    # Get matrix
+    M = matrix(a)
+
+    # Check if close to identity
+    return np.allclose(M, np.eye(M.shape[0]), atol=atol)</code></pre>
 </details>
 </dd>
 <dt id="hybridq.circuit.utils.matrix"><code class="name flex">
@@ -2091,7 +2304,7 @@ array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
 </details>
 </dd>
 <dt id="hybridq.circuit.utils.popright"><code class="name flex">
-<span>def <span class="ident">popright</span></span>(<span>circuit: list[BaseGate], pinned_qubits: list[any], atol: float = 1e-08, use_matrix_commutation: bool = True, simplify: bool = True, verbose: bool = False) ‑> Circuit</span>
+<span>def <span class="ident">popright</span></span>(<span>circuit: list[BaseGate], pinned_qubits: list[any], atol: float = 1e-08, use_matrix_commutation: bool = True, max_n_qubits_matrix: int = 10, simplify: bool = True, verbose: bool = False) ‑> Circuit</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Remove gates outside the lightcone created by pinned_qubits.</p></div>
@@ -2103,6 +2316,7 @@ array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
              pinned_qubits: list[any],
              atol: float = 1e-8,
              use_matrix_commutation: bool = True,
+             max_n_qubits_matrix: int = 10,
              simplify: bool = True,
              verbose: bool = False) -&gt; Circuit:
     &#34;&#34;&#34;
@@ -2121,6 +2335,7 @@ array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                          gate,
                          atol=atol,
                          use_matrix_commutation=use_matrix_commutation,
+                         max_n_qubits_matrix=max_n_qubits_matrix,
                          simplify=simplify,
                          pop=True,
                          pinned_qubits=pinned_qubits,
@@ -2187,7 +2402,7 @@ The output map will have the form new_qubit -&gt; old_qubit.</p></div>
 </details>
 </dd>
 <dt id="hybridq.circuit.utils.simplify"><code class="name flex">
-<span>def <span class="ident">simplify</span></span>(<span>circuit: list[BaseGate], atol: float = 1e-08, use_matrix_commutation: bool = True, remove_id_gates: bool = True, verbose: bool = False) ‑> Circuit</span>
+<span>def <span class="ident">simplify</span></span>(<span>circuit: list[BaseGate], atol: float = 1e-08, use_matrix_commutation: bool = True, max_n_qubits_matrix: int = 10, remove_id_gates: bool = True, verbose: bool = False) ‑> Circuit</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Compress together gates up to the specified number of qubits.</p></div>
@@ -2198,6 +2413,7 @@ The output map will have the form new_qubit -&gt; old_qubit.</p></div>
 <pre><code class="python">def simplify(circuit: list[BaseGate],
              atol: float = 1e-8,
              use_matrix_commutation: bool = True,
+             max_n_qubits_matrix: int = 10,
              remove_id_gates: bool = True,
              verbose: bool = False) -&gt; Circuit:
     &#34;&#34;&#34;
@@ -2209,7 +2425,9 @@ The output map will have the form new_qubit -&gt; old_qubit.</p></div>
 
     # Remove gates if required
     if remove_id_gates:
-        rev_circuit = (g for g in reversed(circuit) if g.name != &#39;I&#39;)
+        rev_circuit = (g for g in reversed(circuit) if g.name != &#39;I&#39; and (
+            not g.provides(&#39;matrix&#39;) or g.n_qubits &gt; max_n_qubits_matrix or
+            not isidentity([g], atol=atol)))
     else:
         rev_circuit = reversed(circuit)
 
@@ -2222,6 +2440,7 @@ The output map will have the form new_qubit -&gt; old_qubit.</p></div>
                          gate,
                          atol=atol,
                          use_matrix_commutation=use_matrix_commutation,
+                         max_n_qubits_matrix=max_n_qubits_matrix,
                          simplify=True,
                          pop=False,
                          pinned_qubits=None,
@@ -2655,6 +2874,7 @@ representation.</dd>
 <li><code><a title="hybridq.circuit.utils.flatten" href="#hybridq.circuit.utils.flatten">flatten</a></code></li>
 <li><code><a title="hybridq.circuit.utils.insert_from_left" href="#hybridq.circuit.utils.insert_from_left">insert_from_left</a></code></li>
 <li><code><a title="hybridq.circuit.utils.isclose" href="#hybridq.circuit.utils.isclose">isclose</a></code></li>
+<li><code><a title="hybridq.circuit.utils.isidentity" href="#hybridq.circuit.utils.isidentity">isidentity</a></code></li>
 <li><code><a title="hybridq.circuit.utils.matrix" href="#hybridq.circuit.utils.matrix">matrix</a></code></li>
 <li><code><a title="hybridq.circuit.utils.moments" href="#hybridq.circuit.utils.moments">moments</a></code></li>
 <li><code><a title="hybridq.circuit.utils.pop" href="#hybridq.circuit.utils.pop">pop</a></code></li>
@@ -2672,7 +2892,7 @@ representation.</dd>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

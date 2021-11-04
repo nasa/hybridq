@@ -1,0 +1,1724 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>hybridq.noise.channel.channel API documentation</title>
+<meta name="description" content="Authors: Salvatore Mandra (salvatore.mandra@nasa.gov),
+Jeffrey Marshall (jeffrey.s.marshall@nasa.gov) …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>hybridq.noise.channel.channel</code></h1>
+</header>
+<section id="section-intro">
+<p>Authors: Salvatore Mandra (salvatore.mandra@nasa.gov),
+Jeffrey Marshall (jeffrey.s.marshall@nasa.gov)</p>
+<p>Copyright © 2021, United States Government, as represented by the Administrator
+of the National Aeronautics and Space Administration. All rights reserved.</p>
+<p>The HybridQ: A Hybrid Simulator for Quantum Circuits platform is licensed under
+the Apache License, Version 2.0 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of the License at
+<a href="http://www.apache.org/licenses/LICENSE-2.0.">http://www.apache.org/licenses/LICENSE-2.0.</a></p>
+<p>Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Authors: Salvatore Mandra (salvatore.mandra@nasa.gov),
+         Jeffrey Marshall (jeffrey.s.marshall@nasa.gov)
+
+Copyright © 2021, United States Government, as represented by the Administrator
+of the National Aeronautics and Space Administration. All rights reserved.
+
+The HybridQ: A Hybrid Simulator for Quantum Circuits platform is licensed under
+the Apache License, Version 2.0 (the &#34;License&#34;); you may not use this file
+except in compliance with the License. You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+&#34;&#34;&#34;
+
+from __future__ import annotations
+from hybridq.base import __Base__, generate, staticvars, compare, requires
+from hybridq.gate import BaseGate, property as pr
+from hybridq.dm.gate import BaseSuperGate, property as dm_pr
+import numpy as np
+
+
+class BaseChannel(__Base__):
+    &#34;&#34;&#34;
+    Base class for `Channel`s.
+    &#34;&#34;&#34;
+    pass
+
+
+@compare(&#39;LMatrices,RMatrices,s&#39;)
+@staticvars(&#39;LMatrices,RMatrices,s,_use_cache&#39;,
+            _use_cache=True,
+            transform=dict(LMatrices=lambda M: tuple(map(np.asarray, M)),
+                           RMatrices=lambda M: tuple(map(np.asarray, M)),
+                           s=lambda s: np.asarray(s),
+                           _use_cache=lambda x: bool(x)))
+class _MatrixChannel(BaseChannel,
+                     BaseGate,
+                     BaseSuperGate,
+                     pr.QubitGate,
+                     pr.TagGate,
+                     pr.NameGate,
+                     n_qubits=any,
+                     name=&#39;&#39;):
+    &#34;&#34;&#34;
+    Base class for `MatrixChannel`s.
+    &#34;&#34;&#34;
+
+    def __init_subclass__(cls, **kwargs):
+        from hybridq.dm.gate import KrausSuperGate
+        from hybridq.gate import MatrixGate
+
+        # Call super
+        super().__init_subclass__(**kwargs)
+
+        # Get static variables
+        LMatrices = cls.__get_staticvar__(&#39;LMatrices&#39;)
+        RMatrices = cls.__get_staticvar__(&#39;RMatrices&#39;)
+        n_qubits = cls.__get_staticvar__(&#39;n_qubits&#39;)
+        s = cls.__get_staticvar__(&#39;s&#39;)
+        use_cache = cls.__get_staticvar__(&#39;_use_cache&#39;)
+
+        # Check dimensions
+        if any(M.shape != (2**n_qubits, 2**n_qubits) for M in LMatrices):
+            raise ValueError(&#34;Matrices in &#39;LMatrices&#39; have shapes &#34;
+                             &#34;not consistent with number of qubits.&#34;)
+        if any(M.shape != (2**n_qubits, 2**n_qubits) for M in RMatrices):
+            raise ValueError(&#34;Matrices in &#39;RMatrices&#39; have shapes &#34;
+                             &#34;not consistent with number of qubits.&#34;)
+
+        # Check consistency
+        if s.ndim == 0:
+            if len(LMatrices) != len(RMatrices):
+                raise ValueError(
+                    &#34;The number of &#39;LMatrices&#39; must be the same of &#39;RMatrices&#39;&#34;)
+        elif s.ndim == 1:
+            if len(s) != len(LMatrices) or len(s) != len(RMatrices):
+                raise ValueError(
+                    &#34;&#39;s.shape&#39; is not consistent with number of matrices. &#34;
+                    f&#34;(expected {(len(LMatrices), )}, &#34;
+                    f&#34;got {s.shape})&#34;)
+        elif s.ndim == 2:
+            if s.shape != (len(LMatrices), len(RMatrices)):
+                raise ValueError(
+                    &#34;&#39;s.shape&#39; is not consistent with number of matrices. &#34;
+                    f&#34;(expected {(len(LMatrices), len(RMatrices))}, &#34;
+                    f&#34;got {s.shape})&#34;)
+
+        # Get gates
+        LGates = tuple(map(MatrixGate, LMatrices))
+        RGates = tuple(map(MatrixGate, RMatrices))
+
+        # Initialize Kraus operator
+        cls.__Kraus = KrausSuperGate(gates=(LGates, RGates),
+                                     s=s,
+                                     use_cache=use_cache)
+
+    def __print__(self):
+        return dict(s=(100, f&#39;s.shape={self.s.shape}&#39;, 0))
+
+    @property
+    def Kraus(self) -&gt; KrausSuperGate:
+        &#34;&#34;&#34;
+        Return `KrausSuperGate` representing `_MatrixChannel`.
+        &#34;&#34;&#34;
+
+        # Check if qubits are current ...
+        if self.__Kraus.gates[0][0].qubits != self.qubits:
+            # ... otherwise, update qubits in all gates
+            for lg, rg in zip(*self.__Kraus.gates):
+                lg._on(self.qubits)
+                rg._on(self.qubits)
+
+        # Return Kraus operator
+        return self.__Kraus
+
+    def map(self, order: tuple[any, ...] = None) -&gt; KrausMap:
+        &#34;&#34;&#34;
+        Return `_MatrixChannel` Kraus&#39; map.
+
+        Parameters
+        ----------
+        order: tuple[any, ...], optional
+            If provided, Kraus&#39; map is ordered accordingly to `order`.
+        &#34;&#34;&#34;
+
+        # Return map
+        return self.Kraus.map(order=order)
+
+
+def MatrixChannel(LMatrices: tuple[array, ...],
+                  RMatrices: tuple[array, ...] = None,
+                  s: {float, array} = 1,
+                  qubits: tuple[any, ...] = None,
+                  tags: dict[any, any] = None,
+                  name: str = &#39;MATRIX_CHANNEL&#39;,
+                  copy: bool = True,
+                  atol: float = 1e-8,
+                  methods: dict[any, any] = None,
+                  use_cache: bool = True):
+    &#34;&#34;&#34;
+    Return a channel described by `LMatrices` and `RMatrices`. More precisely,
+    `MatrixChannel` will represent a channel of the form:
+
+        rho -&gt; E(rho) = \sum_ij s_ij L_i rho R_j^*
+
+    with `rho` being a density matrix.
+
+    Parameters
+    ----------
+    LMatrices: tuple[array, ...]
+        Left matrices associated to `MatrixChannel`.
+    RMatrices: tuple[array, ...], optional
+        Right matrices associated to `MatrixChannel`. If not provided,
+        `LMatrices` will be used as `RMatrices`.
+    s: {float, array}, optional
+        Weights for the left and right matrices associated to `MatrixChannel`.
+        If `s` is a constant, then `s_ij = s` for `i == j` and zero otherwise.
+        Similarly, if `s` is a one dimensional array, then `s_ij = s_i` for
+        `i == j` and zero otherwise.
+    tags: dict[any, any], optional
+        Tags to add to `MatrixChannel`s.
+    qubits: tuple[any, ...], optional
+        Qubits the `MatrixChannel` will act on.
+    name: str, optional
+        Name of `MatrixChannel`.
+    copy: bool, optional,
+        If `copy == True`, then `LMatrices`, `RMatrices` and `s` are copied
+        instead of passed by reference (default: `True`).
+    atol: float, optional
+        Use `atol` as absolute tollerance while checking.
+    methods: dict[any, any]
+        Add extra methods to the object.
+    use_cache: bool, optional
+        If `True`, extra memory is used to store a cached `Matrix`.
+
+    Returns
+    -------
+    MatrixChannel
+    &#34;&#34;&#34;
+
+    from hybridq.utils import isintegral, isnumber
+
+    ## # Define sample
+    ## def __sample__(self, size: int = None, replace: bool = True):
+    ##     from hybridq.utils import isintegral
+    ##
+    ##     # It is assumed here that s.ndim == 1
+    ##     assert (s.ndim == 1)
+    ##
+    ##     # Get number of elements
+    ##     idxs = np.random.choice(range(len(s)), size=size, replace=replace, p=s)
+    ##
+    ##     # Get gates (it is assumed here that left and right gates are the same)
+    ##     return self.Kraus.gates[0][idxs] if isintegral(idxs) else tuple(
+    ##         self.Kraus.gates[0][x] for x in idxs)
+    ##
+    ## # Define apply
+    ## def __apply__(self, psi, order):
+    ##     raise NotImplementedError
+
+    # Get matrices, and copy if needed
+    LMatrices = tuple(map(np.array if copy else np.asarray, LMatrices))
+    RMatrices = None if RMatrices is None else tuple(
+        map(np.array if copy else np.asarray, RMatrices))
+
+    # Get s
+    if isnumber(s):
+        # Convert to array
+        s = float(s) * np.ones(len(LMatrices))
+
+        # Check that LMatrices and RMatrices are consistent
+        if RMatrices is not None and len(LMatrices) != len(RMatrices):
+            raise ValueError(&#34;&#39;s&#39; cannot be a float if &#39;LMatrices&#39; &#34;
+                             &#34;and &#39;RMatrices&#39; have different size&#34;)
+
+    else:
+        # Convert to array
+        s = (np.array if copy else np.asarray)(s)
+
+        # Try to reduce to vector
+        if s.ndim == 2 and s.shape[0] == s.shape[1]:
+            if np.allclose(s, np.diag(np.diag(s)), atol=atol):
+                s = np.diag(s)
+
+        # Check number of dimensions
+        elif s.ndim &gt; 2:
+            raise ValueError(&#34;&#39;s&#39; not supported.&#34;)
+
+        # If diagonal, convert to vector
+
+    # At least on matrix should be provided
+    if not len(LMatrices) or (RMatrices is not None and not (RMatrices)):
+        raise ValueError(&#34;At least one matrix must be provided&#34;)
+
+    # Get n_qubits from matrices
+    n_qubits = np.log2(LMatrices[0].shape[0])
+    if isintegral(n_qubits):
+        n_qubits = int(n_qubits)
+    else:
+        raise ValueError(&#34;Only matrices acting on qubits are supported&#34;)
+
+    # Check that all matrices have the same shape
+    if any(m.shape != (2**n_qubits, 2**n_qubits) for m in LMatrices) or (
+            RMatrices is not None and
+            any(m.shape != (2**n_qubits, 2**n_qubits) for m in RMatrices)):
+        raise ValueError(&#34;All matrices must have the same shape&#34;)
+
+    # Get qubits
+    qubits = None if qubits is None else tuple(qubits)
+
+    # Check if qubits is consistent with number of qubits
+    if qubits and len(qubits) != n_qubits:
+        raise ValueError(&#34;&#39;qubits&#39; is not consistent with the size of matrices&#34;)
+
+    # Get name
+    name = str(name)
+
+    # Set mro
+    mro = (_MatrixChannel,)
+
+    # Set static dictionary
+    sdict = dict(name=name.upper(),
+                 s=s,
+                 LMatrices=LMatrices,
+                 RMatrices=LMatrices if RMatrices is None else RMatrices,
+                 n_qubits=n_qubits,
+                 _use_cache=use_cache)
+
+    # Initialize methods
+    _methods = {}
+
+    ## # Initialize _stochastic and _functional
+    ## _stochastic = False
+    ## _functional = False
+    ##
+    ## # Check if all matrices are unitaries
+    ## if s.ndim == 1 and RMatrices is None and np.isclose(np.sum(s), 1,
+    ##                                                     atol=atol):
+    ##     from hybridq.utils import isunitary
+    ##
+    ##     # Check if matrix is unitaries
+    ##     _stochastic = all(map(isunitary, LMatrices))
+    ##
+    ## # If all unitaries, add sample
+    ## if _stochastic:
+    ##     # Update mro
+    ##     mro = mro + (pr.StochasticGate,)
+    ##
+    ##     # Add gates
+    ##     sdict.update(gates=None)
+    ##
+    ##     # Add sample
+    ##     _methods.update(sample=__sample__)
+    ##
+    ## # Add apply
+    ## elif _functional:
+    ##     # Update mro
+    ##     mro = mro + (pr.FunctionalGate,)
+    ##
+    ##     # Add update
+    ##     sdict.update(apply=__apply__)
+
+    # Merge extra methods
+    if methods is not None:
+        _methods.update(methods)
+
+    # Generate gate
+    return generate(&#39;&#39;.join(name.title().split(&#39;_&#39;)),
+                    mro,
+                    methods=_methods,
+                    **sdict)(qubits=qubits, tags=tags)
+
+
+def GlobalPauliChannel(qubits: tuple[any, ...],
+                       s: {float, array, dict},
+                       tags: dict[any, any] = None,
+                       name: str = &#39;GLOBAL_PAULI_CHANNEL&#39;,
+                       copy: bool = True,
+                       atol: float = 1e-8,
+                       methods: dict[any, any] = None,
+                       use_cache: bool = True) -&gt; GlobalPauliChannel:
+    &#34;&#34;&#34;
+    Return a `GlobalPauliChannel`s acting on `qubits`.
+    More precisely, each `LocalPauliChannel` has the form:
+
+        rho -&gt; E(rho) = \sum_{i1,i2,...}{j1,j2,...}
+                s_{i1,i2...}{j1,j2,...}
+                    sigma_i1 sigma_i2 ... rho sigma_j1 sigma_j2 ...
+
+    with `rho` being a density matrix and `sigma_i` being Pauli matrices.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `LocalPauliChannel`s will act on.
+    s: {float, array, dict}
+        Weight for Pauli matrices.
+        If `s` is a float, the diagonal of the matrix s_ij is set to `s`.
+        Similarly, if `s` is a one dimensional array, then the diagonal of
+        matrix s_ij is set to that array.
+        If `s` is a `dict`, weights can be specified by
+        using the tokens `I`, `X`, `Y` and `Z`. For instance, `dict(XYYZ=0.2)`
+        will set the weight for `sigma_i1 == X`, `sigma_i2 == Y`, `sigma_j1 == Y`
+        and `sigma_j2 == Z` to `0.2`.
+    tags: dict[any, any]
+        Tags to add to `LocalPauliChannel`s.
+    name: str, optional
+        Alternative name for `GlobalPauliChannel`.
+    copy: bool, optional,
+        If `copy == True`, then `s` is copied instead of passed by reference
+        (default: `True`).
+    atol: float, optional
+        Use `atol` as absolute tollerance while checking.
+    methods: dict[any, any]
+        Add extra methods to the object.
+    use_cache: bool, optional
+        If `True`, extra memory is used to store a cached `Matrix`.
+    &#34;&#34;&#34;
+
+    from hybridq.utils import isintegral, kron
+    from itertools import product
+    from hybridq.gate import Gate
+
+    # Get qubits
+    qubits = tuple(qubits)
+
+    # Define n_qubits
+    n_qubits = len(qubits)
+
+    # If &#39;s&#39; is a &#39;dict&#39;
+    if isinstance(s, dict):
+        # Convert to upper
+        s = {str(k).upper(): v for k, v in s.items()}
+
+        # Check if tokens are valid
+        if any(len(k) != 2 * n_qubits for k in s):
+            raise ValueError(&#34;Keys in &#39;s&#39; must have twice a number of &#34;
+                             &#34;tokens which is twice the number of qubits&#34;)
+
+        if any(set(k).difference(&#39;IXYZ&#39;) for k in s):
+            raise ValueError(&#34;&#39;s&#39; contains non-valid tokens&#34;)
+
+        # Get position
+        def _get_position(k):
+            return sum(
+                (4**i * dict(I=0, X=1, Y=2, Z=3)[k]) for i, k in enumerate(k))
+
+        # Build matrix
+        _s = np.zeros((4**n_qubits, 4**n_qubits))
+        for k, v in s.items():
+            # Get positions
+            x, y = _get_position(k[:n_qubits]), _get_position(k[n_qubits:])
+
+            # Fill matrix
+            _s[x, y] = v
+
+        # assign
+        s = _s
+
+    # Otherwise, convert to array
+    else:
+        s = (np.array if copy else np.asarray)(s)
+
+        # If a single float, return vector
+        if s.ndim == 0:
+            s = np.ones(4**n_qubits) * s
+
+        # Otherwise, dimensions must be consistent
+        elif s.ndim &gt; 2 or set(s.shape) != {4**n_qubits}:
+            raise ValueError(&#34;&#39;s&#39; must be either a vector of exactly &#34;
+                             f&#34;{4**n_qubits} elements, or a &#34;
+                             f&#34;{(4**n_qubits, 4**n_qubits)} matrix&#34;)
+
+    # Get matrices
+    Matrices = [
+        kron(*m)
+        for m in product(*([[Gate(g).Matrix for g in &#39;IXYZ&#39;]] * n_qubits))
+    ]
+
+    # Return gate
+    return MatrixChannel(LMatrices=Matrices,
+                         qubits=qubits,
+                         s=s,
+                         tags=tags,
+                         name=name,
+                         copy=False,
+                         atol=atol,
+                         methods=methods,
+                         use_cache=use_cache)
+
+
+def LocalPauliChannel(qubits: tuple[any, ...],
+                      s: {float, array, dict},
+                      tags: dict[any, any] = None,
+                      name: str = &#39;LOCAL_PAULI_CHANNEL&#39;,
+                      copy: bool = True,
+                      atol: float = 1e-8,
+                      methods: dict[any, any] = None,
+                      use_cache: bool = True) -&gt; tuple[LocalPauliChannel, ...]:
+    &#34;&#34;&#34;
+    Return a `tuple` of `LocalPauliChannel`s acting independently on `qubits`.
+    More precisely, each `LocalPauliChannel` has the form:
+
+        rho -&gt; E_i(rho) = \sum_ij s_ij sigma_i rho sigma_j
+
+    with `rho` being a density matrix and `sigma_i` being Pauli matrices.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `LocalPauliChannel`s will act on.
+    s: {float, array, dict}
+        Weight for Pauli matrices. If `s` is a constant, then `s_ij = s` for
+        `i == j` and zero otherwise.  Similarly, if `s` is a one dimensional
+        array, then `s_ij = s_i` for `i == j` and zero otherwise. If `s` is a
+        `dict`, weights can be specified by using the tokens `I`, `X`, `Y` and
+        `Z`. For instance, `dict(XY=0.2)` will set `s[1, 2] = 0.2`.
+    tags: dict[any, any]
+        Tags to add to `LocalPauliChannel`s.
+    name: str, optional
+        Alternative name for `LocalPauliChannel`s.
+    copy: bool, optional,
+        If `copy == True`, then `s` is copied instead of passed by reference
+        (default: `True`).
+    atol: float, optional
+        Use `atol` as absolute tolerance while checking.
+    methods: dict[any, any]
+        Add extra methods to the object.
+    use_cache: bool, optional
+        If `True`, extra memory is used to store a cached `Matrix`.
+    &#34;&#34;&#34;
+
+    return tuple(
+        GlobalPauliChannel(qubits=(q,),
+                           name=name,
+                           s=s,
+                           tags=tags,
+                           copy=copy,
+                           atol=atol,
+                           methods=methods,
+                           use_cache=use_cache) for q in qubits)
+
+
+def LocalDepolarizingChannel(qubits: tuple[any, ...],
+                             p: {float, array, dict},
+                             name: str = &#39;LOCAL_DEPOLARIZING_CHANNEL&#39;,
+                             **kwargs) -&gt; tuple[LocalDepolarizingChannel, ...]:
+    &#34;&#34;&#34;
+    Return a `tuple` of `LocalDepolarizingChannel`s acting independently on
+    `qubits`.  More precisely, each channel has the form:
+
+        rho -&gt; E_i(rho) = (1-p_i) rho + p_i * I/2
+
+    with `rho` being a density matrix, p_i the user specified depolarizing
+    probability for qubit i, and I the identity matrix.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `LocalDepolarizingChannel`s will act on.
+    p: {float, array, dict}
+        Depolarizing probability for qubits.
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length
+        of `qubits`, which corresponds to each depolarizing probability.
+        Otherwise a dictionary mapping from `qubit`s to probability
+        can be given.
+    name: str, optional
+        Alternative name for channel.
+    kwargs: kwargs for GlobalPauliChannel
+    &#34;&#34;&#34;
+    # Get probs
+    p = __get_params(keys=qubits, args=p, key_name=&#39;qubit&#39;, value_type=float)
+
+    # Return gates
+    return tuple(
+        GlobalDepolarizingChannel(qubits=(q,), name=name, p=p[q], **kwargs)
+        for q in qubits)
+
+
+def GlobalDepolarizingChannel(qubits: tuple[any, ...],
+                              p: float,
+                              name: str = &#39;GLOBAL_DEPOLARIZING_CHANNEL&#39;,
+                              **kwargs) -&gt; GlobalDepolarizingChannel:
+    &#34;&#34;&#34;
+    Return a depolarizing channel that acts on all qubits
+
+        rho -&gt; E(rho) = (1-p) rho + p * I/d
+
+    with `rho` being a density matrix of `len(qubits)` qubits,
+    p the user specified depolarizing probability,
+    I the identity matrix, and d=2**len(qubits) the full dimension.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `GlobalDepolarizingChannel` will act on.
+    p: float
+        Depolarizing probability.
+    name: str, optional
+        Alternative name for channel.
+    kwargs: kwargs for GlobalPauliChannel
+    &#34;&#34;&#34;
+    # Convert p to float
+    p = float(p)
+
+    # Get size of s
+    ns = 4**len(qubits)
+
+    # Get s
+    s = [1 - p + p / ns] + [p / ns] * (ns - 1)
+
+    # Return gate
+    return GlobalPauliChannel(
+        qubits=qubits,
+        name=name,
+        s=s,
+        methods=dict(__print__=lambda self: {&#39;p&#39;: (400, f&#39;p={p}&#39;, 0)}),
+        **kwargs)
+
+
+def LocalDephasingChannel(qubits: tuple[any, ...],
+                          p: {float, array, dict},
+                          pauli_index: int = 3,
+                          name: str = &#39;LOCAL_DEPHASING_CHANNEL&#39;,
+                          **kwargs) -&gt; tuple[LocalDephasingChannel, ...]:
+    &#34;&#34;&#34;
+    Return a `tuple` of `LocalDephasingChannel`s acting independently
+    on `qubits`.
+    More precisely, each channel has the form:
+
+        rho -&gt; E_i(rho) = (1-p_i) rho + p_i * σ rho σ
+
+    with `rho` being a density matrix, p_i the user specified depolarizing
+    probability for qubit i, and σ a user specified Pauli matrix.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `LocalDephasingChannel`s will act on.
+    p: {float, array, dict}
+        Dephasing probability for qubits.
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length
+        of `qubits`, which corresponds to each dephasing probability.
+        Otherwise a dictionary mapping from `qubit`s to probability
+        can be given.
+    pauli_index: int
+        Integer in {0,1,2,3} representing the dephasing axis (Pauli matrix).
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length of
+        `qubits`, which corresponds to each dephasing axis.  Otherwise a
+        dictionary mapping from `qubit`s to axis can be given.
+    name: str, optional
+        Alternative name for channel.
+    kwargs: kwargs for GlobalPauliChannel
+    &#34;&#34;&#34;
+    # Get probs and pauli_index
+    p = __get_params(keys=qubits, args=p, key_name=&#39;qubit&#39;, value_type=float)
+    pauli_index = __get_params(keys=qubits,
+                               args=pauli_index,
+                               key_name=&#39;qubit&#39;,
+                               value_type=int)
+
+    # Check pauli_index
+    if any(v not in range(4) for v in pauli_index.values()):
+        raise ValueError(&#34;`pauli_index` must be in {0,1,2,3}&#34;)
+
+    # Get gate
+    def _get_gate(q):
+        # Get probability and axis
+        _p = p[q]
+        _x = pauli_index[q]
+        _xl = {0: &#39;I&#39;, 1: &#39;X&#39;, 2: &#39;Y&#39;, 3: &#39;Z&#39;}[_x]
+
+        # Get s
+        s = [1 - _p, 0, 0, 0]
+        s[_x] += _p
+
+        # Return gate
+        return GlobalPauliChannel(
+            qubits=(q,),
+            name=name,
+            s=s,
+            methods=dict(__print__=lambda self: dict(
+                p=(400, f&#39;p={_p}&#39;, 0), axis=(401, f&#39;axis={_xl}&#39;, 0))),
+            **kwargs)
+
+    # Return gate
+    return tuple(map(_get_gate, qubits))
+
+
+def AmplitudeDampingChannel(qubits: tuple[any, ...],
+                            gamma: {float, array, dict},
+                            p: {float, array, dict} = 1,
+                            name: str = &#39;AMPLITUDE_DAMPING_CHANNEL&#39;,
+                            atol: float = 1e-8,
+                            **kwargs) -&gt; tuple[AmplitudeDampingChannel, ...]:
+    &#34;&#34;&#34;
+    Return a `tuple` of `AmplitudeDampingChannel`s acting independently
+    on `qubits`. There are 4 Kraus operators (for each qubit):
+    sqrt(p) * [ [1, 0], [0, sqrt(1-gamma)] ]
+    sqrt(p) * [ [0, sqrt(gamma)], [0, 0] ]
+    sqrt(1-p) * [ [sqrt(1-gamma), 0], [0, 1] ]
+    sqrt(1-p) * [ [0, 0], [sqrt(gamma), 0] ]
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `AmplitudeDampingChannel`s will act on.
+    gamma: {float, array, dict}
+        Transition rate (0-&gt;1 and 1-&gt;0).
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length
+        of `qubits`, which corresponds to the value for each qubit.
+        Otherwise a dictionary mapping from `qubit`s to gamma
+        can be given.
+    p: {float, array, dict}
+        p is the probability for the &#39;damping&#39; channel (governing 1-&gt;0), and
+        1-p is probability for the &#39;excitation&#39; channel (0-&gt;1).
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length
+        of `qubits`, which corresponds to the value for each qubit.
+        Otherwise a dictionary mapping from `qubit`s to gamma
+        can be given.
+    name: str, optional
+        Alternative name for channel.
+    atol: float, optional
+        Use `atol` as absolute tolerance while checking.
+    kwargs: kwargs for MatrixChannel
+    &#34;&#34;&#34;
+    # Get gammas and probs
+    gamma = __get_params(keys=qubits,
+                         args=gamma,
+                         key_name=&#39;qubit&#39;,
+                         value_type=float)
+    p = __get_params(keys=qubits, args=p, key_name=&#39;qubit&#39;, value_type=float)
+
+    def _get_gate(q):
+        # Get gamma and p
+        _gamma = gamma[q]
+        _p = p[q]
+
+        E0 = np.sqrt(_p) * np.diag([1, np.sqrt(1 - _gamma)])
+        E1 = np.sqrt(_p) * np.array([[0, np.sqrt(_gamma)], [0, 0]])
+        E2 = np.sqrt(1 - _p) * np.diag([np.sqrt(1 - _gamma), 1])
+        E3 = np.sqrt(1 - _p) * np.array([[0, 0], [np.sqrt(_gamma), 0]])
+
+        mats = []
+        # drop zero operators
+        for m in [E0, E1, E2, E3]:
+            if not np.allclose(m, 0, atol=atol):
+                mats += [m]
+
+        # Return gate
+        return MatrixChannel(
+            LMatrices=tuple(mats),
+            qubits=(q,),
+            s=1,
+            name=name,
+            atol=atol,
+            methods=dict(__print__=lambda self: dict(
+                gamma=(400, f&#39;gamma={_gamma}&#39;, 0), p=(401, f&#39;p={_p}&#39;, 0))),
+            **kwargs)
+
+    # Return gate
+    return tuple(map(_get_gate, qubits))
+
+
+def __get_params(keys,
+                 args,
+                 key_type: callable = lambda x: x,
+                 value_type: callable = lambda x: x,
+                 key_name: str = &#39;key&#39;):
+    from hybridq.utils import to_dict, to_list
+    from collections import defaultdict
+
+    # Initialize output
+    _args = None
+
+    # Try to convert to float
+    if _args is None:
+        try:
+            _args = {any: value_type(args)}
+        except:
+            pass
+
+    # Try to convert to dict
+    if _args is None:
+        try:
+            _args = to_dict(args, key_type=key_type, value_type=value_type)
+        except:
+            pass
+
+    # Try to convert to list
+    if _args is None:
+        try:
+            # Convert to list
+            _args = to_list(args, value_type=value_type)
+
+        except:
+            pass
+
+        else:
+            # Check number of keys
+            if len(_args) != len(keys):
+                raise ValueError(f&#34;Must have exactly one value per {key_name}&#34;)
+
+            # Get dict
+            _args = {key_type(k): x for k, x in zip(keys, _args)}
+
+    # If _args is still None, raise
+    if _args is None:
+        raise TypeError(f&#34;&#39;{args}&#39; not supported&#34;)
+
+    # Check keys
+    if any not in _args and set(keys) != set(_args):
+        raise ValueError(f&#34;All {key_name}s must be specified&#34;)
+
+    # Return
+    return defaultdict(lambda: _args[any], _args) if any in _args else _args</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="hybridq.noise.channel.channel.AmplitudeDampingChannel"><code class="name flex">
+<span>def <span class="ident">AmplitudeDampingChannel</span></span>(<span>qubits: tuple[any, ...], gamma: {float, array, dict}, p: {float, array, dict} = 1, name: str = 'AMPLITUDE_DAMPING_CHANNEL', atol: float = 1e-08, **kwargs) ‑> tuple[<a title="hybridq.noise.channel.channel.AmplitudeDampingChannel" href="#hybridq.noise.channel.channel.AmplitudeDampingChannel">AmplitudeDampingChannel()</a>, ...]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a <code>tuple</code> of <code><a title="hybridq.noise.channel.channel.AmplitudeDampingChannel" href="#hybridq.noise.channel.channel.AmplitudeDampingChannel">AmplitudeDampingChannel()</a></code>s acting independently
+on <code>qubits</code>. There are 4 Kraus operators (for each qubit):
+sqrt(p) * [ [1, 0], [0, sqrt(1-gamma)] ]
+sqrt(p) * [ [0, sqrt(gamma)], [0, 0] ]
+sqrt(1-p) * [ [sqrt(1-gamma), 0], [0, 1] ]
+sqrt(1-p) * [ [0, 0], [sqrt(gamma), 0] ]</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>qubits</code></strong> :&ensp;<code>tuple[any, &hellip;]</code></dt>
+<dd>Qubits the <code><a title="hybridq.noise.channel.channel.AmplitudeDampingChannel" href="#hybridq.noise.channel.channel.AmplitudeDampingChannel">AmplitudeDampingChannel()</a></code>s will act on.</dd>
+<dt><strong><code>gamma</code></strong> :&ensp;<code>{float, array, dict}</code></dt>
+<dd>Transition rate (0-&gt;1 and 1-&gt;0).
+If a single value is passed, the same is used for all qubits.
+If a one dimensional array is passed, it must be the same length
+of <code>qubits</code>, which corresponds to the value for each qubit.
+Otherwise a dictionary mapping from <code>qubit</code>s to gamma
+can be given.</dd>
+<dt><strong><code>p</code></strong> :&ensp;<code>{float, array, dict}</code></dt>
+<dd>p is the probability for the 'damping' channel (governing 1-&gt;0), and
+1-p is probability for the 'excitation' channel (0-&gt;1).
+If a single value is passed, the same is used for all qubits.
+If a one dimensional array is passed, it must be the same length
+of <code>qubits</code>, which corresponds to the value for each qubit.
+Otherwise a dictionary mapping from <code>qubit</code>s to gamma
+can be given.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Alternative name for channel.</dd>
+<dt><strong><code>atol</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Use <code>atol</code> as absolute tolerance while checking.</dd>
+<dt><strong><code>kwargs</code></strong> :&ensp;<code>kwargs for <a title="hybridq.noise.channel.channel.MatrixChannel" href="#hybridq.noise.channel.channel.MatrixChannel">MatrixChannel()</a></code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def AmplitudeDampingChannel(qubits: tuple[any, ...],
+                            gamma: {float, array, dict},
+                            p: {float, array, dict} = 1,
+                            name: str = &#39;AMPLITUDE_DAMPING_CHANNEL&#39;,
+                            atol: float = 1e-8,
+                            **kwargs) -&gt; tuple[AmplitudeDampingChannel, ...]:
+    &#34;&#34;&#34;
+    Return a `tuple` of `AmplitudeDampingChannel`s acting independently
+    on `qubits`. There are 4 Kraus operators (for each qubit):
+    sqrt(p) * [ [1, 0], [0, sqrt(1-gamma)] ]
+    sqrt(p) * [ [0, sqrt(gamma)], [0, 0] ]
+    sqrt(1-p) * [ [sqrt(1-gamma), 0], [0, 1] ]
+    sqrt(1-p) * [ [0, 0], [sqrt(gamma), 0] ]
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `AmplitudeDampingChannel`s will act on.
+    gamma: {float, array, dict}
+        Transition rate (0-&gt;1 and 1-&gt;0).
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length
+        of `qubits`, which corresponds to the value for each qubit.
+        Otherwise a dictionary mapping from `qubit`s to gamma
+        can be given.
+    p: {float, array, dict}
+        p is the probability for the &#39;damping&#39; channel (governing 1-&gt;0), and
+        1-p is probability for the &#39;excitation&#39; channel (0-&gt;1).
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length
+        of `qubits`, which corresponds to the value for each qubit.
+        Otherwise a dictionary mapping from `qubit`s to gamma
+        can be given.
+    name: str, optional
+        Alternative name for channel.
+    atol: float, optional
+        Use `atol` as absolute tolerance while checking.
+    kwargs: kwargs for MatrixChannel
+    &#34;&#34;&#34;
+    # Get gammas and probs
+    gamma = __get_params(keys=qubits,
+                         args=gamma,
+                         key_name=&#39;qubit&#39;,
+                         value_type=float)
+    p = __get_params(keys=qubits, args=p, key_name=&#39;qubit&#39;, value_type=float)
+
+    def _get_gate(q):
+        # Get gamma and p
+        _gamma = gamma[q]
+        _p = p[q]
+
+        E0 = np.sqrt(_p) * np.diag([1, np.sqrt(1 - _gamma)])
+        E1 = np.sqrt(_p) * np.array([[0, np.sqrt(_gamma)], [0, 0]])
+        E2 = np.sqrt(1 - _p) * np.diag([np.sqrt(1 - _gamma), 1])
+        E3 = np.sqrt(1 - _p) * np.array([[0, 0], [np.sqrt(_gamma), 0]])
+
+        mats = []
+        # drop zero operators
+        for m in [E0, E1, E2, E3]:
+            if not np.allclose(m, 0, atol=atol):
+                mats += [m]
+
+        # Return gate
+        return MatrixChannel(
+            LMatrices=tuple(mats),
+            qubits=(q,),
+            s=1,
+            name=name,
+            atol=atol,
+            methods=dict(__print__=lambda self: dict(
+                gamma=(400, f&#39;gamma={_gamma}&#39;, 0), p=(401, f&#39;p={_p}&#39;, 0))),
+            **kwargs)
+
+    # Return gate
+    return tuple(map(_get_gate, qubits))</code></pre>
+</details>
+</dd>
+<dt id="hybridq.noise.channel.channel.GlobalDepolarizingChannel"><code class="name flex">
+<span>def <span class="ident">GlobalDepolarizingChannel</span></span>(<span>qubits: tuple[any, ...], p: float, name: str = 'GLOBAL_DEPOLARIZING_CHANNEL', **kwargs) ‑> <a title="hybridq.noise.channel.channel.GlobalDepolarizingChannel" href="#hybridq.noise.channel.channel.GlobalDepolarizingChannel">GlobalDepolarizingChannel()</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a depolarizing channel that acts on all qubits</p>
+<pre><code>rho -&gt; E(rho) = (1-p) rho + p * I/d
+</code></pre>
+<p>with <code>rho</code> being a density matrix of <code>len(qubits)</code> qubits,
+p the user specified depolarizing probability,
+I the identity matrix, and d=2**len(qubits) the full dimension.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>qubits</code></strong> :&ensp;<code>tuple[any, &hellip;]</code></dt>
+<dd>Qubits the <code><a title="hybridq.noise.channel.channel.GlobalDepolarizingChannel" href="#hybridq.noise.channel.channel.GlobalDepolarizingChannel">GlobalDepolarizingChannel()</a></code> will act on.</dd>
+<dt><strong><code>p</code></strong> :&ensp;<code>float</code></dt>
+<dd>Depolarizing probability.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Alternative name for channel.</dd>
+<dt><strong><code>kwargs</code></strong> :&ensp;<code>kwargs for <a title="hybridq.noise.channel.channel.GlobalPauliChannel" href="#hybridq.noise.channel.channel.GlobalPauliChannel">GlobalPauliChannel()</a></code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def GlobalDepolarizingChannel(qubits: tuple[any, ...],
+                              p: float,
+                              name: str = &#39;GLOBAL_DEPOLARIZING_CHANNEL&#39;,
+                              **kwargs) -&gt; GlobalDepolarizingChannel:
+    &#34;&#34;&#34;
+    Return a depolarizing channel that acts on all qubits
+
+        rho -&gt; E(rho) = (1-p) rho + p * I/d
+
+    with `rho` being a density matrix of `len(qubits)` qubits,
+    p the user specified depolarizing probability,
+    I the identity matrix, and d=2**len(qubits) the full dimension.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `GlobalDepolarizingChannel` will act on.
+    p: float
+        Depolarizing probability.
+    name: str, optional
+        Alternative name for channel.
+    kwargs: kwargs for GlobalPauliChannel
+    &#34;&#34;&#34;
+    # Convert p to float
+    p = float(p)
+
+    # Get size of s
+    ns = 4**len(qubits)
+
+    # Get s
+    s = [1 - p + p / ns] + [p / ns] * (ns - 1)
+
+    # Return gate
+    return GlobalPauliChannel(
+        qubits=qubits,
+        name=name,
+        s=s,
+        methods=dict(__print__=lambda self: {&#39;p&#39;: (400, f&#39;p={p}&#39;, 0)}),
+        **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="hybridq.noise.channel.channel.GlobalPauliChannel"><code class="name flex">
+<span>def <span class="ident">GlobalPauliChannel</span></span>(<span>qubits: tuple[any, ...], s: {float, array, dict}, tags: dict[any, any] = None, name: str = 'GLOBAL_PAULI_CHANNEL', copy: bool = True, atol: float = 1e-08, methods: dict[any, any] = None, use_cache: bool = True) ‑> <a title="hybridq.noise.channel.channel.GlobalPauliChannel" href="#hybridq.noise.channel.channel.GlobalPauliChannel">GlobalPauliChannel()</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a <code><a title="hybridq.noise.channel.channel.GlobalPauliChannel" href="#hybridq.noise.channel.channel.GlobalPauliChannel">GlobalPauliChannel()</a></code>s acting on <code>qubits</code>.
+More precisely, each <code><a title="hybridq.noise.channel.channel.LocalPauliChannel" href="#hybridq.noise.channel.channel.LocalPauliChannel">LocalPauliChannel()</a></code> has the form:</p>
+<pre><code>rho -&gt; E(rho) = \sum_{i1,i2,...}{j1,j2,...}
+        s_{i1,i2...}{j1,j2,...}
+            sigma_i1 sigma_i2 ... rho sigma_j1 sigma_j2 ...
+</code></pre>
+<p>with <code>rho</code> being a density matrix and <code>sigma_i</code> being Pauli matrices.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>qubits</code></strong> :&ensp;<code>tuple[any, &hellip;]</code></dt>
+<dd>Qubits the <code><a title="hybridq.noise.channel.channel.LocalPauliChannel" href="#hybridq.noise.channel.channel.LocalPauliChannel">LocalPauliChannel()</a></code>s will act on.</dd>
+<dt><strong><code>s</code></strong> :&ensp;<code>{float, array, dict}</code></dt>
+<dd>Weight for Pauli matrices.
+If <code>s</code> is a float, the diagonal of the matrix s_ij is set to <code>s</code>.
+Similarly, if <code>s</code> is a one dimensional array, then the diagonal of
+matrix s_ij is set to that array.
+If <code>s</code> is a <code>dict</code>, weights can be specified by
+using the tokens <code>I</code>, <code>X</code>, <code>Y</code> and <code>Z</code>. For instance, <code>dict(XYYZ=0.2)</code>
+will set the weight for <code>sigma_i1 == X</code>, <code>sigma_i2 == Y</code>, <code>sigma_j1 == Y</code>
+and <code>sigma_j2 == Z</code> to <code>0.2</code>.</dd>
+<dt><strong><code>tags</code></strong> :&ensp;<code>dict[any, any]</code></dt>
+<dd>Tags to add to <code><a title="hybridq.noise.channel.channel.LocalPauliChannel" href="#hybridq.noise.channel.channel.LocalPauliChannel">LocalPauliChannel()</a></code>s.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Alternative name for <code><a title="hybridq.noise.channel.channel.GlobalPauliChannel" href="#hybridq.noise.channel.channel.GlobalPauliChannel">GlobalPauliChannel()</a></code>.</dd>
+<dt><strong><code>copy</code></strong> :&ensp;<code>bool</code>, optional<code>,</code></dt>
+<dd>If <code>copy == True</code>, then <code>s</code> is copied instead of passed by reference
+(default: <code>True</code>).</dd>
+<dt><strong><code>atol</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Use <code>atol</code> as absolute tollerance while checking.</dd>
+<dt><strong><code>methods</code></strong> :&ensp;<code>dict[any, any]</code></dt>
+<dd>Add extra methods to the object.</dd>
+<dt><strong><code>use_cache</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, extra memory is used to store a cached <code>Matrix</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def GlobalPauliChannel(qubits: tuple[any, ...],
+                       s: {float, array, dict},
+                       tags: dict[any, any] = None,
+                       name: str = &#39;GLOBAL_PAULI_CHANNEL&#39;,
+                       copy: bool = True,
+                       atol: float = 1e-8,
+                       methods: dict[any, any] = None,
+                       use_cache: bool = True) -&gt; GlobalPauliChannel:
+    &#34;&#34;&#34;
+    Return a `GlobalPauliChannel`s acting on `qubits`.
+    More precisely, each `LocalPauliChannel` has the form:
+
+        rho -&gt; E(rho) = \sum_{i1,i2,...}{j1,j2,...}
+                s_{i1,i2...}{j1,j2,...}
+                    sigma_i1 sigma_i2 ... rho sigma_j1 sigma_j2 ...
+
+    with `rho` being a density matrix and `sigma_i` being Pauli matrices.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `LocalPauliChannel`s will act on.
+    s: {float, array, dict}
+        Weight for Pauli matrices.
+        If `s` is a float, the diagonal of the matrix s_ij is set to `s`.
+        Similarly, if `s` is a one dimensional array, then the diagonal of
+        matrix s_ij is set to that array.
+        If `s` is a `dict`, weights can be specified by
+        using the tokens `I`, `X`, `Y` and `Z`. For instance, `dict(XYYZ=0.2)`
+        will set the weight for `sigma_i1 == X`, `sigma_i2 == Y`, `sigma_j1 == Y`
+        and `sigma_j2 == Z` to `0.2`.
+    tags: dict[any, any]
+        Tags to add to `LocalPauliChannel`s.
+    name: str, optional
+        Alternative name for `GlobalPauliChannel`.
+    copy: bool, optional,
+        If `copy == True`, then `s` is copied instead of passed by reference
+        (default: `True`).
+    atol: float, optional
+        Use `atol` as absolute tollerance while checking.
+    methods: dict[any, any]
+        Add extra methods to the object.
+    use_cache: bool, optional
+        If `True`, extra memory is used to store a cached `Matrix`.
+    &#34;&#34;&#34;
+
+    from hybridq.utils import isintegral, kron
+    from itertools import product
+    from hybridq.gate import Gate
+
+    # Get qubits
+    qubits = tuple(qubits)
+
+    # Define n_qubits
+    n_qubits = len(qubits)
+
+    # If &#39;s&#39; is a &#39;dict&#39;
+    if isinstance(s, dict):
+        # Convert to upper
+        s = {str(k).upper(): v for k, v in s.items()}
+
+        # Check if tokens are valid
+        if any(len(k) != 2 * n_qubits for k in s):
+            raise ValueError(&#34;Keys in &#39;s&#39; must have twice a number of &#34;
+                             &#34;tokens which is twice the number of qubits&#34;)
+
+        if any(set(k).difference(&#39;IXYZ&#39;) for k in s):
+            raise ValueError(&#34;&#39;s&#39; contains non-valid tokens&#34;)
+
+        # Get position
+        def _get_position(k):
+            return sum(
+                (4**i * dict(I=0, X=1, Y=2, Z=3)[k]) for i, k in enumerate(k))
+
+        # Build matrix
+        _s = np.zeros((4**n_qubits, 4**n_qubits))
+        for k, v in s.items():
+            # Get positions
+            x, y = _get_position(k[:n_qubits]), _get_position(k[n_qubits:])
+
+            # Fill matrix
+            _s[x, y] = v
+
+        # assign
+        s = _s
+
+    # Otherwise, convert to array
+    else:
+        s = (np.array if copy else np.asarray)(s)
+
+        # If a single float, return vector
+        if s.ndim == 0:
+            s = np.ones(4**n_qubits) * s
+
+        # Otherwise, dimensions must be consistent
+        elif s.ndim &gt; 2 or set(s.shape) != {4**n_qubits}:
+            raise ValueError(&#34;&#39;s&#39; must be either a vector of exactly &#34;
+                             f&#34;{4**n_qubits} elements, or a &#34;
+                             f&#34;{(4**n_qubits, 4**n_qubits)} matrix&#34;)
+
+    # Get matrices
+    Matrices = [
+        kron(*m)
+        for m in product(*([[Gate(g).Matrix for g in &#39;IXYZ&#39;]] * n_qubits))
+    ]
+
+    # Return gate
+    return MatrixChannel(LMatrices=Matrices,
+                         qubits=qubits,
+                         s=s,
+                         tags=tags,
+                         name=name,
+                         copy=False,
+                         atol=atol,
+                         methods=methods,
+                         use_cache=use_cache)</code></pre>
+</details>
+</dd>
+<dt id="hybridq.noise.channel.channel.LocalDephasingChannel"><code class="name flex">
+<span>def <span class="ident">LocalDephasingChannel</span></span>(<span>qubits: tuple[any, ...], p: {float, array, dict}, pauli_index: int = 3, name: str = 'LOCAL_DEPHASING_CHANNEL', **kwargs) ‑> tuple[<a title="hybridq.noise.channel.channel.LocalDephasingChannel" href="#hybridq.noise.channel.channel.LocalDephasingChannel">LocalDephasingChannel()</a>, ...]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a <code>tuple</code> of <code><a title="hybridq.noise.channel.channel.LocalDephasingChannel" href="#hybridq.noise.channel.channel.LocalDephasingChannel">LocalDephasingChannel()</a></code>s acting independently
+on <code>qubits</code>.
+More precisely, each channel has the form:</p>
+<pre><code>rho -&gt; E_i(rho) = (1-p_i) rho + p_i * σ rho σ
+</code></pre>
+<p>with <code>rho</code> being a density matrix, p_i the user specified depolarizing
+probability for qubit i, and σ a user specified Pauli matrix.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>qubits</code></strong> :&ensp;<code>tuple[any, &hellip;]</code></dt>
+<dd>Qubits the <code><a title="hybridq.noise.channel.channel.LocalDephasingChannel" href="#hybridq.noise.channel.channel.LocalDephasingChannel">LocalDephasingChannel()</a></code>s will act on.</dd>
+<dt><strong><code>p</code></strong> :&ensp;<code>{float, array, dict}</code></dt>
+<dd>Dephasing probability for qubits.
+If a single value is passed, the same is used for all qubits.
+If a one dimensional array is passed, it must be the same length
+of <code>qubits</code>, which corresponds to each dephasing probability.
+Otherwise a dictionary mapping from <code>qubit</code>s to probability
+can be given.</dd>
+<dt><strong><code>pauli_index</code></strong> :&ensp;<code>int</code></dt>
+<dd>Integer in {0,1,2,3} representing the dephasing axis (Pauli matrix).
+If a single value is passed, the same is used for all qubits.
+If a one dimensional array is passed, it must be the same length of
+<code>qubits</code>, which corresponds to each dephasing axis.
+Otherwise a
+dictionary mapping from <code>qubit</code>s to axis can be given.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Alternative name for channel.</dd>
+<dt><strong><code>kwargs</code></strong> :&ensp;<code>kwargs for <a title="hybridq.noise.channel.channel.GlobalPauliChannel" href="#hybridq.noise.channel.channel.GlobalPauliChannel">GlobalPauliChannel()</a></code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def LocalDephasingChannel(qubits: tuple[any, ...],
+                          p: {float, array, dict},
+                          pauli_index: int = 3,
+                          name: str = &#39;LOCAL_DEPHASING_CHANNEL&#39;,
+                          **kwargs) -&gt; tuple[LocalDephasingChannel, ...]:
+    &#34;&#34;&#34;
+    Return a `tuple` of `LocalDephasingChannel`s acting independently
+    on `qubits`.
+    More precisely, each channel has the form:
+
+        rho -&gt; E_i(rho) = (1-p_i) rho + p_i * σ rho σ
+
+    with `rho` being a density matrix, p_i the user specified depolarizing
+    probability for qubit i, and σ a user specified Pauli matrix.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `LocalDephasingChannel`s will act on.
+    p: {float, array, dict}
+        Dephasing probability for qubits.
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length
+        of `qubits`, which corresponds to each dephasing probability.
+        Otherwise a dictionary mapping from `qubit`s to probability
+        can be given.
+    pauli_index: int
+        Integer in {0,1,2,3} representing the dephasing axis (Pauli matrix).
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length of
+        `qubits`, which corresponds to each dephasing axis.  Otherwise a
+        dictionary mapping from `qubit`s to axis can be given.
+    name: str, optional
+        Alternative name for channel.
+    kwargs: kwargs for GlobalPauliChannel
+    &#34;&#34;&#34;
+    # Get probs and pauli_index
+    p = __get_params(keys=qubits, args=p, key_name=&#39;qubit&#39;, value_type=float)
+    pauli_index = __get_params(keys=qubits,
+                               args=pauli_index,
+                               key_name=&#39;qubit&#39;,
+                               value_type=int)
+
+    # Check pauli_index
+    if any(v not in range(4) for v in pauli_index.values()):
+        raise ValueError(&#34;`pauli_index` must be in {0,1,2,3}&#34;)
+
+    # Get gate
+    def _get_gate(q):
+        # Get probability and axis
+        _p = p[q]
+        _x = pauli_index[q]
+        _xl = {0: &#39;I&#39;, 1: &#39;X&#39;, 2: &#39;Y&#39;, 3: &#39;Z&#39;}[_x]
+
+        # Get s
+        s = [1 - _p, 0, 0, 0]
+        s[_x] += _p
+
+        # Return gate
+        return GlobalPauliChannel(
+            qubits=(q,),
+            name=name,
+            s=s,
+            methods=dict(__print__=lambda self: dict(
+                p=(400, f&#39;p={_p}&#39;, 0), axis=(401, f&#39;axis={_xl}&#39;, 0))),
+            **kwargs)
+
+    # Return gate
+    return tuple(map(_get_gate, qubits))</code></pre>
+</details>
+</dd>
+<dt id="hybridq.noise.channel.channel.LocalDepolarizingChannel"><code class="name flex">
+<span>def <span class="ident">LocalDepolarizingChannel</span></span>(<span>qubits: tuple[any, ...], p: {float, array, dict}, name: str = 'LOCAL_DEPOLARIZING_CHANNEL', **kwargs) ‑> tuple[<a title="hybridq.noise.channel.channel.LocalDepolarizingChannel" href="#hybridq.noise.channel.channel.LocalDepolarizingChannel">LocalDepolarizingChannel()</a>, ...]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a <code>tuple</code> of <code><a title="hybridq.noise.channel.channel.LocalDepolarizingChannel" href="#hybridq.noise.channel.channel.LocalDepolarizingChannel">LocalDepolarizingChannel()</a></code>s acting independently on
+<code>qubits</code>.
+More precisely, each channel has the form:</p>
+<pre><code>rho -&gt; E_i(rho) = (1-p_i) rho + p_i * I/2
+</code></pre>
+<p>with <code>rho</code> being a density matrix, p_i the user specified depolarizing
+probability for qubit i, and I the identity matrix.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>qubits</code></strong> :&ensp;<code>tuple[any, &hellip;]</code></dt>
+<dd>Qubits the <code><a title="hybridq.noise.channel.channel.LocalDepolarizingChannel" href="#hybridq.noise.channel.channel.LocalDepolarizingChannel">LocalDepolarizingChannel()</a></code>s will act on.</dd>
+<dt><strong><code>p</code></strong> :&ensp;<code>{float, array, dict}</code></dt>
+<dd>Depolarizing probability for qubits.
+If a single value is passed, the same is used for all qubits.
+If a one dimensional array is passed, it must be the same length
+of <code>qubits</code>, which corresponds to each depolarizing probability.
+Otherwise a dictionary mapping from <code>qubit</code>s to probability
+can be given.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Alternative name for channel.</dd>
+<dt><strong><code>kwargs</code></strong> :&ensp;<code>kwargs for <a title="hybridq.noise.channel.channel.GlobalPauliChannel" href="#hybridq.noise.channel.channel.GlobalPauliChannel">GlobalPauliChannel()</a></code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def LocalDepolarizingChannel(qubits: tuple[any, ...],
+                             p: {float, array, dict},
+                             name: str = &#39;LOCAL_DEPOLARIZING_CHANNEL&#39;,
+                             **kwargs) -&gt; tuple[LocalDepolarizingChannel, ...]:
+    &#34;&#34;&#34;
+    Return a `tuple` of `LocalDepolarizingChannel`s acting independently on
+    `qubits`.  More precisely, each channel has the form:
+
+        rho -&gt; E_i(rho) = (1-p_i) rho + p_i * I/2
+
+    with `rho` being a density matrix, p_i the user specified depolarizing
+    probability for qubit i, and I the identity matrix.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `LocalDepolarizingChannel`s will act on.
+    p: {float, array, dict}
+        Depolarizing probability for qubits.
+        If a single value is passed, the same is used for all qubits.
+        If a one dimensional array is passed, it must be the same length
+        of `qubits`, which corresponds to each depolarizing probability.
+        Otherwise a dictionary mapping from `qubit`s to probability
+        can be given.
+    name: str, optional
+        Alternative name for channel.
+    kwargs: kwargs for GlobalPauliChannel
+    &#34;&#34;&#34;
+    # Get probs
+    p = __get_params(keys=qubits, args=p, key_name=&#39;qubit&#39;, value_type=float)
+
+    # Return gates
+    return tuple(
+        GlobalDepolarizingChannel(qubits=(q,), name=name, p=p[q], **kwargs)
+        for q in qubits)</code></pre>
+</details>
+</dd>
+<dt id="hybridq.noise.channel.channel.LocalPauliChannel"><code class="name flex">
+<span>def <span class="ident">LocalPauliChannel</span></span>(<span>qubits: tuple[any, ...], s: {float, array, dict}, tags: dict[any, any] = None, name: str = 'LOCAL_PAULI_CHANNEL', copy: bool = True, atol: float = 1e-08, methods: dict[any, any] = None, use_cache: bool = True) ‑> tuple[<a title="hybridq.noise.channel.channel.LocalPauliChannel" href="#hybridq.noise.channel.channel.LocalPauliChannel">LocalPauliChannel()</a>, ...]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a <code>tuple</code> of <code><a title="hybridq.noise.channel.channel.LocalPauliChannel" href="#hybridq.noise.channel.channel.LocalPauliChannel">LocalPauliChannel()</a></code>s acting independently on <code>qubits</code>.
+More precisely, each <code><a title="hybridq.noise.channel.channel.LocalPauliChannel" href="#hybridq.noise.channel.channel.LocalPauliChannel">LocalPauliChannel()</a></code> has the form:</p>
+<pre><code>rho -&gt; E_i(rho) = \sum_ij s_ij sigma_i rho sigma_j
+</code></pre>
+<p>with <code>rho</code> being a density matrix and <code>sigma_i</code> being Pauli matrices.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>qubits</code></strong> :&ensp;<code>tuple[any, &hellip;]</code></dt>
+<dd>Qubits the <code><a title="hybridq.noise.channel.channel.LocalPauliChannel" href="#hybridq.noise.channel.channel.LocalPauliChannel">LocalPauliChannel()</a></code>s will act on.</dd>
+<dt><strong><code>s</code></strong> :&ensp;<code>{float, array, dict}</code></dt>
+<dd>Weight for Pauli matrices. If <code>s</code> is a constant, then <code>s_ij = s</code> for
+<code>i == j</code> and zero otherwise.
+Similarly, if <code>s</code> is a one dimensional
+array, then <code>s_ij = s_i</code> for <code>i == j</code> and zero otherwise. If <code>s</code> is a
+<code>dict</code>, weights can be specified by using the tokens <code>I</code>, <code>X</code>, <code>Y</code> and
+<code>Z</code>. For instance, <code>dict(XY=0.2)</code> will set <code>s[1, 2] = 0.2</code>.</dd>
+<dt><strong><code>tags</code></strong> :&ensp;<code>dict[any, any]</code></dt>
+<dd>Tags to add to <code><a title="hybridq.noise.channel.channel.LocalPauliChannel" href="#hybridq.noise.channel.channel.LocalPauliChannel">LocalPauliChannel()</a></code>s.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Alternative name for <code><a title="hybridq.noise.channel.channel.LocalPauliChannel" href="#hybridq.noise.channel.channel.LocalPauliChannel">LocalPauliChannel()</a></code>s.</dd>
+<dt><strong><code>copy</code></strong> :&ensp;<code>bool</code>, optional<code>,</code></dt>
+<dd>If <code>copy == True</code>, then <code>s</code> is copied instead of passed by reference
+(default: <code>True</code>).</dd>
+<dt><strong><code>atol</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Use <code>atol</code> as absolute tolerance while checking.</dd>
+<dt><strong><code>methods</code></strong> :&ensp;<code>dict[any, any]</code></dt>
+<dd>Add extra methods to the object.</dd>
+<dt><strong><code>use_cache</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, extra memory is used to store a cached <code>Matrix</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def LocalPauliChannel(qubits: tuple[any, ...],
+                      s: {float, array, dict},
+                      tags: dict[any, any] = None,
+                      name: str = &#39;LOCAL_PAULI_CHANNEL&#39;,
+                      copy: bool = True,
+                      atol: float = 1e-8,
+                      methods: dict[any, any] = None,
+                      use_cache: bool = True) -&gt; tuple[LocalPauliChannel, ...]:
+    &#34;&#34;&#34;
+    Return a `tuple` of `LocalPauliChannel`s acting independently on `qubits`.
+    More precisely, each `LocalPauliChannel` has the form:
+
+        rho -&gt; E_i(rho) = \sum_ij s_ij sigma_i rho sigma_j
+
+    with `rho` being a density matrix and `sigma_i` being Pauli matrices.
+
+    Parameters
+    ----------
+    qubits: tuple[any, ...]
+        Qubits the `LocalPauliChannel`s will act on.
+    s: {float, array, dict}
+        Weight for Pauli matrices. If `s` is a constant, then `s_ij = s` for
+        `i == j` and zero otherwise.  Similarly, if `s` is a one dimensional
+        array, then `s_ij = s_i` for `i == j` and zero otherwise. If `s` is a
+        `dict`, weights can be specified by using the tokens `I`, `X`, `Y` and
+        `Z`. For instance, `dict(XY=0.2)` will set `s[1, 2] = 0.2`.
+    tags: dict[any, any]
+        Tags to add to `LocalPauliChannel`s.
+    name: str, optional
+        Alternative name for `LocalPauliChannel`s.
+    copy: bool, optional,
+        If `copy == True`, then `s` is copied instead of passed by reference
+        (default: `True`).
+    atol: float, optional
+        Use `atol` as absolute tolerance while checking.
+    methods: dict[any, any]
+        Add extra methods to the object.
+    use_cache: bool, optional
+        If `True`, extra memory is used to store a cached `Matrix`.
+    &#34;&#34;&#34;
+
+    return tuple(
+        GlobalPauliChannel(qubits=(q,),
+                           name=name,
+                           s=s,
+                           tags=tags,
+                           copy=copy,
+                           atol=atol,
+                           methods=methods,
+                           use_cache=use_cache) for q in qubits)</code></pre>
+</details>
+</dd>
+<dt id="hybridq.noise.channel.channel.MatrixChannel"><code class="name flex">
+<span>def <span class="ident">MatrixChannel</span></span>(<span>LMatrices: tuple[array, ...], RMatrices: tuple[array, ...] = None, s: {float, array} = 1, qubits: tuple[any, ...] = None, tags: dict[any, any] = None, name: str = 'MATRIX_CHANNEL', copy: bool = True, atol: float = 1e-08, methods: dict[any, any] = None, use_cache: bool = True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a channel described by <code>LMatrices</code> and <code>RMatrices</code>. More precisely,
+<code><a title="hybridq.noise.channel.channel.MatrixChannel" href="#hybridq.noise.channel.channel.MatrixChannel">MatrixChannel()</a></code> will represent a channel of the form:</p>
+<pre><code>rho -&gt; E(rho) = \sum_ij s_ij L_i rho R_j^*
+</code></pre>
+<p>with <code>rho</code> being a density matrix.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>LMatrices</code></strong> :&ensp;<code>tuple[array, &hellip;]</code></dt>
+<dd>Left matrices associated to <code><a title="hybridq.noise.channel.channel.MatrixChannel" href="#hybridq.noise.channel.channel.MatrixChannel">MatrixChannel()</a></code>.</dd>
+<dt><strong><code>RMatrices</code></strong> :&ensp;<code>tuple[array, &hellip;]</code>, optional</dt>
+<dd>Right matrices associated to <code><a title="hybridq.noise.channel.channel.MatrixChannel" href="#hybridq.noise.channel.channel.MatrixChannel">MatrixChannel()</a></code>. If not provided,
+<code>LMatrices</code> will be used as <code>RMatrices</code>.</dd>
+<dt><strong><code>s</code></strong> :&ensp;<code>{float, array}</code>, optional</dt>
+<dd>Weights for the left and right matrices associated to <code><a title="hybridq.noise.channel.channel.MatrixChannel" href="#hybridq.noise.channel.channel.MatrixChannel">MatrixChannel()</a></code>.
+If <code>s</code> is a constant, then <code>s_ij = s</code> for <code>i == j</code> and zero otherwise.
+Similarly, if <code>s</code> is a one dimensional array, then <code>s_ij = s_i</code> for
+<code>i == j</code> and zero otherwise.</dd>
+<dt><strong><code>tags</code></strong> :&ensp;<code>dict[any, any]</code>, optional</dt>
+<dd>Tags to add to <code><a title="hybridq.noise.channel.channel.MatrixChannel" href="#hybridq.noise.channel.channel.MatrixChannel">MatrixChannel()</a></code>s.</dd>
+<dt><strong><code>qubits</code></strong> :&ensp;<code>tuple[any, &hellip;]</code>, optional</dt>
+<dd>Qubits the <code><a title="hybridq.noise.channel.channel.MatrixChannel" href="#hybridq.noise.channel.channel.MatrixChannel">MatrixChannel()</a></code> will act on.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Name of <code><a title="hybridq.noise.channel.channel.MatrixChannel" href="#hybridq.noise.channel.channel.MatrixChannel">MatrixChannel()</a></code>.</dd>
+<dt><strong><code>copy</code></strong> :&ensp;<code>bool</code>, optional<code>,</code></dt>
+<dd>If <code>copy == True</code>, then <code>LMatrices</code>, <code>RMatrices</code> and <code>s</code> are copied
+instead of passed by reference (default: <code>True</code>).</dd>
+<dt><strong><code>atol</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Use <code>atol</code> as absolute tollerance while checking.</dd>
+<dt><strong><code>methods</code></strong> :&ensp;<code>dict[any, any]</code></dt>
+<dd>Add extra methods to the object.</dd>
+<dt><strong><code>use_cache</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If <code>True</code>, extra memory is used to store a cached <code>Matrix</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="hybridq.noise.channel.channel.MatrixChannel" href="#hybridq.noise.channel.channel.MatrixChannel">MatrixChannel()</a></code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def MatrixChannel(LMatrices: tuple[array, ...],
+                  RMatrices: tuple[array, ...] = None,
+                  s: {float, array} = 1,
+                  qubits: tuple[any, ...] = None,
+                  tags: dict[any, any] = None,
+                  name: str = &#39;MATRIX_CHANNEL&#39;,
+                  copy: bool = True,
+                  atol: float = 1e-8,
+                  methods: dict[any, any] = None,
+                  use_cache: bool = True):
+    &#34;&#34;&#34;
+    Return a channel described by `LMatrices` and `RMatrices`. More precisely,
+    `MatrixChannel` will represent a channel of the form:
+
+        rho -&gt; E(rho) = \sum_ij s_ij L_i rho R_j^*
+
+    with `rho` being a density matrix.
+
+    Parameters
+    ----------
+    LMatrices: tuple[array, ...]
+        Left matrices associated to `MatrixChannel`.
+    RMatrices: tuple[array, ...], optional
+        Right matrices associated to `MatrixChannel`. If not provided,
+        `LMatrices` will be used as `RMatrices`.
+    s: {float, array}, optional
+        Weights for the left and right matrices associated to `MatrixChannel`.
+        If `s` is a constant, then `s_ij = s` for `i == j` and zero otherwise.
+        Similarly, if `s` is a one dimensional array, then `s_ij = s_i` for
+        `i == j` and zero otherwise.
+    tags: dict[any, any], optional
+        Tags to add to `MatrixChannel`s.
+    qubits: tuple[any, ...], optional
+        Qubits the `MatrixChannel` will act on.
+    name: str, optional
+        Name of `MatrixChannel`.
+    copy: bool, optional,
+        If `copy == True`, then `LMatrices`, `RMatrices` and `s` are copied
+        instead of passed by reference (default: `True`).
+    atol: float, optional
+        Use `atol` as absolute tollerance while checking.
+    methods: dict[any, any]
+        Add extra methods to the object.
+    use_cache: bool, optional
+        If `True`, extra memory is used to store a cached `Matrix`.
+
+    Returns
+    -------
+    MatrixChannel
+    &#34;&#34;&#34;
+
+    from hybridq.utils import isintegral, isnumber
+
+    ## # Define sample
+    ## def __sample__(self, size: int = None, replace: bool = True):
+    ##     from hybridq.utils import isintegral
+    ##
+    ##     # It is assumed here that s.ndim == 1
+    ##     assert (s.ndim == 1)
+    ##
+    ##     # Get number of elements
+    ##     idxs = np.random.choice(range(len(s)), size=size, replace=replace, p=s)
+    ##
+    ##     # Get gates (it is assumed here that left and right gates are the same)
+    ##     return self.Kraus.gates[0][idxs] if isintegral(idxs) else tuple(
+    ##         self.Kraus.gates[0][x] for x in idxs)
+    ##
+    ## # Define apply
+    ## def __apply__(self, psi, order):
+    ##     raise NotImplementedError
+
+    # Get matrices, and copy if needed
+    LMatrices = tuple(map(np.array if copy else np.asarray, LMatrices))
+    RMatrices = None if RMatrices is None else tuple(
+        map(np.array if copy else np.asarray, RMatrices))
+
+    # Get s
+    if isnumber(s):
+        # Convert to array
+        s = float(s) * np.ones(len(LMatrices))
+
+        # Check that LMatrices and RMatrices are consistent
+        if RMatrices is not None and len(LMatrices) != len(RMatrices):
+            raise ValueError(&#34;&#39;s&#39; cannot be a float if &#39;LMatrices&#39; &#34;
+                             &#34;and &#39;RMatrices&#39; have different size&#34;)
+
+    else:
+        # Convert to array
+        s = (np.array if copy else np.asarray)(s)
+
+        # Try to reduce to vector
+        if s.ndim == 2 and s.shape[0] == s.shape[1]:
+            if np.allclose(s, np.diag(np.diag(s)), atol=atol):
+                s = np.diag(s)
+
+        # Check number of dimensions
+        elif s.ndim &gt; 2:
+            raise ValueError(&#34;&#39;s&#39; not supported.&#34;)
+
+        # If diagonal, convert to vector
+
+    # At least on matrix should be provided
+    if not len(LMatrices) or (RMatrices is not None and not (RMatrices)):
+        raise ValueError(&#34;At least one matrix must be provided&#34;)
+
+    # Get n_qubits from matrices
+    n_qubits = np.log2(LMatrices[0].shape[0])
+    if isintegral(n_qubits):
+        n_qubits = int(n_qubits)
+    else:
+        raise ValueError(&#34;Only matrices acting on qubits are supported&#34;)
+
+    # Check that all matrices have the same shape
+    if any(m.shape != (2**n_qubits, 2**n_qubits) for m in LMatrices) or (
+            RMatrices is not None and
+            any(m.shape != (2**n_qubits, 2**n_qubits) for m in RMatrices)):
+        raise ValueError(&#34;All matrices must have the same shape&#34;)
+
+    # Get qubits
+    qubits = None if qubits is None else tuple(qubits)
+
+    # Check if qubits is consistent with number of qubits
+    if qubits and len(qubits) != n_qubits:
+        raise ValueError(&#34;&#39;qubits&#39; is not consistent with the size of matrices&#34;)
+
+    # Get name
+    name = str(name)
+
+    # Set mro
+    mro = (_MatrixChannel,)
+
+    # Set static dictionary
+    sdict = dict(name=name.upper(),
+                 s=s,
+                 LMatrices=LMatrices,
+                 RMatrices=LMatrices if RMatrices is None else RMatrices,
+                 n_qubits=n_qubits,
+                 _use_cache=use_cache)
+
+    # Initialize methods
+    _methods = {}
+
+    ## # Initialize _stochastic and _functional
+    ## _stochastic = False
+    ## _functional = False
+    ##
+    ## # Check if all matrices are unitaries
+    ## if s.ndim == 1 and RMatrices is None and np.isclose(np.sum(s), 1,
+    ##                                                     atol=atol):
+    ##     from hybridq.utils import isunitary
+    ##
+    ##     # Check if matrix is unitaries
+    ##     _stochastic = all(map(isunitary, LMatrices))
+    ##
+    ## # If all unitaries, add sample
+    ## if _stochastic:
+    ##     # Update mro
+    ##     mro = mro + (pr.StochasticGate,)
+    ##
+    ##     # Add gates
+    ##     sdict.update(gates=None)
+    ##
+    ##     # Add sample
+    ##     _methods.update(sample=__sample__)
+    ##
+    ## # Add apply
+    ## elif _functional:
+    ##     # Update mro
+    ##     mro = mro + (pr.FunctionalGate,)
+    ##
+    ##     # Add update
+    ##     sdict.update(apply=__apply__)
+
+    # Merge extra methods
+    if methods is not None:
+        _methods.update(methods)
+
+    # Generate gate
+    return generate(&#39;&#39;.join(name.title().split(&#39;_&#39;)),
+                    mro,
+                    methods=_methods,
+                    **sdict)(qubits=qubits, tags=tags)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="hybridq.noise.channel.channel.BaseChannel"><code class="flex name class">
+<span>class <span class="ident">BaseChannel</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for <code>Channel</code>s.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BaseChannel(__Base__):
+    &#34;&#34;&#34;
+    Base class for `Channel`s.
+    &#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>hybridq.base.base.__Base__</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li>hybridq.noise.channel.channel._MatrixChannel</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="hybridq.noise.channel" href="index.html">hybridq.noise.channel</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="hybridq.noise.channel.channel.AmplitudeDampingChannel" href="#hybridq.noise.channel.channel.AmplitudeDampingChannel">AmplitudeDampingChannel</a></code></li>
+<li><code><a title="hybridq.noise.channel.channel.GlobalDepolarizingChannel" href="#hybridq.noise.channel.channel.GlobalDepolarizingChannel">GlobalDepolarizingChannel</a></code></li>
+<li><code><a title="hybridq.noise.channel.channel.GlobalPauliChannel" href="#hybridq.noise.channel.channel.GlobalPauliChannel">GlobalPauliChannel</a></code></li>
+<li><code><a title="hybridq.noise.channel.channel.LocalDephasingChannel" href="#hybridq.noise.channel.channel.LocalDephasingChannel">LocalDephasingChannel</a></code></li>
+<li><code><a title="hybridq.noise.channel.channel.LocalDepolarizingChannel" href="#hybridq.noise.channel.channel.LocalDepolarizingChannel">LocalDepolarizingChannel</a></code></li>
+<li><code><a title="hybridq.noise.channel.channel.LocalPauliChannel" href="#hybridq.noise.channel.channel.LocalPauliChannel">LocalPauliChannel</a></code></li>
+<li><code><a title="hybridq.noise.channel.channel.MatrixChannel" href="#hybridq.noise.channel.channel.MatrixChannel">MatrixChannel</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="hybridq.noise.channel.channel.BaseChannel" href="#hybridq.noise.channel.channel.BaseChannel">BaseChannel</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

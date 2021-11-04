@@ -1,5 +1,9 @@
 # HybridQ: A Hybrid Simulator for Quantum Circuits
 
+[![GitHub License](https://img.shields.io/badge/License-Apache-green)](https://github.com/nasa/hybridq/blob/main/LICENSE)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/nasa/hybridq.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/nasa/hybridq/context:python)
+[![Language grade: C++](https://img.shields.io/lgtm/grade/cpp/g/nasa/hybridq.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/nasa/hybridq/context:cpp)
+
 **HybridQ** is a highly extensible platform designed to provide a common framework
 to integrate multiple state-of-the-art techniques to simulate large scale
 quantum circuits on a variety of hardware. **HybridQ** provides tools to manipulate,

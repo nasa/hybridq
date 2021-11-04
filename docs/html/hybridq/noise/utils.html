@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>hybridq.noise.utils API documentation</title>
+<meta name="description" content="Authors: Salvatore Mandra (salvatore.mandra@nasa.gov),
+Jeffrey Marshall (jeffrey.s.marshall@nasa.gov) …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>hybridq.noise.utils</code></h1>
+</header>
+<section id="section-intro">
+<p>Authors: Salvatore Mandra (salvatore.mandra@nasa.gov),
+Jeffrey Marshall (jeffrey.s.marshall@nasa.gov)</p>
+<p>Copyright © 2021, United States Government, as represented by the Administrator
+of the National Aeronautics and Space Administration. All rights reserved.</p>
+<p>The HybridQ: A Hybrid Simulator for Quantum Circuits platform is licensed under
+the Apache License, Version 2.0 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of the License at
+<a href="http://www.apache.org/licenses/LICENSE-2.0.">http://www.apache.org/licenses/LICENSE-2.0.</a></p>
+<p>Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Authors: Salvatore Mandra (salvatore.mandra@nasa.gov),
+         Jeffrey Marshall (jeffrey.s.marshall@nasa.gov)
+
+Copyright © 2021, United States Government, as represented by the Administrator
+of the National Aeronautics and Space Administration. All rights reserved.
+
+The HybridQ: A Hybrid Simulator for Quantum Circuits platform is licensed under
+the Apache License, Version 2.0 (the &#34;License&#34;); you may not use this file
+except in compliance with the License. You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+&#34;&#34;&#34;
+
+from __future__ import annotations
+from hybridq.dm.circuit import Circuit as SuperCircuit
+from hybridq.noise.channel.channel import BaseChannel
+from hybridq.noise.channel import channel
+from tqdm.auto import tqdm
+
+
+def add_depolarizing_noise(circuit: Circuit,
+                           probs: {float, list[float, ...], dict[any, float]},
+                           where: {&#39;before&#39;, &#39;after&#39;} = &#39;after&#39;,
+                           verbose: bool = False):
+    &#34;&#34;&#34;
+    Given a `Circuit`, add global depolarizing noise after each instance
+    of a `Gate`, with the same locality as the gate.
+    Note, noise will not be added after an instance of `BaseChannel`
+
+    circuit: Circuit
+        The `Circuit` which will be modified. Note, a new `Circuit` is
+        returned (this is not in place).
+    probs: {float, list[float, ...], dict[any, float]}
+        Depolarizing probabilities for `circuit`. If `probs` is a single `float`,
+        the same probability is applied to all gates regardless the number of
+        qubits. If `probs` is a list, the k-th value is used as the probability
+        for all the k-qubit gates. If `probs` is a `dict`, `probs[k]` will be
+        used as probability for k-qubit gates. If `probs[k]` is missing, the
+        probability for a k-qubit gate will fallback to `probs[any]` (if
+        provided).
+    where: {&#39;before&#39;, &#39;after&#39;, &#39;both&#39;}
+        Add noise either `&#39;before&#39;` or `&#39;after&#39;` every gate (default: `after`).
+    verbose: bool, optional
+        Verbose output.
+    &#34;&#34;&#34;
+    from hybridq.circuit import Circuit
+
+    # Check &#39;where&#39;
+    if where not in [&#39;before&#39;, &#39;after&#39;]:
+        raise ValueError(&#34;&#39;where&#39; can only be either &#39;before&#39; or &#39;after&#39;&#34;)
+
+    # Convert circuit
+    circuit = Circuit(circuit)
+
+    # Convert probs
+    probs = channel.__get_params(keys=sorted(set(g.n_qubits for g in circuit)),
+                                 args=probs,
+                                 value_type=float)
+
+    # Define how to add noise
+    def _add_noise(g):
+        # Get probability
+        p = probs[g.n_qubits]
+
+        # Get noise
+        noise = channel.GlobalDepolarizingChannel(g.qubits, p)
+
+        # Return gates
+        return [g] if isinstance(g, BaseChannel) else (
+            [g, noise] if where == &#39;after&#39; else [noise, g])
+
+    # Update circuit
+    return SuperCircuit(g for w in tqdm(
+        circuit, disable=not verbose, desc=&#39;Add depolarizing noise&#39;)
+                        for g in _add_noise(w))
+
+
+def add_dephasing_noise(circuit: Circuit,
+                        probs: {float, list[float, ...], dict[any, float]},
+                        pauli_indexes: {int, list[int, ...], dict[any,
+                                                                  int]} = 3,
+                        where: {&#39;before&#39;, &#39;after&#39;} = &#39;after&#39;,
+                        verbose: bool = False):
+    &#34;&#34;&#34;
+    Given a `Circuit`, add dephasing noise after each instance of a `Gate`,
+    which acts independently on the qubits of the gate.
+    Note, noise will not be added after an instance of `BaseChannel`
+
+    circuit: Circuit
+        The `Circuit` which will be modified. Note, a new `Circuit` is
+        returned (this is not in place).
+    probs: {float, list[float, ...], dict[any, float]}
+        Dephasing probabilities for `circuit`. If `probs` is a single `float`,
+        the same probability is applied to all qubits. If `probs` is a list,
+        the k-th value is used as the probability for the k-th qubit. If `probs`
+        is a `dict`, `probs[q]` will be used as probability for the qubit `q`.
+        If `probs[q]` is missing, the probability for a qubit `q` will fallback
+        to `probs[any]` (if provided).
+    pauli_indexes: {int, list[int, ...], dict[any, int]}
+        Pauli indexes representing the dephasing axis (Pauli matrix).  If
+        `pauli_indexes` is a single `int`, the same axis is applied to all
+        qubits. If `pauli_indexes` is a list, the k-th value is used as the
+        axis for the k-th qubit. If `pauli_indexes` is a `dict`,
+        `pauli_indexes[q]` will be used as axis for the qubit `q`. If
+        `pauli_indexes[q]` is missing, the axis for a qubit `q` will fallback
+        to `pauli_indexes[any]` (if provided).
+    where: {&#39;before&#39;, &#39;after&#39;, &#39;both&#39;}
+        Add noise either `&#39;before&#39;` or `&#39;after&#39;` every gate (default: `after`).
+    verbose: bool, optional
+        Verbose output.
+    &#34;&#34;&#34;
+    from hybridq.circuit import Circuit
+
+    # Check &#39;where&#39;
+    if where not in [&#39;before&#39;, &#39;after&#39;]:
+        raise ValueError(&#34;&#39;where&#39; can only be either &#39;before&#39; or &#39;after&#39;&#34;)
+
+    # Convert circuit
+    circuit = Circuit(circuit)
+
+    # Get all qubits
+    qubits = circuit.all_qubits()
+
+    # Convert gammas and probs
+    probs = channel.__get_params(qubits, probs, value_type=float)
+    pauli_indexes = channel.__get_params(qubits, pauli_indexes, value_type=int)
+
+    # Define how to add noise
+    def _add_noise(g):
+        # Get gammas and probs
+        _probs = {q: probs[q] for q in g.qubits}
+        _axis = {q: pauli_indexes[q] for q in g.qubits}
+
+        # Get noise
+        noise = channel.LocalDephasingChannel(g.qubits,
+                                              p=_probs,
+                                              pauli_index=_axis)
+
+        # Return gates
+        return [g] if isinstance(
+            g, BaseChannel) else ((g,) + noise if where == &#39;after&#39; else noise +
+                                  (g,))
+
+    # Update circuit
+    return SuperCircuit(g for w in tqdm(
+        circuit, disable=not verbose, desc=&#39;Add amplitude damping noise&#39;)
+                        for g in _add_noise(w))
+
+
+def add_amplitude_damping_noise(
+        circuit: Circuit,
+        gammas: {float, list[float, ...], dict[any, float]},
+        probs: {float, list[float, ...], dict[any, float]} = 1,
+        where: {&#39;before&#39;, &#39;after&#39;} = &#39;after&#39;,
+        verbose: bool = False):
+    &#34;&#34;&#34;
+    Given a `Circuit`, add amplitude damping noise after each instance of a
+     `Gate`. The noise will act independently on the qubits in the gate.
+    Note, noise will not be added after an instance of `BaseChannel`
+
+    circuit: Circuit
+        The `Circuit` which will be modified. Note, a new `Circuit` is
+        returned (this is not in place).
+    gammas: {float, list[float, ...], dict[any, float]}
+        Transition rate (0-&gt;1 and 1-&gt;0) for the amplitude damping noise
+        channel. If `gammas` is a single `float`, the same probability is applied
+        to all qubits. If `gammas` is a list, the k-th value is used as the
+        probability for the k-th qubit. If `gammas` is a `dict`, `gammas[q]` will
+        be used as probability for the qubit `q`. If `gammas[q]` is missing,
+        the probability for a qubit `q` will fallback to `gammas[any]` (if
+        provided).
+    probs: {float, list[float, ...], dict[any, float]}
+        Amplitude damping probabilities for `circuit`. If `probs` is a single
+        `float`, the same probability is applied to all qubits. If `probs` is a
+        list, the k-th value is used as the probability for the k-th qubit. If
+        `probs` is a `dict`, `probs[q]` will be used as probability for the qubit
+        `q`. If `probs[q]` is missing, the probability for a qubit `q` will
+        fallback to `probs[any]` (if provided).
+    where: {&#39;before&#39;, &#39;after&#39;, &#39;both&#39;}
+        Add noise either `&#39;before&#39;` or `&#39;after&#39;` every gate (default: `after`).
+    verbose: bool, optional
+        Verbose output.
+    &#34;&#34;&#34;
+    from hybridq.circuit import Circuit
+
+    # Check &#39;where&#39;
+    if where not in [&#39;before&#39;, &#39;after&#39;]:
+        raise ValueError(&#34;&#39;where&#39; can only be either &#39;before&#39; or &#39;after&#39;&#34;)
+
+    # Convert circuit
+    circuit = Circuit(circuit)
+
+    # Get all qubits
+    qubits = circuit.all_qubits()
+
+    # Convert gammas and probs
+    gammas = channel.__get_params(qubits, gammas, value_type=float)
+    probs = channel.__get_params(qubits, probs, value_type=float)
+
+    # Define how to add noise
+    def _add_noise(g):
+        # Get gammas and probs
+        _gammas = {q: gammas[q] for q in g.qubits}
+        _probs = {q: probs[q] for q in g.qubits}
+
+        # Get noise
+        noise = channel.AmplitudeDampingChannel(g.qubits,
+                                                gamma=_gammas,
+                                                p=_probs)
+
+        # Return gates
+        return [g] if isinstance(
+            g, BaseChannel) else ((g,) + noise if where == &#39;after&#39; else noise +
+                                  (g,))
+
+    # Update circuit
+    return SuperCircuit(g for w in tqdm(
+        circuit, disable=not verbose, desc=&#39;Add amplitude damping noise&#39;)
+                        for g in _add_noise(w))</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="hybridq.noise.utils.add_amplitude_damping_noise"><code class="name flex">
+<span>def <span class="ident">add_amplitude_damping_noise</span></span>(<span>circuit: Circuit, gammas: {float, list[float, ...], dict[any, float]}, probs: {float, list[float, ...], dict[any, float]} = 1, where: "{'before', 'after'}" = 'after', verbose: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Given a <code>Circuit</code>, add amplitude damping noise after each instance of a
+<code>Gate</code>. The noise will act independently on the qubits in the gate.
+Note, noise will not be added after an instance of <code>BaseChannel</code></p>
+<p>circuit: Circuit
+The <code>Circuit</code> which will be modified. Note, a new <code>Circuit</code> is
+returned (this is not in place).
+gammas: {float, list[float, &hellip;], dict[any, float]}
+Transition rate (0-&gt;1 and 1-&gt;0) for the amplitude damping noise
+channel. If <code>gammas</code> is a single <code>float</code>, the same probability is applied
+to all qubits. If <code>gammas</code> is a list, the k-th value is used as the
+probability for the k-th qubit. If <code>gammas</code> is a <code>dict</code>, <code>gammas[q]</code> will
+be used as probability for the qubit <code>q</code>. If <code>gammas[q]</code> is missing,
+the probability for a qubit <code>q</code> will fallback to <code>gammas[any]</code> (if
+provided).
+probs: {float, list[float, &hellip;], dict[any, float]}
+Amplitude damping probabilities for <code>circuit</code>. If <code>probs</code> is a single
+<code>float</code>, the same probability is applied to all qubits. If <code>probs</code> is a
+list, the k-th value is used as the probability for the k-th qubit. If
+<code>probs</code> is a <code>dict</code>, <code>probs[q]</code> will be used as probability for the qubit
+<code>q</code>. If <code>probs[q]</code> is missing, the probability for a qubit <code>q</code> will
+fallback to <code>probs[any]</code> (if provided).
+where: {'before', 'after', 'both'}
+Add noise either <code>'before'</code> or <code>'after'</code> every gate (default: <code>after</code>).
+verbose: bool, optional
+Verbose output.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_amplitude_damping_noise(
+        circuit: Circuit,
+        gammas: {float, list[float, ...], dict[any, float]},
+        probs: {float, list[float, ...], dict[any, float]} = 1,
+        where: {&#39;before&#39;, &#39;after&#39;} = &#39;after&#39;,
+        verbose: bool = False):
+    &#34;&#34;&#34;
+    Given a `Circuit`, add amplitude damping noise after each instance of a
+     `Gate`. The noise will act independently on the qubits in the gate.
+    Note, noise will not be added after an instance of `BaseChannel`
+
+    circuit: Circuit
+        The `Circuit` which will be modified. Note, a new `Circuit` is
+        returned (this is not in place).
+    gammas: {float, list[float, ...], dict[any, float]}
+        Transition rate (0-&gt;1 and 1-&gt;0) for the amplitude damping noise
+        channel. If `gammas` is a single `float`, the same probability is applied
+        to all qubits. If `gammas` is a list, the k-th value is used as the
+        probability for the k-th qubit. If `gammas` is a `dict`, `gammas[q]` will
+        be used as probability for the qubit `q`. If `gammas[q]` is missing,
+        the probability for a qubit `q` will fallback to `gammas[any]` (if
+        provided).
+    probs: {float, list[float, ...], dict[any, float]}
+        Amplitude damping probabilities for `circuit`. If `probs` is a single
+        `float`, the same probability is applied to all qubits. If `probs` is a
+        list, the k-th value is used as the probability for the k-th qubit. If
+        `probs` is a `dict`, `probs[q]` will be used as probability for the qubit
+        `q`. If `probs[q]` is missing, the probability for a qubit `q` will
+        fallback to `probs[any]` (if provided).
+    where: {&#39;before&#39;, &#39;after&#39;, &#39;both&#39;}
+        Add noise either `&#39;before&#39;` or `&#39;after&#39;` every gate (default: `after`).
+    verbose: bool, optional
+        Verbose output.
+    &#34;&#34;&#34;
+    from hybridq.circuit import Circuit
+
+    # Check &#39;where&#39;
+    if where not in [&#39;before&#39;, &#39;after&#39;]:
+        raise ValueError(&#34;&#39;where&#39; can only be either &#39;before&#39; or &#39;after&#39;&#34;)
+
+    # Convert circuit
+    circuit = Circuit(circuit)
+
+    # Get all qubits
+    qubits = circuit.all_qubits()
+
+    # Convert gammas and probs
+    gammas = channel.__get_params(qubits, gammas, value_type=float)
+    probs = channel.__get_params(qubits, probs, value_type=float)
+
+    # Define how to add noise
+    def _add_noise(g):
+        # Get gammas and probs
+        _gammas = {q: gammas[q] for q in g.qubits}
+        _probs = {q: probs[q] for q in g.qubits}
+
+        # Get noise
+        noise = channel.AmplitudeDampingChannel(g.qubits,
+                                                gamma=_gammas,
+                                                p=_probs)
+
+        # Return gates
+        return [g] if isinstance(
+            g, BaseChannel) else ((g,) + noise if where == &#39;after&#39; else noise +
+                                  (g,))
+
+    # Update circuit
+    return SuperCircuit(g for w in tqdm(
+        circuit, disable=not verbose, desc=&#39;Add amplitude damping noise&#39;)
+                        for g in _add_noise(w))</code></pre>
+</details>
+</dd>
+<dt id="hybridq.noise.utils.add_dephasing_noise"><code class="name flex">
+<span>def <span class="ident">add_dephasing_noise</span></span>(<span>circuit: Circuit, probs: {float, list[float, ...], dict[any, float]}, pauli_indexes: {int, list[int, ...], dict[any, int]} = 3, where: "{'before', 'after'}" = 'after', verbose: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Given a <code>Circuit</code>, add dephasing noise after each instance of a <code>Gate</code>,
+which acts independently on the qubits of the gate.
+Note, noise will not be added after an instance of <code>BaseChannel</code></p>
+<p>circuit: Circuit
+The <code>Circuit</code> which will be modified. Note, a new <code>Circuit</code> is
+returned (this is not in place).
+probs: {float, list[float, &hellip;], dict[any, float]}
+Dephasing probabilities for <code>circuit</code>. If <code>probs</code> is a single <code>float</code>,
+the same probability is applied to all qubits. If <code>probs</code> is a list,
+the k-th value is used as the probability for the k-th qubit. If <code>probs</code>
+is a <code>dict</code>, <code>probs[q]</code> will be used as probability for the qubit <code>q</code>.
+If <code>probs[q]</code> is missing, the probability for a qubit <code>q</code> will fallback
+to <code>probs[any]</code> (if provided).
+pauli_indexes: {int, list[int, &hellip;], dict[any, int]}
+Pauli indexes representing the dephasing axis (Pauli matrix).
+If
+<code>pauli_indexes</code> is a single <code>int</code>, the same axis is applied to all
+qubits. If <code>pauli_indexes</code> is a list, the k-th value is used as the
+axis for the k-th qubit. If <code>pauli_indexes</code> is a <code>dict</code>,
+<code>pauli_indexes[q]</code> will be used as axis for the qubit <code>q</code>. If
+<code>pauli_indexes[q]</code> is missing, the axis for a qubit <code>q</code> will fallback
+to <code>pauli_indexes[any]</code> (if provided).
+where: {'before', 'after', 'both'}
+Add noise either <code>'before'</code> or <code>'after'</code> every gate (default: <code>after</code>).
+verbose: bool, optional
+Verbose output.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_dephasing_noise(circuit: Circuit,
+                        probs: {float, list[float, ...], dict[any, float]},
+                        pauli_indexes: {int, list[int, ...], dict[any,
+                                                                  int]} = 3,
+                        where: {&#39;before&#39;, &#39;after&#39;} = &#39;after&#39;,
+                        verbose: bool = False):
+    &#34;&#34;&#34;
+    Given a `Circuit`, add dephasing noise after each instance of a `Gate`,
+    which acts independently on the qubits of the gate.
+    Note, noise will not be added after an instance of `BaseChannel`
+
+    circuit: Circuit
+        The `Circuit` which will be modified. Note, a new `Circuit` is
+        returned (this is not in place).
+    probs: {float, list[float, ...], dict[any, float]}
+        Dephasing probabilities for `circuit`. If `probs` is a single `float`,
+        the same probability is applied to all qubits. If `probs` is a list,
+        the k-th value is used as the probability for the k-th qubit. If `probs`
+        is a `dict`, `probs[q]` will be used as probability for the qubit `q`.
+        If `probs[q]` is missing, the probability for a qubit `q` will fallback
+        to `probs[any]` (if provided).
+    pauli_indexes: {int, list[int, ...], dict[any, int]}
+        Pauli indexes representing the dephasing axis (Pauli matrix).  If
+        `pauli_indexes` is a single `int`, the same axis is applied to all
+        qubits. If `pauli_indexes` is a list, the k-th value is used as the
+        axis for the k-th qubit. If `pauli_indexes` is a `dict`,
+        `pauli_indexes[q]` will be used as axis for the qubit `q`. If
+        `pauli_indexes[q]` is missing, the axis for a qubit `q` will fallback
+        to `pauli_indexes[any]` (if provided).
+    where: {&#39;before&#39;, &#39;after&#39;, &#39;both&#39;}
+        Add noise either `&#39;before&#39;` or `&#39;after&#39;` every gate (default: `after`).
+    verbose: bool, optional
+        Verbose output.
+    &#34;&#34;&#34;
+    from hybridq.circuit import Circuit
+
+    # Check &#39;where&#39;
+    if where not in [&#39;before&#39;, &#39;after&#39;]:
+        raise ValueError(&#34;&#39;where&#39; can only be either &#39;before&#39; or &#39;after&#39;&#34;)
+
+    # Convert circuit
+    circuit = Circuit(circuit)
+
+    # Get all qubits
+    qubits = circuit.all_qubits()
+
+    # Convert gammas and probs
+    probs = channel.__get_params(qubits, probs, value_type=float)
+    pauli_indexes = channel.__get_params(qubits, pauli_indexes, value_type=int)
+
+    # Define how to add noise
+    def _add_noise(g):
+        # Get gammas and probs
+        _probs = {q: probs[q] for q in g.qubits}
+        _axis = {q: pauli_indexes[q] for q in g.qubits}
+
+        # Get noise
+        noise = channel.LocalDephasingChannel(g.qubits,
+                                              p=_probs,
+                                              pauli_index=_axis)
+
+        # Return gates
+        return [g] if isinstance(
+            g, BaseChannel) else ((g,) + noise if where == &#39;after&#39; else noise +
+                                  (g,))
+
+    # Update circuit
+    return SuperCircuit(g for w in tqdm(
+        circuit, disable=not verbose, desc=&#39;Add amplitude damping noise&#39;)
+                        for g in _add_noise(w))</code></pre>
+</details>
+</dd>
+<dt id="hybridq.noise.utils.add_depolarizing_noise"><code class="name flex">
+<span>def <span class="ident">add_depolarizing_noise</span></span>(<span>circuit: Circuit, probs: {float, list[float, ...], dict[any, float]}, where: "{'before', 'after'}" = 'after', verbose: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Given a <code>Circuit</code>, add global depolarizing noise after each instance
+of a <code>Gate</code>, with the same locality as the gate.
+Note, noise will not be added after an instance of <code>BaseChannel</code></p>
+<p>circuit: Circuit
+The <code>Circuit</code> which will be modified. Note, a new <code>Circuit</code> is
+returned (this is not in place).
+probs: {float, list[float, &hellip;], dict[any, float]}
+Depolarizing probabilities for <code>circuit</code>. If <code>probs</code> is a single <code>float</code>,
+the same probability is applied to all gates regardless the number of
+qubits. If <code>probs</code> is a list, the k-th value is used as the probability
+for all the k-qubit gates. If <code>probs</code> is a <code>dict</code>, <code>probs[k]</code> will be
+used as probability for k-qubit gates. If <code>probs[k]</code> is missing, the
+probability for a k-qubit gate will fallback to <code>probs[any]</code> (if
+provided).
+where: {'before', 'after', 'both'}
+Add noise either <code>'before'</code> or <code>'after'</code> every gate (default: <code>after</code>).
+verbose: bool, optional
+Verbose output.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_depolarizing_noise(circuit: Circuit,
+                           probs: {float, list[float, ...], dict[any, float]},
+                           where: {&#39;before&#39;, &#39;after&#39;} = &#39;after&#39;,
+                           verbose: bool = False):
+    &#34;&#34;&#34;
+    Given a `Circuit`, add global depolarizing noise after each instance
+    of a `Gate`, with the same locality as the gate.
+    Note, noise will not be added after an instance of `BaseChannel`
+
+    circuit: Circuit
+        The `Circuit` which will be modified. Note, a new `Circuit` is
+        returned (this is not in place).
+    probs: {float, list[float, ...], dict[any, float]}
+        Depolarizing probabilities for `circuit`. If `probs` is a single `float`,
+        the same probability is applied to all gates regardless the number of
+        qubits. If `probs` is a list, the k-th value is used as the probability
+        for all the k-qubit gates. If `probs` is a `dict`, `probs[k]` will be
+        used as probability for k-qubit gates. If `probs[k]` is missing, the
+        probability for a k-qubit gate will fallback to `probs[any]` (if
+        provided).
+    where: {&#39;before&#39;, &#39;after&#39;, &#39;both&#39;}
+        Add noise either `&#39;before&#39;` or `&#39;after&#39;` every gate (default: `after`).
+    verbose: bool, optional
+        Verbose output.
+    &#34;&#34;&#34;
+    from hybridq.circuit import Circuit
+
+    # Check &#39;where&#39;
+    if where not in [&#39;before&#39;, &#39;after&#39;]:
+        raise ValueError(&#34;&#39;where&#39; can only be either &#39;before&#39; or &#39;after&#39;&#34;)
+
+    # Convert circuit
+    circuit = Circuit(circuit)
+
+    # Convert probs
+    probs = channel.__get_params(keys=sorted(set(g.n_qubits for g in circuit)),
+                                 args=probs,
+                                 value_type=float)
+
+    # Define how to add noise
+    def _add_noise(g):
+        # Get probability
+        p = probs[g.n_qubits]
+
+        # Get noise
+        noise = channel.GlobalDepolarizingChannel(g.qubits, p)
+
+        # Return gates
+        return [g] if isinstance(g, BaseChannel) else (
+            [g, noise] if where == &#39;after&#39; else [noise, g])
+
+    # Update circuit
+    return SuperCircuit(g for w in tqdm(
+        circuit, disable=not verbose, desc=&#39;Add depolarizing noise&#39;)
+                        for g in _add_noise(w))</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="hybridq.noise" href="index.html">hybridq.noise</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="hybridq.noise.utils.add_amplitude_damping_noise" href="#hybridq.noise.utils.add_amplitude_damping_noise">add_amplitude_damping_noise</a></code></li>
+<li><code><a title="hybridq.noise.utils.add_dephasing_noise" href="#hybridq.noise.utils.add_dephasing_noise">add_dephasing_noise</a></code></li>
+<li><code><a title="hybridq.noise.utils.add_depolarizing_noise" href="#hybridq.noise.utils.add_depolarizing_noise">add_depolarizing_noise</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>
