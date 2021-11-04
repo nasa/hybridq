@@ -108,7 +108,7 @@ def ptrace(state: np.ndarray,
         return np.einsum('ijkk->ij', state)
 
 
-def is_channel(channel: MatrixChannel,
+def is_channel(channel: SuperGate,
                atol=1e-8,
                order: tuple[any, ...] = None,
                **kwargs) -> bool:
@@ -119,6 +119,8 @@ def is_channel(channel: MatrixChannel,
 
     Parameters
     ----------
+    channel: MatrixSuperGate or KrausSuperGate
+        Must have the method 'map()'.
     atol: float, optional
         absolute tolerance to use for determining channel is CPTP.
     order: tuple[any, ...], optional
@@ -145,7 +147,7 @@ def is_channel(channel: MatrixChannel,
     return tp and hp and cp
 
 
-def choi_matrix(channel: NoiseChannel,
+def choi_matrix(channel: SuperGate,
                 order: tuple[any, ...] = None,
                 **kwargs) -> np.ndarray:
     """
