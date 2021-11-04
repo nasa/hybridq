@@ -120,6 +120,73 @@ def merge(a: Gate, *bs) -> Gate:
         return merge(gate, *bs)
 
 
+def pad(gate: Gate,
+        qubits: iter[any],
+        order: iter[any] = None,
+        return_matrix_only: bool = False) -> {MatrixGate, np.ndarray}:
+    """
+    Pad `gate` to act on `qubits`. More precisely, if `gate` is acting on a
+    subset of `qubits`, extend `gate` with identities to act on all `qubits`.
+
+    Parameters
+    ----------
+    gate: Gate
+        The gate to pad.
+    qubits: iter[any]
+        Qubits used to pad `gate`. If `gate.qubits` is not a subset of
+        `qubits`, raise an error.
+    order: iter[any], optional
+        If provided, reorder qubits in the final gate accordingly to `qubits`.
+    return_matrix_only: bool, optional
+        If `True`, the matrix representing the state is returned instead of
+        `MatrixGate` (default: `False`).
+
+    Returns
+    -------
+    MatrixGate
+        The padded gate acting on `qubits`.
+    """
+    from hybridq.gate import MatrixGate
+    from hybridq.utils import sort
+
+    # Convert qubits to tuple
+    qubits = tuple(qubits)
+
+    # Convert order to tuple if provided
+    order = None if order is None else tuple(order)
+
+    # Check that order is a permutation of qubits
+    if order and sort(qubits) != sort(order):
+        raise ValueError("'order' must be a permutation of 'qubits'")
+
+    # 'gate' must have qubits and it must be a subset of 'qubits'
+    if not gate.provides('qubits') or set(gate.qubits).difference(qubits):
+        raise ValueError("'gate' must provide qubits and those "
+                         "qubits must be a subset of 'qubits'.")
+
+    # Get matrix
+    M = gate.matrix()
+
+    # Pad matrix with identity
+    if gate.n_qubits != len(qubits):
+        M = np.kron(M, np.eye(2**(len(qubits) - gate.n_qubits)))
+
+    # Get new qubits
+    qubits = gate.qubits + tuple(set(qubits).difference(gate.qubits))
+
+    # Reorder if required
+    if order and order != qubits:
+        # Get new matrix
+        M = MatrixGate(M, qubits=qubits).matrix(order=order)
+
+        # Set new qubits
+        qubits = order
+
+    # Return gate
+    return M if return_matrix_only else MatrixGate(
+        M, qubits=qubits, tags=gate.tags if gate.provides('tags') else {})
+
+
 def decompose(gate: Gate,
               qubits: iter[any],
               return_matrices: bool = False,

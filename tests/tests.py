@@ -18,7 +18,7 @@ specific language governing permissions and limitations under the License.
 from hybridq.gate import Gate
 from hybridq.utils import kron
 from hybridq.gate.utils import get_available_gates
-from hybridq.extras.random import get_random_gate, get_rqc, get_random_indexes
+from hybridq.extras.random import get_random_gate, get_rqc
 from hybridq.dm.circuit import Circuit as SuperCircuit
 from hybridq.dm.circuit import simulation as dm_simulation
 from hybridq.noise.channel import GlobalDepolarizingChannel, \
@@ -487,6 +487,54 @@ def test_gates__gates(dummy):
         assert (np.allclose(_U1, _U3))
 
 
+@pytest.mark.parametrize('n_qubits,pad_size',
+                         [(5, q) for _ in range(10) for q in range(1, 4)])
+def test_gates__pad(n_qubits, pad_size):
+    from hybridq.extras.random import get_indexes
+    from hybridq.gate import MatrixGate
+    from hybridq.gate.utils import pad
+
+    # Get random qubits
+    qubits = get_indexes(n_qubits, use_random_indexes=True)
+
+    # Get qubits to pad
+    while 1:
+        qubits_pad = get_indexes(pad_size, use_random_indexes=True)
+        if not set(qubits_pad).intersection(qubits):
+            break
+
+    # Get random gate
+    gate = MatrixGate(np.random.random((2**n_qubits, 2**n_qubits)),
+                      qubits=qubits)
+
+    # Get random order
+    order = tuple(
+        np.random.permutation(np.array(qubits + qubits_pad, dtype=object)))
+
+    # Pad gate and set order
+    padded_gate = pad(gate, qubits=qubits + qubits_pad, order=order)
+
+    # Check order
+    assert (padded_gate.qubits == order)
+
+    # Get transposition
+    _tr = [order.index(q) for q in gate.qubits + tuple(qubits_pad)]
+    _tr += [q + len(order) for q in _tr]
+
+    # Invert
+    _tr = [_tr.index(q) for q in range(2 * (n_qubits + pad_size))]
+
+    # Construct matrix
+    M = np.reshape(
+        np.transpose(
+            np.reshape(np.kron(gate.matrix(), np.eye(2**pad_size)),
+                       (2,) * 2 * (n_qubits + pad_size)), _tr),
+        (2**(n_qubits + pad_size),) * 2)
+
+    # Check
+    np.testing.assert_allclose(M, padded_gate.matrix())
+
+
 @pytest.mark.parametrize('dummy', [_ for _ in range(50)])
 def test_gates__gate_power(dummy):
 
@@ -685,8 +733,55 @@ def test_gates__cgates_2(n_qubits, depth):
     assert (np.allclose(psi2, psi1, atol=1e-3))
 
 
+@pytest.mark.parametrize('dummy', [_ for _ in range(20)])
+def test_gates__schmidt_gate_1(dummy):
+    # Import SchmidtGate
+    from hybridq.gate import utils as gate_utils
+    from hybridq.gate import SchmidtGate, MatrixGate, Gate
+
+    # Let's create some random gates ...
+    G1 = [
+        MatrixGate(np.random.random((4, 4)), qubits='ab'),
+        MatrixGate(np.random.random((4, 4)), qubits='cb'),
+        MatrixGate(np.random.random((2, 2)), qubits='b'),
+    ]
+    G2 = [
+        MatrixGate(np.random.random((4, 4)), qubits=[2, 3]),
+        MatrixGate(np.random.random((4, 4)), qubits=[5, 3]),
+        MatrixGate(np.random.random((4, 4)), qubits=[(0, 1), 2]),
+        MatrixGate(np.random.random((2, 2)), qubits=[2]),
+    ]
+
+    # ... and random weights
+    w = np.random.random((3, 4))
+
+    # Create SchmidtGate
+    S = SchmidtGate(gates=(G1, G2), s=w)
+
+    # Qubits in SchmidtGate's are ordered so that "left" qubits
+    # appear before than the "right" qubits
+    assert (S.qubits == S.gates[0].qubits + S.gates[1].qubits)
+
+    # Let's check the SchmidtGate by manually merging the gates
+    #
+    # First, we need to extend all gates in G1 and G2 to the right number of qubits, ...
+    _G1 = [gate_utils.merge(g, Gate('I', qubits=S.qubits)) for g in G1]
+    _G2 = [gate_utils.merge(g, Gate('I', qubits=S.qubits)) for g in G2]
+
+    # ... we can then sum all matrices using the right order ...
+    U = np.sum([
+        S.s[i, j] * gate_utils.merge(_G1[i], _G2[j]).matrix(order=S.qubits)
+        for i in range(len(G1))
+        for j in range(len(G2))
+    ],
+               axis=0)
+
+    # ... and check that everything is ok
+    np.testing.assert_allclose(U, S.matrix())
+
+
 @pytest.mark.parametrize('nq', [8 for _ in range(20)])
-def test_gates__schmidt_gate(nq):
+def test_gates__schmidt_gate_2(nq):
     from hybridq.gate import MatrixGate, SchmidtGate
     from hybridq.gate.utils import decompose
 
@@ -2371,7 +2466,7 @@ def test_dm_0__supergate_1(n_qubits, k, ndim):
     _time_2 = time() - _time_2
 
     # Check that the time to get cached matrix is always smaller
-    assert (_time_1 >= _time_2)
+    assert (_time_1 < 0.2 or _time_1 >= _time_2)
 
     # Check that time is always smaller than 200ms
     assert (_time_2 < 0.2)
