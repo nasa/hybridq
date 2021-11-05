@@ -21,7 +21,7 @@ RUN yum -y update && \
     yum clean all -y
 
 # Get Python version
-ARG PYTHON
+ARG PYTHON_VERSION
 
 # Set default if needed. Available versions
 # cp36-cp36m
@@ -30,21 +30,22 @@ ARG PYTHON
 # cp38-cp38
 # cp39-cp39
 # cp310-cp310
-ENV PYTHON=${PYTHON:-cp37-cp37m}
+ENV PYTHON_VERSION=${PYTHON_VERSION:-cp37-cp37m}
+ENV PYTHON=/opt/python/${PYTHON_VERSION}/bin/python
 
-# Update PATH
-ENV PATH=/opt/python/${PYTHON}/bin/:/usr/lib64/openmpi/bin:$PATH
+# Update path
+ENV PATH=/usr/lib64/openmpi/bin:$PATH
 
 # Update LD_LIBRARY_PATH
-ENV LD_LIBRARY_PATH=/usr/lib64/openmpi/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=/opt/python/${PYTHON_VERSION}/lib/:/usr/lib64/openmpi/lib:$LD_LIBRARY_PATH
 
 # Copy requirements
 COPY requirements.txt /tmp/
 
 # Install requirements
-RUN python -m pip install mpi4py && \
-    python -m pip install -r /tmp/requirements.txt && \
-    (python -m pip cache purge || true)
+RUN $PYTHON -m pip install mpi4py && \
+    $PYTHON -m pip install -r /tmp/requirements.txt scipy~=1.7 numpy~=1.21 && \
+    ($PYTHON -m pip cache purge || true)
 
 # Remove requirements file
 RUN rm /tmp/requirements.txt

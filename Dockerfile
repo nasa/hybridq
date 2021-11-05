@@ -13,11 +13,12 @@ COPY ./ /opt/hybridq
 # Install HybridQ
 RUN cd /opt/hybridq && \
     source /opt/rh/devtoolset-10/enable && \
-    python -m pip install -v . && \
-    (python -m pip cache purge || true)
+    $PYTHON -m pip install -v . && \
+    ($PYTHON -m pip cache purge || true)
 
-# Update LD_LIBRARY_PATH
-ENV LD_LIBRARY_PATH=/opt/python/${PYTHON}/lib/:$LD_LIBRARY_PATH
+# Install alternatives
+RUN alternatives --install /usr/bin/hybridq hybridq /opt/python/${PYTHON_VERSION}/bin/hybridq 20
+RUN alternatives --install /usr/bin/hybridq-dm hybridq-dm /opt/python/${PYTHON_VERSION}/bin/hybridq-dm 20
 
 # Run example to cache numba functions
 RUN ${SKIP_PRE_CACHING:-false} || (cd /opt/hybridq && \
