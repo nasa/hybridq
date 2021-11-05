@@ -15,11 +15,18 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+# Specify Python versions
+PYTHON_VERSIONS="cp37-cp37m cp38-cp38 cp39-cp39"
+
 # Get all tests names
 TEST_NAMES=$(cat tests/tests.py | grep ^'def test' | sed -e 's/def test_//g' -e 's/__.*//g' | sort -g | uniq)
 
 # For each test, generate yml
-for name in $TEST_NAMES; do
-  echo "Generating test for $name." >&2
-  cat .github/python-pytest.yml.__base__ | sed "s/\[\[:TESTNAME:\]\]/${name}/g" > ".github/workflows/python-pytest_${name}.yml"
+for python_version in $PYTHON_VERSIONS; do
+  for name in $TEST_NAMES; do
+    echo "Generating test for $name (python-${python_version})." >&2
+    cat .github/python-pytest.yml.__base__ | \
+      sed -e "s/\[\[:TESTNAME:\]\]/${name}/g" \
+          -e "s/\[\[::PYTHON_VERSION::\]\]/${python_version}/g" > ".github/workflows/python-pytest_${name}_${python_version}.yml"
+  done
 done
