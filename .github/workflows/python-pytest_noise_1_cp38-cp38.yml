@@ -1,0 +1,28 @@
+name: Python PyTest - noise_1
+
+on:
+  push:
+    branches: [ main, devel ]
+  pull_request:
+    branches: [ main, devel ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull baseline for HybridQ
+        run: |
+          docker pull smandra/hybridq-baseline:cp38-cp38
+          docker tag smandra/hybridq-baseline:cp38-cp38 hybridq-baseline:latest
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build HybridQ container
+        run: |
+          docker-compose build --build-arg ARCH=x86-64 hybridq
+
+      - name: Run tests
+        run: |
+          docker run --rm hybridq -c 'pip install pytest-random-order && \
+            pytest -sv --random-order -k 'noise_1__' /opt/hybridq/tests/tests.py'

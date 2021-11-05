@@ -1,4 +1,4 @@
-name: Python PyTest - dm_2
+name: Python PyTest - circuit
 
 on:
   push:
@@ -12,8 +12,8 @@ jobs:
     steps:
       - name: Pull baseline for HybridQ
         run: |
-          docker pull smandra/hybridq-baseline:latest
-          docker tag smandra/hybridq-baseline:latest hybridq-baseline:latest
+          docker pull smandra/hybridq-baseline:cp39-cp39
+          docker tag smandra/hybridq-baseline:cp39-cp39 hybridq-baseline:latest
 
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -25,4 +25,4 @@ jobs:
       - name: Run tests
         run: |
           docker run --rm hybridq -c 'pip install pytest-random-order && \
-            pytest -sv --random-order -k 'dm_2__' /opt/hybridq/tests/tests.py'
+            pytest -sv --random-order -k 'circuit__' /opt/hybridq/tests/tests.py'
