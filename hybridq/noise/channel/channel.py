@@ -418,7 +418,8 @@ def GlobalPauliChannel(qubits: tuple[any, ...],
     # Get matrices
     Matrices = [
         kron(*m)
-        for m in product(*([[Gate(g).Matrix for g in 'IXYZ']] * n_qubits))
+        for m in product(*([[Gate(g, n_qubits=1).Matrix for g in 'IXYZ']] *
+                           n_qubits))
     ]
 
     # Return gate

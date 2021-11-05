@@ -2178,7 +2178,7 @@ def test_simulation_3__simulation(n_qubits, depth):
                                   initial_state=initial_state,
                                   max_n_slices=2**12,
                                   verbose=True)
-    except ValueError:
+    except RuntimeError:
         if str(sys.exc_info()[1])[:15] == "Too many slices":
             warn('Skipping test: ' + str(sys.exc_info()[1]))
             pytest.skip()
@@ -2204,7 +2204,7 @@ def test_simulation_3__simulation(n_qubits, depth):
                                   initial_state='...' + initial_state[3:],
                                   final_state=final_state,
                                   verbose=True)
-    except ValueError:
+    except RuntimeError:
         if str(sys.exc_info()[1])[:15] == "Too many slices":
             warn('Skipping test: ' + str(sys.exc_info()[1]))
             pytest.skip()
@@ -2245,7 +2245,7 @@ def test_simulation_3__simulation(n_qubits, depth):
                                   max_largest_intermediate=2**10,
                                   max_n_slices=2**12,
                                   verbose=True)
-    except ValueError:
+    except RuntimeError:
         if str(sys.exc_info()[1])[:15] == "Too many slices":
             warn('Skipping test: ' + str(sys.exc_info()[1]))
             pytest.skip()
@@ -2667,7 +2667,7 @@ def test_dm_2__simulation_2(n_qubits, n_gates):
             simplify=dict(use_matrix_commutation=False),
             compress=dict(max_n_qubits=2, use_matrix_commutation=False),
             optimize='tn')
-    except ValueError:
+    except RuntimeError:
         if str(sys.exc_info()[1])[:15] == "Too many slices":
             warn('Skipping test: ' + str(sys.exc_info()[1]))
             pytest.skip()

@@ -108,7 +108,7 @@ def ptrace(state: np.ndarray,
         return np.einsum('ijkk->ij', state)
 
 
-def is_channel(channel: MatrixChannel,
+def is_channel(channel: SuperGate,
                atol=1e-8,
                order: tuple[any, ...] = None,
                **kwargs) -> bool:
@@ -119,6 +119,8 @@ def is_channel(channel: MatrixChannel,
 
     Parameters
     ----------
+    channel: MatrixSuperGate or KrausSuperGate
+        Must have the method 'map()'.
     atol: float, optional
         absolute tolerance to use for determining channel is CPTP.
     order: tuple[any, ...], optional
@@ -145,7 +147,7 @@ def is_channel(channel: MatrixChannel,
     return tp and hp and cp
 
 
-def choi_matrix(channel: MatrixChannel,
+def choi_matrix(channel: SuperGate,
                 order: tuple[any, ...] = None,
                 **kwargs) -> np.ndarray:
     """
@@ -158,11 +160,16 @@ def choi_matrix(channel: MatrixChannel,
 
     Parameters
     ----------
+    channel: MatrixSuperGate or KrausSuperGate
+        Must have the method 'map()'.
     order: tuple[any, ...], optional
         If provided, Kraus' map is ordered accordingly to `order`.
         See `MatrixChannel.map()`
     kwargs: kwargs for `MatrixChannel.map()`
     """
+
+    if not hasattr(channel, 'map'):
+        raise ValueError("'channel' must have method 'map()'")
 
     op = channel.map(order, **kwargs)
     d = _channel_dim(channel)
@@ -178,5 +185,11 @@ def choi_matrix(channel: MatrixChannel,
 
 
 def _channel_dim(channel):
-    # dimension (assume all Kraus' have same shape)
-    return channel.Kraus.gates[0][0].matrix().shape[0]
+    # map() gives the dimension squared of the channel
+    full_dims = channel.map().shape
+    assert len(full_dims) == 2
+    assert full_dims[0] == full_dims[1]
+    d = np.sqrt(full_dims[0])
+    if not np.isclose(d, int(d)):
+        raise ValueError('invalid shape for channel')
+    return int(d)
