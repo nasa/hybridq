@@ -1,4 +1,4 @@
-name: Python ([[::PYTHON_VERSION::]]) PyTest - [[:TESTNAME:]]
+name: Python (cp38-cp38) PyTest - circuit
 
 on:
   push:
@@ -12,8 +12,8 @@ jobs:
     steps:
       - name: Pull baseline for HybridQ
         run: |
-          docker pull smandra/hybridq-baseline:[[::PYTHON_VERSION::]]
-          docker tag smandra/hybridq-baseline:[[::PYTHON_VERSION::]] hybridq-baseline:latest
+          docker pull smandra/hybridq-baseline:cp38-cp38
+          docker tag smandra/hybridq-baseline:cp38-cp38 hybridq-baseline:latest
 
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -25,4 +25,4 @@ jobs:
       - name: Run tests
         run: |
           docker run --rm hybridq -c '$PYTHON -m pip install pytest-random-order && \
-            $PYTHON -m pytest -sv --random-order -k '[[:TESTNAME:]]__' /opt/hybridq/tests/tests.py'
+            $PYTHON -m pytest -sv --random-order -k 'circuit__' /opt/hybridq/tests/tests.py'
