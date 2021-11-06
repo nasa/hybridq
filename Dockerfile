@@ -1,5 +1,5 @@
 # Get baseline
-FROM hybridq-baseline
+FROM smandra/hybridq-baseline
 
 # Get ENV variables
 ARG ARCH
