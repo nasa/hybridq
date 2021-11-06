@@ -1,5 +1,6 @@
 # HybridQ: A Hybrid Simulator for Quantum Circuits
 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/nasa/hybridq/main)
 [![GitHub License](https://img.shields.io/badge/License-Apache-green)](https://github.com/nasa/hybridq/blob/main/LICENSE)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/nasa/hybridq.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/nasa/hybridq/context:python)
 [![Language grade: C++](https://img.shields.io/lgtm/grade/cpp/g/nasa/hybridq.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/nasa/hybridq/context:cpp)
