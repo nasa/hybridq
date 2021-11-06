@@ -44,8 +44,11 @@ COPY requirements.txt /tmp/
 
 # Install requirements
 RUN $PYTHON -m pip install mpi4py && \
-    $PYTHON -m pip install -r /tmp/requirements.txt scipy~=1.7 numpy~=1.21 && \
-    ($PYTHON -m pip cache purge || true)
+    $PYTHON -m pip install --no-cache \
+      -r /tmp/requirements.txt \
+      scipy~=1.7 \
+      numpy~=1.21 \
+      notebook jupyterlab
 
 # Remove requirements file
 RUN rm /tmp/requirements.txt
