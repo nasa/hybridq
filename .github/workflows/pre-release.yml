@@ -8,11 +8,6 @@ jobs:
   documentation:
     runs-on: ubuntu-latest
     steps:
-      - name: Pull baseline for HybridQ
-        run: |
-          docker pull smandra/hybridq-baseline:latest
-          docker tag smandra/hybridq-baseline:latest hybridq-baseline:latest
-
       - name: Checkout repository
         uses: actions/checkout@v2
 
