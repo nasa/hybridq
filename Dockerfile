@@ -1,5 +1,5 @@
 # Get baseline
-ARG BASELINE=docker.io/smandra/hybridq-baseline:latest
+ARG BASELINE=docker.io/smandra/hybridq-baseline:cp37-cp37m
 
 # Pull baseline
 FROM $BASELINE
