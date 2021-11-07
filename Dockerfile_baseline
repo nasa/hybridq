@@ -39,19 +39,20 @@ ENV PATH=/usr/lib64/openmpi/bin:$PATH
 # Update LD_LIBRARY_PATH
 ENV LD_LIBRARY_PATH=/opt/python/${PYTHON_VERSION}/lib/:/usr/lib64/openmpi/lib:$LD_LIBRARY_PATH
 
+# Upgrade PIP
+RUN $PYTHON -m pip install --no-cache --upgrade pip
+
+# Install MPI4Py
+RUN $PYTHON -m pip install --no-cache mpi4py
+
+# Install JupyterLab
+RUN $PYTHON -m pip install --no-cache jupyter notebook
+
 # Copy requirements
 COPY requirements.txt /tmp/
 
 # Install requirements
-RUN $PYTHON -m pip install mpi4py && \
-    $PYTHON -m pip install --no-cache \
-      -r /tmp/requirements.txt \
-      scipy~=1.7 \
-      numpy~=1.21 \
-      notebook jupyterlab
+RUN $PYTHON -m pip install --no-cache -r /tmp/requirements.txt
 
 # Remove requirements file
 RUN rm /tmp/requirements.txt
-
-# Add entry point
-ENTRYPOINT ["/bin/bash"]

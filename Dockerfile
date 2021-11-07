@@ -1,5 +1,5 @@
 # Get baseline
-FROM docker.io/smandra/hybridq-baseline:mybinder
+FROM docker.io/smandra/hybridq-baseline:mybinder2
 
 # Get ENV variables
 ARG ARCH
@@ -29,14 +29,15 @@ ARG NB_USER
 ARG NB_UID
 ENV NB_USER=${NB_USER:-default}
 ENV NB_UID=${NB_UID:-1000}
-ENV USER ${NB_USER}
-ENV HOME /home/${NB_USER}
+ENV USER=${NB_USER}
+ENV HOME=/home/${NB_USER}
 #
-RUN adduser -c "Default user" -mU --uid ${NB_UID} ${NB_USER}
+RUN adduser -c "Default user" -mU --uid ${NB_UID} ${USER}
+
+# Add docs and tutorials to user
+RUN cp -r /opt/hybridq/tutorials $HOME && chown -R $USER:$USER $HOME/tutorials
+RUN cp -r /opt/hybridq/docs $HOME && chown -R $USER:$USER $HOME/docs
 
 # Change workdir and user
 WORKDIR ${HOME}
 USER ${USER}
-
-# Add entry point
-ENTRYPOINT ["/bin/bash"]
