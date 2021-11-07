@@ -13,15 +13,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Update baseline
-        run: |
-          sed -i 's/hybridq-baseline/hybridq-baseline:cp38-cp38/g' Dockerfile
-
       - name: Build HybridQ container
         run: |
-          docker-compose build --build-arg ARCH=x86-64 hybridq
+          docker-compose build --build-arg ARCH=x86-64 \
+                               --build-arg BASELINE=docker.io/smandra/hybridq-baseline:cp38-cp38 \
+                               hybridq
 
       - name: Run tests
         run: |
-          docker run --rm hybridq -c '$PYTHON -m pip install pytest-random-order && \
-            $PYTHON -m pytest -sv --random-order -k 'dm_1__' /opt/hybridq/tests/tests.py'
+          docker run --rm hybridq bash -c 'python -m pip install pytest-random-order && \
+            python -m pytest -sv --random-order -k 'dm_1__' /opt/hybridq/tests/tests.py'
