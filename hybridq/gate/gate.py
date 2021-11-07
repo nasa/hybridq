@@ -634,8 +634,11 @@ def FunctionalGate(f: callable,
     )(qubits=qubits, tags=tags)
 
 
-@pr.staticvars('p')
-class _StochasticGate(BaseGate, pr.StochasticGate, gates=tuple()):
+@pr.staticvars(
+    'p,gates',
+    transform=dict(gates=lambda gates: tuple(gates)),
+    check=dict(gates=lambda gates: all(isinstance(g, BaseGate) for g in gates)))
+class _StochasticGate(BaseGate, pr.StochasticGate):
 
     def sample(self):
         raise NotImplementedError()
