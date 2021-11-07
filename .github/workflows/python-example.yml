@@ -19,21 +19,21 @@ jobs:
 
       - name: Run example
         run: |
-          docker run --rm hybridq -c 'cd /opt/hybridq && \
-            $PYTHON examples/example.py'
+          docker run --rm hybridq bash -c 'cd /opt/hybridq && \
+            python examples/example.py'
 
       - name: Run MPI example
         run: |
-          docker run --rm hybridq -c 'cd /opt/hybridq && \
-            mpiexec -n 2 --allow-run-as-root $PYTHON examples/example-mpi.py && \
-            mpiexec -n 2 --allow-run-as-root $PYTHON examples/example-mpi-trace.py && \
-            mpiexec -n 2 --allow-run-as-root $PYTHON examples/example-mpi-clifford.py && \
-            DISABLE_MPI_AUTODETECT=1 mpiexec -n 2 --allow-run-as-root $PYTHON examples/example-mpi.py && \
-            DISABLE_MPI_AUTODETECT=1 mpiexec -n 2 --allow-run-as-root $PYTHON examples/example-mpi-trace.py && \
-            DISABLE_MPI_AUTODETECT=1 mpiexec -n 2 --allow-run-as-root $PYTHON examples/example-mpi-clifford.py'
+          docker run --rm hybridq bash -c 'cd /opt/hybridq && \
+            mpiexec -n 2 --allow-run-as-root python examples/example-mpi.py && \
+            mpiexec -n 2 --allow-run-as-root python examples/example-mpi-trace.py && \
+            mpiexec -n 2 --allow-run-as-root python examples/example-mpi-clifford.py && \
+            DISABLE_MPI_AUTODETECT=1 mpiexec -n 2 --allow-run-as-root python examples/example-mpi.py && \
+            DISABLE_MPI_AUTODETECT=1 mpiexec -n 2 --allow-run-as-root python examples/example-mpi-trace.py && \
+            DISABLE_MPI_AUTODETECT=1 mpiexec -n 2 --allow-run-as-root python examples/example-mpi-clifford.py'
 
       - name: Run simulator
         run: |
-          docker run --rm hybridq -c 'cd /opt/hybridq && \
+          docker run --rm hybridq bash -c 'cd /opt/hybridq && \
             hybridq examples/circuit.qasm /dev/null --verbose --optimize=evolution
             hybridq-dm examples/circuit_simple.qasm XIZXYZXZYZIXIZXXXZIZXIYY /dev/null --verbose --parallel'
