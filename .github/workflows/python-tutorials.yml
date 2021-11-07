@@ -1,0 +1,26 @@
+name: Python Tutorials
+
+on:
+  push:
+    branches: [ main, devel ]
+  pull_request:
+    branches: [ main, devel ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build HybridQ container
+        run: |
+          docker-compose build --build-arg ARCH=x86-64 hybridq
+
+      - name: Run Tutorials
+        run: |
+          docker run --rm hybridq bash -c '\
+            pip install papermill && \
+            for tutorial in tutorials/*.ipynb; do \
+              ~/.local/bin/papermill $tutorial /dev/null; \
+            done'
