@@ -11,6 +11,8 @@ services:
     container_name: hybridq
     build:
       context: ./
+      args:
+        BASELINE: docker.io/smandra/hybridq-baseline
       dockerfile: Dockerfile
     depends_on:
       - hybridq-baseline

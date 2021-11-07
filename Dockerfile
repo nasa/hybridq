@@ -1,5 +1,8 @@
 # Get baseline
-FROM docker.io/smandra/hybridq-baseline:mybinder2
+ARG BASELINE
+
+# Pull baseline
+FROM $BASELINE
 
 # Get ENV variables
 ARG ARCH
