@@ -37,9 +37,10 @@ ENV HOME=/home/${NB_USER}
 #
 RUN adduser -c "Default user" -mU --uid ${NB_UID} ${USER}
 
-# Add docs and tutorials to user
-RUN cp -r /opt/hybridq/tutorials $HOME && chown -R $USER:$USER $HOME/tutorials
+# Add docs, examples and tutorials to user
 RUN cp -r /opt/hybridq/docs $HOME && chown -R $USER:$USER $HOME/docs
+RUN cp -r /opt/hybridq/examples $HOME && chown -R $USER:$USER $HOME/examples
+RUN cp -r /opt/hybridq/tutorials $HOME && chown -R $USER:$USER $HOME/tutorials
 
 # Change workdir and user
 WORKDIR ${HOME}
