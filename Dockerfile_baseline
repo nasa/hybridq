@@ -52,7 +52,10 @@ RUN $PYTHON -m pip install --no-cache jupyter notebook
 COPY requirements.txt /tmp/
 
 # Install requirements
-RUN $PYTHON -m pip install --no-cache -r /tmp/requirements.txt
+RUN $PYTHON -m pip install --no-cache \
+                      -r /tmp/requirements.txt \
+                      scipy~=1.7 \
+                      numpy~=1.21
 
 # Remove requirements file
 RUN rm /tmp/requirements.txt
