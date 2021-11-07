@@ -19,12 +19,11 @@ jobs:
 
       - name: Run example
         run: |
-          docker run --rm hybridq bash -c 'cd /opt/hybridq && \
-            python examples/example.py'
+          docker run --rm hybridq bash -c 'python examples/example.py'
 
       - name: Run MPI example
         run: |
-          docker run --rm hybridq bash -c 'cd /opt/hybridq && \
+          docker run --rm hybridq bash -c '\
             mpiexec -n 2 --allow-run-as-root python examples/example-mpi.py && \
             mpiexec -n 2 --allow-run-as-root python examples/example-mpi-trace.py && \
             mpiexec -n 2 --allow-run-as-root python examples/example-mpi-clifford.py && \
@@ -34,6 +33,6 @@ jobs:
 
       - name: Run simulator
         run: |
-          docker run --rm hybridq bash -c 'cd /opt/hybridq && \
+          docker run --rm hybridq bash -c '\
             hybridq examples/circuit.qasm /dev/null --verbose --optimize=evolution
             hybridq-dm examples/circuit_simple.qasm XIZXYZXZYZIXIZXXXZIZXIYY /dev/null --verbose --parallel'
