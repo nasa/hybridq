@@ -54,20 +54,4 @@ for VERSION in $PYTHON_VERSIONS; do
   $DOCKER push docker.io/smandra/hybridq-baseline:$VERSION
   $DOCKER push docker.io/smandra/hybridq:${HVERSION}-${VERSION}
 
-  # Set default
-  if [[ $VERSION == $DEFAULT ]]; then
-    echo "# Setting ($VERSION) as default." >&2
-
-    # Tags for docker.io
-    $DOCKER tag hybridq-baseline:$VERSION docker.io/smandra/hybridq-baseline:latest
-    $DOCKER tag hybridq:${HVERSION}-${VERSION} docker.io/smandra/hybridq:latest
-
-    # Push
-    $DOCKER push docker.io/smandra/hybridq-baseline:latest
-    $DOCKER push docker.io/smandra/hybridq:latest
-
-  fi
-
 done
-
-# Set default
