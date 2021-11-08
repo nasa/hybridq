@@ -10,11 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Pull baseline for HybridQ
-        run: |
-          docker pull smandra/hybridq-baseline:latest
-          docker tag smandra/hybridq-baseline:latest hybridq-baseline:latest
-
       - name: Checkout repository
         uses: actions/checkout@v2
 
@@ -24,7 +19,7 @@ jobs:
 
       - name: Check format
         run: |
-          docker run --rm hybridq -c '\
+          docker run --rm hybridq bash -c '\
             export PATH=/opt/python/$PYTHON_VERSION/bin/:$PATH && \
             pip install yapf==0.31.0 clang-format==13.0.0 && \
             cd /opt/hybridq && \
