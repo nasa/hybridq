@@ -17,7 +17,9 @@ specific language governing permissions and limitations under the License.
 """
 
 from __future__ import annotations
+from warnings import warn
 import numpy as np
+import scipy.linalg
 
 
 def is_dm(rho: np.ndarray, atol=1e-6) -> bool:
@@ -182,6 +184,101 @@ def choi_matrix(channel: SuperGate,
         C += np.kron(Eij.reshape((d, d)), map.reshape((d, d)))
 
     return C
+
+
+def fidelity(state1: np.ndarray, state2: np.ndarray, *,
+             use_sqrt_def: bool=False,
+             atol: float=1e-8) -> float:
+    """
+    Compute the fidelity of two quantum states as:
+    F(state1, state2) = ( Tr[ sqrt{sqrt(state1) * state2 * sqrt(state1)} ] )^2
+
+    Parameters
+    ----------
+    state1: np.ndarray
+        Either a ket or density matrix.
+        If a ket, it should have shape (d,), where d is the dimension.
+        If a density matrix, it should have shape (d, d).
+    state2: np.ndarray
+        Either a ket or density matrix.
+        If a ket, it should have shape (d,), where d is the dimension.
+        If a density matrix, it should have shape (d, d).
+    use_sqrt_def: bool, optional
+        If True, return the definition of fidelity without the square.
+    atol: float, optional
+        absolute tolerance used in rounding (imaginary parts
+        smaller than this will be rounded to 0).
+
+
+    Notes
+    -----
+    `state1` and `state2` must have consistent dimensions, but need to
+    be both ket's or density matrices.
+
+    To convert shape to ket, one can use np.reshape(state, (d,)).
+    To convert shape to density matrix, one can use np.reshape(state, (d, d)).
+
+    If both states are pure, the definition is equivalent to
+    |<psi1| psi2>|^2
+    """
+
+    state1 = np.asarray(state1)
+    state2 = np.asarray(state2)
+
+    def _validate_shape(rho_or_psi):
+        valid = True
+        dims = rho_or_psi.shape
+        if len(dims) not in (1, 2):
+            valid = False
+        if len(dims) == 2 and dims[0] != dims[1]:
+            valid = False
+        if not valid:
+            raise ValueError("Invalid state dimensions. "
+                             "Ket type should be 1-dimensional (state.ndim==1)."
+                             " Density matrix should be square d x d")
+    _validate_shape(state1)
+    _validate_shape(state2)
+
+    dim1 = state1.shape[0]
+    dim2 = state2.shape[0]
+
+    if dim1 != dim2:
+        raise ValueError(f"state dimensions incosistent, got {dim1} != {dim2}")
+
+    # ket or density matrix
+    ket1 = state1.ndim == 1
+    ket2 = state2.ndim == 1
+
+    power = 1 if use_sqrt_def else 2
+    if ket1 and ket2:
+        # both states are kets
+        return np.abs(np.inner(state1.conj(), state2)) ** power
+    elif np.sum([ket1, ket2]) == 1:
+        # one of the states is a ket, the other a density matrix
+        # compute |<psi | rho | psi>|^2
+        rho = state2 if ket1 else state1
+        psi = state1 if ket1 else state2
+
+        psi_right = rho @ psi
+        return np.abs(np.inner(psi.conj(), psi_right)) ** power
+    else:
+        # both density matrices
+        sqrt_rho = scipy.linalg.sqrtm(state1)
+
+        _tmp = sqrt_rho @ state2 @ sqrt_rho
+        _tmp = scipy.linalg.sqrtm(_tmp)
+
+        F = _tmp.trace()
+        if np.isclose(np.imag(F), 0, atol=atol):
+            F = np.real(F)
+        else:
+            warn("Fidelity has non-trivial imaginary component")
+
+        return F ** power
+
+
+
+
 
 
 def _channel_dim(channel):
