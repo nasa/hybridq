@@ -22,6 +22,22 @@ from hybridq.utils import isintegral, isnumber
 from copy import copy, deepcopy
 
 
+@staticvars('docstring',
+            docstring="",
+            transform=dict(docstring=lambda x: str(x)))
+class DocString(__Base__):
+    """
+    Add docstring to an object.
+    """
+
+    def __init_subclass__(cls, **kwargs):
+        # Call super
+        super().__init_subclass__(**kwargs)
+
+        # Update docstring
+        cls.__doc__ = cls.__get_staticvar__('docstring')
+
+
 class Tags(__Base__):
     """
     Add tags to a object.
