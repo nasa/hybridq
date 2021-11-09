@@ -15,35 +15,46 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-# Enter docs folder
-echo "# Enter docs folder." >&2
-cd docs/
-
-# Get pdoc
+# Define pdoc
 PDOC=${PDOC:-pdoc3}
-
-# Generate HTML
-echo "# Generate HTML." >&2
-$PDOC --skip-errors -f --html hybridq 2>/dev/null
-
-# Generate PDF Markdown
-echo "# Generate PDF Markdown." >&2
-$PDOC --skip-errors --pdf hybridq > html/hybridq/pdf.md 2>/dev/null
-
-# Enter HTML folder
-echo "# Enter HTML folder." >&2
-cd html/hybridq
 
 # Define pandoc
 PANDOC=${PANDOC:-pandoc}
+
+# Get random name
+BACKUP=__backup.${RANDOM}${RANDOM}__
+
+# Create folder
+mkdir -p docs/$BACKUP >&2
+
+# Backup docs folder
+echo "# Backup docs folder." >&2
+\mv -v docs/* docs/$BACKUP >&2
+
+# Move back static folders
+\mv -v docs/$BACKUP/nasa-cla docs/ >&2
+\mv -v docs/$BACKUP/images docs/ >&2
+
+# Generate HTML
+echo "# Generate HTML." >&2
+$PDOC --skip-errors -f --html -o docs/ hybridq 2>/dev/null
+\mv -v docs/hybridq/* docs/
+
+# Generate PDF Markdown
+echo "# Generate PDF Markdown." >&2
+$PDOC --skip-errors --pdf hybridq > docs/pdf.md 2>/dev/null
 
 # Generate PDF
 echo "# Generate PDF." >&2
 $PANDOC --metadata=title:"HybridQ Documentation" \
         --from=markdown+abbreviations+tex_math_single_backslash \
         --pdf-engine=xelatex --variable=mainfont:"DejaVu Sans" \
-        --toc --toc-depth=4 --output=../../hybridq.pdf pdf.md 2>/dev/null
+        --toc --toc-depth=4 --output=docs/hybridq.pdf docs/pdf.md 2>/dev/null
 
 # Remove PDF Markdown
 echo "# Remove PDF Markdown." >&2
-rm pdf.md
+\rm -v docs/pdf.md >&2
+
+# Remove Backup
+echo "# Remove Backup." >&2
+\rm -frv docs/$BACKUP
