@@ -16,8 +16,9 @@ specific language governing permissions and limitations under the License.
 """
 
 from __future__ import annotations
-from scipy.linalg import expm, sqrtm
 from scipy.linalg import fractional_matrix_power as powm
+from scipy.linalg import expm, sqrtm
+from collections import defaultdict
 import hybridq.gate.property as pr
 from inspect import signature
 from copy import deepcopy
@@ -32,6 +33,96 @@ class BaseGate(pr.__Base__):
     pass
 
 
+# Define docstrings
+_gate_docstrings = defaultdict(
+    lambda x: "", {
+        'I':
+            "Identity operator (n_qubits=any).",
+        'H':
+            "Hadamard operator (n_qubits=1). ",
+        'X':
+            "X Pauli matrix (n_qubits=1).",
+        'Y':
+            "Y Pauli matrix (n_qubits=1).",
+        'Z':
+            "Z Pauli matrix (n_qubits=1).",
+        'U3':
+            """
+Arbitrary single qubit unitary gate (n_qubits=1, n_params=3). It accepts three
+angles in radians and it is equivalent to the following operator:
+
+U3(t, p, l) = exp(i (p + l) / 2) * RZ(p) RY(t) RZ(l),
+
+with RY and RZ being rotations along the Y and Z axes.
+""",
+        'R_PI_2':
+            """
+Rotation in the X-Y plane (n_qubits=1, n_params=2). It accepts one angle in
+radians and it is equivalent to the following operator:
+
+R_PI_2(phi) = RZ(phi) RX(pi / 2) RZ(-phi),
+
+with RX and RY being rotations along the X and Z axes.
+""",
+        'ZZ':
+            """
+The gate apply the Z Pauli operator to both the first and the second qubit
+(n_qubits=2).
+""",
+        'CZ':
+            "Controlled-Z gate (n_qubits=1).",
+        'CX':
+            "Controlled-X gate (n_qubits=1).",
+        'SWAP':
+            "Swap two qubits (n_qubits=2).",
+        'ISWAP':
+            """
+Swap two qubits and apply a phase 'exp(i pi/2)' if either qubits (but not both)
+is 1 (n_qubits=1).
+""",
+        'CPHASE':
+            """
+A phase 'exp(i phi)' is applied to the second qubit if the first qubit is 1
+(n_qubits=1, n_params=1). It accepts an angle in radians.
+""",
+        'FSIM':
+            """
+Unitary gate implemented in the Sycamore@Google QPU [Nature 574.7779 (2019)]
+(n_qubits=2, n_params=2). It accepts two angles, 't' and 'p', the first one in
+unit of 'pi / 2' while the second in radians, and it is equivalent to the
+following operator:
+
+FSIM(t, p) = CPHASE(-p) ISWAP ** (-2 t / pi).
+""",
+        'RX':
+            """
+Rotation gate along the X-axis defined as 'exp(-i phi/2 X)', with X being the X
+Pauli operator (n_qubits=1, n_params=1). It accepts an angle in radians.
+""",
+        'RY':
+            """
+Rotation gate along the Y-axis defined as 'exp(-i phi/2 Y)', with Y being the Y
+Pauli operator (n_qubits=1, n_params=1). It accepts an angle in radians.
+""",
+        'RZ':
+            """
+Rotation gate along the Z-axis defined as 'exp(-i phi/2 Z)', with Z being the Z
+Pauli operator (n_qubits=1, n_params=1). It accepts an angle in radians.
+""",
+        'SQRT_X':
+            "Square root of X gate (n_qubits=1).",
+        'SQRT_Y':
+            "Square root of Y gate (n_qubits=1).",
+        'P':
+            "Phase gate defined as RZ(pi) (n_qubits=1).",
+        'T':
+            "Phase gate defined as RZ(pi / 2) (n_qubits=1).",
+        'SQRT_SWAP':
+            "Square root of SWAP gate (n_qubits=1).",
+        'SQRT_ISWAP':
+            "Square root of ISWAP gate (n_qubits=1).",
+    })
+
 # Define available gates
 _available_gates = {
     'I':
@@ -44,6 +135,7 @@ _available_gates = {
                           if inplace else deepcopy(self)),
              static_dict=dict(n_qubits=any,
                               n_params=0,
+                              docstring=_gate_docstrings['I'],
                               Matrix_gen=lambda self: np.eye(2**self.n_qubits),
                               apply=lambda self, psi, order: (psi, order))),
     'H':
@@ -51,23 +143,29 @@ _available_gates = {
                   pr.QubitGate, pr.TagGate, pr.NameGate),
              methods={},
              static_dict=dict(n_qubits=1,
+                              docstring=_gate_docstrings['H'],
                               Matrix=np.array([[1, 1], [1, -1]]) / np.sqrt(2))),
     'X':
         dict(mro=(pr.CliffordGate, pr.MatrixGate, pr.SelfAdjointUnitaryGate,
                   pr.QubitGate, pr.TagGate, pr.NameGate),
              methods={},
-             static_dict=dict(n_qubits=1, Matrix=np.array([[0, 1], [1, 0]]))),
+             static_dict=dict(n_qubits=1,
+                              docstring=_gate_docstrings['X'],
+                              Matrix=np.array([[0, 1], [1, 0]]))),
     'Y':
         dict(mro=(pr.CliffordGate, pr.MatrixGate, pr.SelfAdjointUnitaryGate,
                   pr.QubitGate, pr.TagGate, pr.NameGate),
              methods={},
-             static_dict=dict(n_qubits=1, Matrix=np.array([[0, -1j], [1j,
-                                                                      0]]))),
+             static_dict=dict(n_qubits=1,
+                              docstring=_gate_docstrings['Y'],
+                              Matrix=np.array([[0, -1j], [1j, 0]]))),
     'Z':
         dict(mro=(pr.CliffordGate, pr.MatrixGate, pr.SelfAdjointUnitaryGate,
                   pr.QubitGate, pr.TagGate, pr.NameGate),
              methods={},
-             static_dict=dict(n_qubits=1, Matrix=np.array([[1, 0], [0, -1]]))),
+             static_dict=dict(n_qubits=1,
+                              docstring=_gate_docstrings['Z'],
+                              Matrix=np.array([[1, 0], [0, -1]]))),
     'U3':
         dict(
             mro=(pr.ParamGate, pr.UnitaryGate, pr.QubitGate, pr.TagGate,
@@ -76,6 +174,7 @@ _available_gates = {
             static_dict=dict(
                 n_qubits=1,
                 n_params=3,
+                docstring=_gate_docstrings['U3'],
                 Matrix_gen=lambda self, t, p, l: np.array([[
                     np.cos(float(t) / 2), -np.exp(1j * float(l)) * np.sin(
                         float(t) / 2)
@@ -99,6 +198,7 @@ _available_gates = {
              static_dict=dict(
                  n_qubits=1,
                  n_params=1,
+                 docstring=_gate_docstrings['R_PI_2'],
                  Matrix_gen=lambda self, phi: np.array([[
                      1, -1j * np.exp(-1j * float(phi))
                  ], [-1j * np.exp(1j * float(phi)), 1]]) / np.sqrt(2))),
@@ -107,6 +207,7 @@ _available_gates = {
                   pr.QubitGate, pr.TagGate, pr.NameGate),
              methods={},
              static_dict=dict(n_qubits=2,
+                              docstring=_gate_docstrings['ZZ'],
                               Matrix=np.array([[1, 0, 0, 0], [0, -1, 0, 0],
                                                [0, 0, -1, 0], [0, 0, 0, 1]]))),
     'CZ':
@@ -114,6 +215,7 @@ _available_gates = {
                   pr.QubitGate, pr.TagGate, pr.NameGate),
              methods={},
              static_dict=dict(n_qubits=2,
+                              docstring=_gate_docstrings['CZ'],
                               Matrix=np.array([[1, 0, 0, 0], [0, 1, 0, 0],
                                                [0, 0, 1, 0], [0, 0, 0, -1]]))),
     'CX':
@@ -121,6 +223,7 @@ _available_gates = {
                   pr.QubitGate, pr.TagGate, pr.NameGate),
              methods={},
              static_dict=dict(n_qubits=2,
+                              docstring=_gate_docstrings['CX'],
                               Matrix=np.array([[1, 0, 0, 0], [0, 1, 0, 0],
                                                [0, 0, 0, 1], [0, 0, 1, 0]]))),
     'SWAP':
@@ -128,6 +231,7 @@ _available_gates = {
                   pr.QubitGate, pr.TagGate, pr.NameGate),
              methods={},
              static_dict=dict(n_qubits=2,
+                              docstring=_gate_docstrings['SWAP'],
                               Matrix=np.array([[1, 0, 0, 0], [0, 0, 1, 0],
                                                [0, 1, 0, 0], [0, 0, 0, 1]]))),
     'ISWAP':
@@ -135,6 +239,7 @@ _available_gates = {
                   pr.TagGate, pr.NameGate),
              methods={},
              static_dict=dict(n_qubits=2,
+                              docstring=_gate_docstrings['ISWAP'],
                               Matrix=np.array([[1, 0, 0, 0], [0, 0, 1j, 0],
                                                [0, 1j, 0, 0], [0, 0, 0, 1]]))),
     'CPHASE':
@@ -143,6 +248,7 @@ _available_gates = {
              methods={},
              static_dict=dict(n_qubits=2,
                               n_params=1,
+                              docstring=_gate_docstrings['CPHASE'],
                               Matrix_gen=lambda self, p: np.array(
                                   [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0],
                                    [0, 0, 0, np.exp(1j * float(p))]]))),
@@ -153,6 +259,7 @@ _available_gates = {
              static_dict=dict(
                  n_qubits=2,
                  n_params=2,
+                 docstring=_gate_docstrings['FSIM'],
                  Matrix_gen=lambda self, t, p: np.array(
                      [[1, 0, 0, 0],
                       [0, np.cos(float(t)), -1j * np.sin(float(t)), 0],
@@ -169,6 +276,7 @@ _available_gates.update({
              methods={},
              static_dict=dict(
                  n_qubits=1,
+                 docstring=_gate_docstrings['RX'],
                  RMatrix=_available_gates['X']['static_dict']['Matrix'])),
     'RY':
         dict(mro=(pr.RotationGate, pr.UnitaryGate, pr.QubitGate, pr.TagGate,
@@ -176,6 +284,7 @@ _available_gates.update({
              methods={},
              static_dict=dict(
                  n_qubits=1,
+                 docstring=_gate_docstrings['RY'],
                  RMatrix=_available_gates['Y']['static_dict']['Matrix'])),
     'RZ':
         dict(mro=(pr.RotationGate, pr.UnitaryGate, pr.QubitGate, pr.TagGate,
@@ -183,6 +292,7 @@ _available_gates.update({
              methods={},
              static_dict=dict(
                  n_qubits=1,
+                 docstring=_gate_docstrings['RZ'],
                  RMatrix=_available_gates['Z']['static_dict']['Matrix'])),
     'SQRT_X':
         dict(mro=(pr.CliffordGate, pr.MatrixGate, pr.UnitaryGate, pr.QubitGate,
@@ -190,6 +300,7 @@ _available_gates.update({
              methods={},
              static_dict=dict(
                  n_qubits=1,
+                 docstring=_gate_docstrings['SQRT_X'],
                  Matrix=sqrtm(_available_gates['X']['static_dict']['Matrix']))),
     'SQRT_Y':
         dict(mro=(pr.CliffordGate, pr.MatrixGate, pr.UnitaryGate, pr.QubitGate,
@@ -197,6 +308,7 @@ _available_gates.update({
              methods={},
              static_dict=dict(
                  n_qubits=1,
+                 docstring=_gate_docstrings['SQRT_Y'],
                  Matrix=sqrtm(_available_gates['Y']['static_dict']['Matrix']))),
     'P':
         dict(mro=(pr.CliffordGate, pr.MatrixGate, pr.UnitaryGate, pr.QubitGate,
@@ -204,6 +316,7 @@ _available_gates.update({
              methods={},
              static_dict=dict(
                  n_qubits=1,
+                 docstring=_gate_docstrings['P'],
                  Matrix=sqrtm(_available_gates['Z']['static_dict']['Matrix']))),
     'T':
         dict(mro=(pr.MatrixGate, pr.UnitaryGate, pr.QubitGate, pr.TagGate,
@@ -211,6 +324,7 @@ _available_gates.update({
              methods={},
              static_dict=dict(
                  n_qubits=1,
+                 docstring=_gate_docstrings['T'],
                  Matrix=powm(_available_gates['Z']['static_dict']['Matrix'],
                              0.25))),
     'SQRT_SWAP':
@@ -219,6 +333,7 @@ _available_gates.update({
              methods={},
              static_dict=dict(
                  n_qubits=2,
+                 docstring=_gate_docstrings['SQRT_SWAP'],
                  Matrix=sqrtm(
                      _available_gates['SWAP']['static_dict']['Matrix']))),
     'SQRT_ISWAP':
@@ -227,6 +342,7 @@ _available_gates.update({
              methods={},
              static_dict=dict(
                  n_qubits=2,
+                 docstring=_gate_docstrings['SQRT_ISWAP'],
                  Matrix=sqrtm(
                      _available_gates['ISWAP']['static_dict']['Matrix']))),
 })
@@ -474,7 +590,7 @@ def NamedGate(name: str,
 
     # Return gate
     return pr.generate(class_name='Gate_' + str(name),
-                       mro=(BaseGate,) + _mro,
+                       mro=(BaseGate, pr.DocString) + _mro,
                        methods=_methods,
                        name=name,
                        **_sd)(**_locals)
