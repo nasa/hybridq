@@ -980,10 +980,6 @@ class SchmidtGate(__Base__):
 
 
 @requires('sample')
-@staticvars(
-    'gates',
-    transform=dict(
-        gates=lambda gates: None if gates is None else BaseTupleGate(gates)))
 class StochasticGate(__Base__):
     pass
 
