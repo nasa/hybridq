@@ -184,23 +184,59 @@ def MatrixChannel(LMatrices: tuple[array, ...],
 
     from hybridq.utils import isintegral, isnumber
 
-    ## # Define sample
-    ## def __sample__(self, size: int = None, replace: bool = True):
-    ##     from hybridq.utils import isintegral
-    ##
-    ##     # It is assumed here that s.ndim == 1
-    ##     assert (s.ndim == 1)
-    ##
-    ##     # Get number of elements
-    ##     idxs = np.random.choice(range(len(s)), size=size, replace=replace, p=s)
-    ##
-    ##     # Get gates (it is assumed here that left and right gates are the same)
-    ##     return self.Kraus.gates[0][idxs] if isintegral(idxs) else tuple(
-    ##         self.Kraus.gates[0][x] for x in idxs)
-    ##
-    ## # Define apply
-    ## def __apply__(self, psi, order):
-    ##     raise NotImplementedError
+    # Define sample
+    def __sample__(self, size: int = None, replace: bool = True):
+        from hybridq.utils import isintegral
+
+        # It is assumed here that s.ndim == 1
+        assert (self.s.ndim == 1)
+
+        # Get number of elements
+        idxs = np.random.choice(range(len(self.s)),
+                                size=size,
+                                replace=replace,
+                                p=self.s)
+
+        # Get gates (it is assumed here that left and right gates are the same)
+        return self.Kraus.gates[0][idxs] if isintegral(idxs) else tuple(
+            self.Kraus.gates[0][x] for x in idxs)
+
+    # Define apply
+    def __apply__(self, psi, order):
+        from hybridq.utils import dot
+
+        # It is assumed here that s.ndim == 1
+        assert (self.s.ndim == 1)
+
+        # Convert order to tuple
+        order = tuple(order)
+
+        # Compute projected states
+        projs = [
+            dot(a=gate.matrix(),
+                b=psi,
+                axes=tuple(map(order.index, gate.qubits)),
+                b_as_complex_array=not np.iscomplexobj(psi))
+            for gate in self.Kraus.gates[0]
+        ]
+
+        # Compute normalizations
+        norms = [np.linalg.norm(_psi.ravel()) for _psi in projs]
+
+        # Compute probabilities
+        probs = [s * n**2 for s, n in zip(self.s, norms)]
+
+        # Check normalization
+        assert (np.isclose(np.sum(probs), 1, atol=1e-4))
+
+        # Get random index
+        idx = np.where(np.random.random() < np.cumsum(probs))[0][0]
+
+        # Normalize state
+        psi = projs[idx] / norms[idx]
+
+        # Return state and order
+        return psi, order
 
     # Get matrices, and copy if needed
     LMatrices = tuple(map(np.array if copy else np.asarray, LMatrices))
@@ -273,36 +309,30 @@ def MatrixChannel(LMatrices: tuple[array, ...],
     # Initialize methods
     _methods = {}
 
-    ## # Initialize _stochastic and _functional
-    ## _stochastic = False
-    ## _functional = False
-    ##
-    ## # Check if all matrices are unitaries
-    ## if s.ndim == 1 and RMatrices is None and np.isclose(np.sum(s), 1,
-    ##                                                     atol=atol):
-    ##     from hybridq.utils import isunitary
-    ##
-    ##     # Check if matrix is unitaries
-    ##     _stochastic = all(map(isunitary, LMatrices))
-    ##
-    ## # If all unitaries, add sample
-    ## if _stochastic:
-    ##     # Update mro
-    ##     mro = mro + (pr.StochasticGate,)
-    ##
-    ##     # Add gates
-    ##     sdict.update(gates=None)
-    ##
-    ##     # Add sample
-    ##     _methods.update(sample=__sample__)
-    ##
-    ## # Add apply
-    ## elif _functional:
-    ##     # Update mro
-    ##     mro = mro + (pr.FunctionalGate,)
-    ##
-    ##     # Add update
-    ##     sdict.update(apply=__apply__)
+    # FunctionalGate/StochasticGate can be used if s.ndim == 1 and left/right
+    # gates are the same
+    if s.ndim == 1 and (RMatrices is None or LMatrices == RMatrices):
+        from hybridq.utils import isunitary
+
+        # Check if StochastiGate's can be used
+        if np.isclose(np.sum(s), 1, atol=atol) and all(map(
+                isunitary, LMatrices)):
+            # Update mro
+            mro = mro + (pr.StochasticGate,)
+
+            # Add sample
+            _methods.update(sample=__sample__)
+
+        # Otherwise, use FunctionalGate's
+        elif np.allclose(sum(
+                s * (m.conj().T @ m) for s, m in zip(s, LMatrices)),
+                         np.eye(LMatrices[0].shape[0]),
+                         atol=atol):
+            # Update mro
+            mro = mro + (pr.FunctionalGate,)
+
+            # Add update
+            sdict.update(apply=__apply__)
 
     # Merge extra methods
     if methods is not None:
