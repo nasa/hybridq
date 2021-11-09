@@ -252,7 +252,7 @@ def fidelity(state1: np.ndarray, state2: np.ndarray, *,
     dim2 = state2.shape[0]
 
     if dim1 != dim2:
-        raise ValueError(f"state dimensions incosistent, got {dim1} != {dim2}")
+        raise ValueError(f"state dimensions inconsistent, got {dim1} != {dim2}")
 
     # ket or density matrix
     ket1 = state1.ndim == 1
@@ -283,9 +283,12 @@ def fidelity(state1: np.ndarray, state2: np.ndarray, *,
         sqrt_rho = scipy.linalg.sqrtm(state1)
 
         _tmp = sqrt_rho @ state2 @ sqrt_rho
-        _tmp = scipy.linalg.sqrtm(_tmp)
 
-        F = _tmp.trace()
+        # since we take the trace, we can just sum up the sqrt of the
+        # eigenvalues, instead of computing the full matrix sqrt.
+        eigs = np.linalg.eigvals(_tmp)
+
+        F = np.sum([np.sqrt(e) for e in eigs])
         return _convert_to_real(F) ** power
 
 
