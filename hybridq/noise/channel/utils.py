@@ -42,9 +42,12 @@ def is_dm(rho: np.ndarray, atol=1e-6) -> bool:
 
 def ptrace(state: np.ndarray,
            keep: {int, list[int]},
-           dims: {int, list[int]} = None) -> np.ndarray:
+           dims: {int, list[int]}=None) -> np.ndarray:
     """
     compute the partial trace of a pure state (vector) or density matrix.
+
+    Parameters
+    -----------
     state: np.array
         One dimensional for pure state e.g. np.array([1,0,0,0])
         or two dimensional for density matrix e.g. np.array([[1,0],[0,0]])
@@ -57,6 +60,12 @@ def ptrace(state: np.ndarray,
         dimension is `product(dims)`.
         If unspecified, assumes 2 for all.
     Returns the density matrix of the remaining qubits.
+
+    Notes
+    -----
+    To convert shape to ket, one can use np.reshape(state, (d,)),
+    where `d` is the dimension.
+    To convert shape to density matrix, one can use np.reshape(state, (d, d)).
     """
     state = np.asarray(state)
     if len(state.shape) not in (1, 2):
@@ -249,6 +258,13 @@ def fidelity(state1: np.ndarray, state2: np.ndarray, *,
     ket1 = state1.ndim == 1
     ket2 = state2.ndim == 1
 
+    def _convert_to_real(F):
+        if np.isclose(np.imag(F), 0, atol=atol):
+            F = np.real(F)
+        else:
+            warn("Fidelity has non-trivial imaginary component")
+        return F
+
     power = 1 if use_sqrt_def else 2
     if ket1 and ket2:
         # both states are kets
@@ -260,7 +276,8 @@ def fidelity(state1: np.ndarray, state2: np.ndarray, *,
         psi = state1 if ket1 else state2
 
         psi_right = rho @ psi
-        return np.abs(np.inner(psi.conj(), psi_right)) ** power
+        F = np.sqrt(np.inner(psi.conj(), psi_right))
+        return _convert_to_real(F) ** power
     else:
         # both density matrices
         sqrt_rho = scipy.linalg.sqrtm(state1)
@@ -269,16 +286,7 @@ def fidelity(state1: np.ndarray, state2: np.ndarray, *,
         _tmp = scipy.linalg.sqrtm(_tmp)
 
         F = _tmp.trace()
-        if np.isclose(np.imag(F), 0, atol=atol):
-            F = np.real(F)
-        else:
-            warn("Fidelity has non-trivial imaginary component")
-
-        return F ** power
-
-
-
-
+        return _convert_to_real(F) ** power
 
 
 def _channel_dim(channel):
