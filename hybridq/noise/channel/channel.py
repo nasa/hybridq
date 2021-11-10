@@ -208,35 +208,60 @@ def MatrixChannel(LMatrices: tuple[array, ...],
         # It is assumed here that s.ndim == 1
         assert (self.s.ndim == 1)
 
+        # Define how to get projection
+        def _get_projection(idx):
+            # Get s
+            s = self.s[idx]
+
+            # Get Kraus operator
+            gate = self.Kraus.gates[0][idx]
+
+            # Get projection
+            proj = dot(a=gate.matrix(),
+                       b=psi,
+                       axes=tuple(map(order.index, gate.qubits)),
+                       b_as_complex_array=not np.iscomplexobj(psi))
+
+            # Get normalization
+            norm = np.linalg.norm(proj.ravel())
+
+            # Get probability
+            prob = s * norm**2
+
+            # Return projection, norm and probability
+            return proj, norm, prob
+
         # Convert order to tuple
         order = tuple(order)
 
-        # Compute projected states
-        projs = [
-            dot(a=gate.matrix(),
-                b=psi,
-                axes=tuple(map(order.index, gate.qubits)),
-                b_as_complex_array=not np.iscomplexobj(psi))
-            for gate in self.Kraus.gates[0]
-        ]
+        # Get random number
+        r = np.random.random()
 
-        # Compute normalizations
-        norms = [np.linalg.norm(_psi.ravel()) for _psi in projs]
+        # Initialize cumulative
+        c = 0
 
-        # Compute probabilities
-        probs = [s * n**2 for s, n in zip(self.s, norms)]
+        # For each Kraus operator (escluding the last one) ...
+        for idx in self.__LMatrices_order[:-1]:
+            # Get projection, norm and probability
+            proj, norm, prob = _get_projection(idx)
 
-        # Check normalization
-        assert (np.isclose(np.sum(probs), 1, atol=1e-4))
+            # Update cumulative
+            c += prob
 
-        # Get random index
-        idx = np.where(np.random.random() < np.cumsum(probs))[0][0]
+            # If the random number if smaller than the cumulative, break
+            if c >= r:
+                break
+
+        # Otherwise, return the last projection
+        else:
+            # Get projection, norm and probability
+            proj, norm, _ = _get_projection(idx)
 
         # Normalize state
-        psi = projs[idx] / norms[idx]
+        proj /= norm
 
-        # Return state and order
-        return psi, order
+        # Return projection and order
+        return proj, order
 
     # Get matrices, and copy if needed
     LMatrices = tuple(map(np.array if copy else np.asarray, LMatrices))
@@ -328,8 +353,14 @@ def MatrixChannel(LMatrices: tuple[array, ...],
                 s * (m.conj().T @ m) for s, m in zip(s, LMatrices)),
                          np.eye(LMatrices[0].shape[0]),
                          atol=atol):
+            from numpy.linalg import eigvals
+
             # Update mro
             mro = mro + (pr.FunctionalGate,)
+
+            # Get order of matrices (largest norm first)
+            _methods['__LMatrices_order'] = np.argsort(
+                [np.linalg.norm(eigvals(m)) for m in LMatrices])[::-1]
 
             # Add update
             sdict.update(apply=__apply__)
