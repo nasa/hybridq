@@ -25,7 +25,8 @@ from hybridq.noise.channel import GlobalDepolarizingChannel, \
     LocalDepolarizingChannel, LocalPauliChannel, AmplitudeDampingChannel, \
     LocalDephasingChannel
 from hybridq.noise.utils import add_dephasing_noise, add_depolarizing_noise
-from hybridq.noise.channel.utils import ptrace, choi_matrix, is_channel
+from hybridq.noise.channel.utils import ptrace, choi_matrix, is_channel, \
+    reconstruct_dm
 from hybridq.circuit import Circuit, simulation, utils
 from hybridq.circuit.simulation import clifford
 from hybridq.extras.io.cirq import to_cirq
@@ -56,7 +57,7 @@ _get_rqc_unitary = partial_func(get_rqc,
 @pytest.fixture(autouse=True)
 def set_seed():
     # Get random seed
-    seed = np.random.randint(2**32 - 1)
+    seed = np.random.randint(2 ** 32 - 1)
 
     # Get state
     state = np.random.get_state()
@@ -100,14 +101,14 @@ def test_utils__hash(n_qubits, n_gates):
     assert (all(
         x == y for x, y in zip((g.__get_hash__(ignore_keys=['_Tags__tags'])
                                 for g in circuit), (g.__get_hash__(
-                                    ignore_keys=['_Tags__tags'])
-                                                    for g in circuit_tags))))
+            ignore_keys=['_Tags__tags'])
+                                   for g in circuit_tags))))
 
     # Similarly for qubits
     circuit_no_qubits = Circuit(g.on() for g in circuit)
     assert (all(x == y for x, y in zip((g.__get_hash__(
         ignore_keys=['_QubitGate__qubits']) for g in circuit), (g.__get_hash__(
-            ignore_keys=['_QubitGate__qubits']) for g in circuit_no_qubits))))
+        ignore_keys=['_QubitGate__qubits']) for g in circuit_no_qubits))))
 
 
 @pytest.mark.parametrize(
@@ -144,7 +145,8 @@ def test_utils__to_complex(t):
                                              for a in [16, 32, 64, 128]
                                              for _ in range(100)])
 def test_utils__aligned_array(order, alignment):
-    from hybridq.utils.aligned import array, asarray, empty, zeros, ones, isaligned
+    from hybridq.utils.aligned import array, asarray, empty, zeros, ones, \
+        isaligned
 
     # Get np.ndarray order
     def _get_order(a):
@@ -153,7 +155,7 @@ def test_utils__aligned_array(order, alignment):
         return order
 
     # Get random shape
-    shape = tuple(np.random.randint(2**4, size=1 + np.random.randint(5)) + 1)
+    shape = tuple(np.random.randint(2 ** 4, size=1 + np.random.randint(5)) + 1)
 
     # Define available dtypes
     dtypes = [
@@ -250,7 +252,8 @@ def test_utils__aligned_array(order, alignment):
                                          for _ in range(50)])
 def test_utils__transpose(t, n, backend):
     # Get random vector
-    v = np.reshape(np.random.randint(2**32 - 1, size=2**n).astype(t), (2,) * n)
+    v = np.reshape(np.random.randint(2 ** 32 - 1, size=2 ** n).astype(t),
+                   (2,) * n)
     v0 = np.array(v)
     v1 = np.array(v)
     v2 = np.array(v)
@@ -295,14 +298,14 @@ def test_utils__dot(t, n, k, backend):
     from hybridq.utils.aligned import array
 
     # Generate random state
-    psi = np.random.random((2, 2**n)).astype(t)
+    psi = np.random.random((2, 2 ** n)).astype(t)
     psi = (psi.T / np.linalg.norm(psi, axis=1)).T
     psi1 = np.array(psi)
     psi2 = array(psi, alignment=32)
 
     # Generate random matrix
-    U = (np.random.random((2**k, 2**k)) + 1j * np.random.random(
-        (2**k, 2**k))).astype((1j * psi[0][:1]).dtype)
+    U = (np.random.random((2 ** k, 2 ** k)) + 1j * np.random.random(
+        (2 ** k, 2 ** k))).astype((1j * psi[0][:1]).dtype)
 
     # Generate random positions
     axes_b = np.random.choice(n, size=k, replace=False)
@@ -401,7 +404,6 @@ def test_utils__pickle(n_qubits, n_gates):
 
 @pytest.mark.parametrize('dummy', [_ for _ in range(50)])
 def test_utils__sort_argsort(dummy):
-
     _n_floats = np.random.randint(1000)
     _n_ints = np.random.randint(1000)
     _n_tuples = np.random.randint(1000)
@@ -430,7 +432,6 @@ def test_utils__sort_argsort(dummy):
 
     # Check
     for _t in [float, tuple, str]:
-
         # Check array is sorted properly by type
         assert (sorted(filter(lambda x: _type(x) == _t, _array)) == list(
             filter(lambda x: _type(x) == _t, _sorted_array)))
@@ -480,7 +481,7 @@ def test_gates__gates(dummy):
         _U3 = cirq.unitary((to_cirq(Circuit([gate]))))
 
         # Check
-        assert (gate.inv().isclose(gate**-1))
+        assert (gate.inv().isclose(gate ** -1))
         assert (gate.isclose(m_gate))
         assert (gate.inv().isclose(m_gate.inv()))
         assert (np.allclose(_U1, _U2))
@@ -504,7 +505,7 @@ def test_gates__pad(n_qubits, pad_size):
             break
 
     # Get random gate
-    gate = MatrixGate(np.random.random((2**n_qubits, 2**n_qubits)),
+    gate = MatrixGate(np.random.random((2 ** n_qubits, 2 ** n_qubits)),
                       qubits=qubits)
 
     # Get random order
@@ -527,9 +528,9 @@ def test_gates__pad(n_qubits, pad_size):
     # Construct matrix
     M = np.reshape(
         np.transpose(
-            np.reshape(np.kron(gate.matrix(), np.eye(2**pad_size)),
+            np.reshape(np.kron(gate.matrix(), np.eye(2 ** pad_size)),
                        (2,) * 2 * (n_qubits + pad_size)), _tr),
-        (2**(n_qubits + pad_size),) * 2)
+        (2 ** (n_qubits + pad_size),) * 2)
 
     # Check
     np.testing.assert_allclose(M, padded_gate.matrix())
@@ -537,7 +538,6 @@ def test_gates__pad(n_qubits, pad_size):
 
 @pytest.mark.parametrize('dummy', [_ for _ in range(50)])
 def test_gates__gate_power(dummy):
-
     for gate_name in get_available_gates():
         # Get Gate
         gate = Gate(gate_name)
@@ -563,7 +563,7 @@ def test_gates__gate_power(dummy):
 @pytest.mark.parametrize('n_qubits', [4 for _ in range(100)])
 def test_gates__matrix_gate(n_qubits):
     # Get random matrix
-    U = np.random.random((2**n_qubits, 2**n_qubits))
+    U = np.random.random((2 ** n_qubits, 2 ** n_qubits))
 
     # Get gates
     g1 = Gate('MATRIX', U=U)
@@ -595,7 +595,8 @@ def test_gates__cgates_1(n_qubits, depth):
         return [
             _q[x] for x in np.random.choice(len(_q),
                                             size=1 +
-                                            np.random.choice(2, replace=False),
+                                                 np.random.choice(2,
+                                                                  replace=False),
                                             replace=False)
         ]
 
@@ -626,7 +627,7 @@ def test_gates__cgates_1(n_qubits, depth):
         assert (_order == qubits)
 
         # Apply matrix to projection and update state
-        psi2 += dot(g.gate.matrix() - np.eye(2**g.gate.n_qubits),
+        psi2 += dot(g.gate.matrix() - np.eye(2 ** g.gate.n_qubits),
                     _proj,
                     axes_b=[qubits.index(q) for q in g.gate.qubits],
                     inplace=True)
@@ -699,7 +700,8 @@ def test_gates__cgates_2(n_qubits, depth):
         return [
             _q[x] for x in np.random.choice(len(_q),
                                             size=1 +
-                                            np.random.choice(2, replace=False),
+                                                 np.random.choice(2,
+                                                                  replace=False),
                                             replace=False)
         ]
 
@@ -774,7 +776,7 @@ def test_gates__schmidt_gate_1(dummy):
         for i in range(len(G1))
         for j in range(len(G2))
     ],
-               axis=0)
+        axis=0)
 
     # ... and check that everything is ok
     np.testing.assert_allclose(U, S.matrix())
@@ -830,7 +832,7 @@ def test_gates__measure(n_qubits, k):
     assert (np.allclose(r_split[0] + 1j * r_split[1], r))
 
     # Get a random order
-    order = tuple(np.random.randint(-2**31, 2**31, size=n_qubits))
+    order = tuple(np.random.randint(-2 ** 31, 2 ** 31, size=n_qubits))
 
     # Get measure
     M = Measure(qubits=np.random.choice(order, size=k, replace=False))
@@ -858,8 +860,8 @@ def test_gates__measure(n_qubits, k):
                         axes=[order.index(q)
                               for q in M.qubits],
                         state=tuple(bin(s)[2:].zfill(M.n_qubits)),
-                        renormalize=False).ravel())**2
-        for s in range(2**M.n_qubits)
+                        renormalize=False).ravel()) ** 2
+        for s in range(2 ** M.n_qubits)
     ]
 
     # Check
@@ -927,10 +929,10 @@ def test_gates__measure(n_qubits, k):
             for q in order)
 
         # Return probability
-        return np.linalg.norm(r[proj].flatten())**2
+        return np.linalg.norm(r[proj].flatten()) ** 2
 
     # Get exact probabilities
-    probs_ex = _get_prob(np.arange(2**M.n_qubits))
+    probs_ex = _get_prob(np.arange(2 ** M.n_qubits))
     probs_ex /= np.sum(probs_ex)
 
     # Check
@@ -950,7 +952,7 @@ def test_gates__projection(n_qubits, k):
     r = np.random.random((2,) * n_qubits) + 1
 
     # Get a random order
-    order = tuple(np.random.randint(-2**31, 2**31, size=n_qubits))
+    order = tuple(np.random.randint(-2 ** 31, 2 ** 31, size=n_qubits))
 
     # Get projection
     P = Projection(state=''.join(np.random.choice(list('01'), size=k)),
@@ -1009,7 +1011,6 @@ def test_gates__projection(n_qubits, k):
 
 @pytest.mark.parametrize('dummy', [_ for _ in range(250)])
 def test_gates__commutation(dummy):
-
     # Get two random qubits
     g1 = get_random_gate()
     g2 = get_random_gate()
@@ -1039,9 +1040,9 @@ def test_gate_utils__merge_gates(n_qubits, n_ab):
     n_b = n_qubits + n_ab - n_a
 
     # Get random indexes
-    x_a = np.random.randint(2**32 - 1, size=(n_a - n_ab, 2))
-    x_b = np.random.randint(2**32 - 1, size=(n_b - n_ab, 2))
-    x_ab = np.random.randint(2**32 - 1, size=(n_ab, 2))
+    x_a = np.random.randint(2 ** 32 - 1, size=(n_a - n_ab, 2))
+    x_b = np.random.randint(2 ** 32 - 1, size=(n_b - n_ab, 2))
+    x_ab = np.random.randint(2 ** 32 - 1, size=(n_ab, 2))
     x_a = tuple(
         tuple(x) for x in np.random.permutation(np.concatenate((x_a, x_ab))))
     x_b = tuple(
@@ -1052,10 +1053,10 @@ def test_gate_utils__merge_gates(n_qubits, n_ab):
     assert (len(x_b) == n_b)
 
     # Get random gates
-    a1 = Gate('MATRIX', qubits=x_a, U=np.random.random((2**n_a, 2**n_a)))
-    a2 = Gate('MATRIX', qubits=x_a, U=np.random.random((2**n_a, 2**n_a)))
-    b1 = Gate('MATRIX', qubits=x_b, U=np.random.random((2**n_b, 2**n_b)))
-    b2 = Gate('MATRIX', qubits=x_b, U=np.random.random((2**n_b, 2**n_b)))
+    a1 = Gate('MATRIX', qubits=x_a, U=np.random.random((2 ** n_a, 2 ** n_a)))
+    a2 = Gate('MATRIX', qubits=x_a, U=np.random.random((2 ** n_a, 2 ** n_a)))
+    b1 = Gate('MATRIX', qubits=x_b, U=np.random.random((2 ** n_b, 2 ** n_b)))
+    b2 = Gate('MATRIX', qubits=x_b, U=np.random.random((2 ** n_b, 2 ** n_b)))
 
     # Merge gates
     c1 = merge(a1, b1, a2, b2)
@@ -1082,8 +1083,8 @@ def test_gate_utils__decompose_gate(n_qubits, k):
 
     # Get random gate
     g = Gate('matrix',
-             np.random.randint(2**32, size=n_qubits),
-             U=np.random.random((2**n_qubits, 2**n_qubits)))
+             np.random.randint(2 ** 32, size=n_qubits),
+             U=np.random.random((2 ** n_qubits, 2 ** n_qubits)))
 
     # Get random subqubits
     qubits = np.random.choice(g.qubits, size=k, replace=False)
@@ -1172,7 +1173,7 @@ def test_circuit__projection(n_qubits, n_gates):
         ]
 
         # Get random projection
-        ps = bin(np.random.randint(2**len(qs)))[2:].zfill(len(qs))
+        ps = bin(np.random.randint(2 ** len(qs)))[2:].zfill(len(qs))
 
         # Add projection to circuit
         circuit.insert(np.random.choice(len(circuit)),
@@ -1199,7 +1200,6 @@ def test_circuit__projection(n_qubits, n_gates):
 
 @pytest.mark.parametrize('n_qubits,n_gates', [(10, 50) for _ in range(10)])
 def test_circuit__circuit(n_qubits, n_gates):
-
     # Generate rqc
     circuit = _get_rqc_unitary(n_qubits, n_gates)
 
@@ -1219,10 +1219,10 @@ def test_circuit__circuit(n_qubits, n_gates):
     _U3 = cirq.unitary(to_cirq(circuit))
     _U4 = utils.matrix(Circuit(
         utils.to_matrix_gate(c) for c in utils.compress(circuit, 4)),
-                       max_compress=0)
+        max_compress=0)
     _U5 = utils.matrix(Circuit(
         utils.to_matrix_gate(c) for c in utils.moments(circuit)),
-                       max_compress=4)
+        max_compress=4)
 
     # Check if everything mathes
     assert (np.allclose(_U1, _U2.T.conj(), atol=1e-3))
@@ -1258,7 +1258,6 @@ def test_circuit__circuit(n_qubits, n_gates):
 @pytest.mark.parametrize('n_qubits,n_gates',
                          [(n, 50) for n in range(4, 9) for _ in range(5)])
 def test_circuit_utils__matrix(n_qubits, n_gates):
-
     # Get random circuit
     circuit = _get_rqc_unitary(n_qubits, n_gates)
 
@@ -1387,19 +1386,17 @@ def test_circuit_utils__compression_skip_type(n_qubits, depth, max_n_qubits):
 
 @pytest.mark.parametrize('n_qubits,n_gates', [(200, 2000) for _ in range(10)])
 def test_circuit_utils__qasm(n_qubits, n_gates):
-
     # Generate rqc
     circuit = _get_rqc_non_unitary(n_qubits, n_gates)
 
     assert (Circuit(
         g.on([str(x) for x in g.qubits]) for g in circuit) == from_qasm(
-            to_qasm(circuit)))
+        to_qasm(circuit)))
 
 
 @pytest.mark.parametrize('use_matrix_commutation,max_n_qubits',
                          [(t, q) for t in [True, False] for q in range(2, 6)])
 def test_circuit_utils__circuit_compress(use_matrix_commutation, max_n_qubits):
-
     # Generate rqc
     circuit = _get_rqc_non_unitary(20, 200)
 
@@ -1423,7 +1420,6 @@ def test_circuit_utils__circuit_compress(use_matrix_commutation, max_n_qubits):
 @pytest.mark.parametrize('use_matrix_commutation',
                          [t for t in [True, False] for _ in range(5)])
 def test_circuit_utils__circuit_simplify_1(use_matrix_commutation):
-
     # Generate rqc
     circuit = _get_rqc_non_unitary(20, 200)
 
@@ -1439,7 +1435,7 @@ def test_circuit_utils__circuit_simplify_1(use_matrix_commutation):
     circuit_pop = utils.pop(
         circuit, direction='right',
         pinned_qubits=pinned_qubits) + [Gate('X', pinned_qubits)] + utils.pop(
-            circuit.inv(), direction='left', pinned_qubits=pinned_qubits)
+        circuit.inv(), direction='left', pinned_qubits=pinned_qubits)
     circuit = circuit + [Gate('X', pinned_qubits)] + circuit.inv()
 
     # Get matrix
@@ -1577,7 +1573,6 @@ def test_cliffords__check_gates():
                          [(6, 12, c, p) for _ in range(5) for c in [0, 4]
                           for p in [True, False]])
 def test_cliffords__circuit_1(n_qubits, n_gates, compress, parallel):
-
     # Get random circuit
     circuit = _get_rqc_unitary(n_qubits, n_gates)
 
@@ -1640,9 +1635,8 @@ def test_cliffords__circuit_1(n_qubits, n_gates, compress, parallel):
     assert (all(
         np.isclose(all_op[k], op2[k], atol=1e-3) for k in chain(all_op, op2)))
     # Contruct full operator
-    U1 = np.zeros(shape=(2**n_qubits, 2**n_qubits), dtype='complex64')
+    U1 = np.zeros(shape=(2 ** n_qubits, 2 ** n_qubits), dtype='complex64')
     for op, ph in tqdm(all_op.items()):
-
         # Update operator
         U1 += ph * utils.matrix(
             Circuit(Gate(_op, [_q]) for _q, _op in zip(qubits, op)))
@@ -1725,7 +1719,7 @@ def test_simulation_1__tensor_trace(n_qubits, depth):
     circuit = _get_rqc_non_unitary(n_qubits, depth)
 
     # Initialize initial/final state
-    state = bin(np.random.randint(4**n_qubits - 1))[2:].zfill(2 * n_qubits)
+    state = bin(np.random.randint(4 ** n_qubits - 1))[2:].zfill(2 * n_qubits)
 
     # Initialize positions and letters
     pos = np.fromiter(range(2 * n_qubits), dtype='int')
@@ -1784,8 +1778,12 @@ def test_simulation_1__tensor_trace(n_qubits, depth):
 
     # Properly order qubits in U
     order = [x for x, s in enumerate(state) if s in '01'
-            ] + [x for x, s in enumerate(state) if s == '.'] + _p4[::4] + _p4[
-                1::4] + _p4[2::4] + _p4[3::4] + _p2[::2] + _p2[1::2] + _p1
+             ] + [x for x, s in enumerate(state) if s == '.'] + _p4[::4] + _p4[
+                                                                           1::4] + _p4[
+                                                                                   2::4] + _p4[
+                                                                                           3::4] + _p2[
+                                                                                                   ::2] + _p2[
+                                                                                                          1::2] + _p1
     U = np.transpose(U, order)
 
     # Get number of projected qubits
@@ -1800,18 +1798,19 @@ def test_simulation_1__tensor_trace(n_qubits, depth):
     n4 = len(_p4)
 
     # Project qubits
-    U = np.reshape(U, (2**n_proj, 4**n_qubits // 2**n_proj))[int(
+    U = np.reshape(U, (2 ** n_proj, 4 ** n_qubits // 2 ** n_proj))[int(
         ''.join(s for s in state if s in '01'), 2)]
 
     # Sum over the 1-qubit traces
-    U = np.sum(np.reshape(U, (2**(n_open + n2 + n4), 2**n1)), axis=1)
+    U = np.sum(np.reshape(U, (2 ** (n_open + n2 + n4), 2 ** n1)), axis=1)
 
     # Trace over the 2-qubit trace
     U = np.einsum('...ii',
-                  np.reshape(U, (2**(n_open + n4),) + (2**(n2 // 2),) * 2))
+                  np.reshape(U, (2 ** (n_open + n4),) + (2 ** (n2 // 2),) * 2))
 
     # Trace over the 4-qubit trace
-    U = np.einsum('...iiii', np.reshape(U, (2**n_open,) + (2**(n4 // 4),) * 4))
+    U = np.einsum('...iiii',
+                  np.reshape(U, (2 ** n_open,) + (2 ** (n4 // 4),) * 4))
 
     # Check that the tensor match the transformed matrix
     assert (np.allclose(U.flatten(), res_tn.flatten(), atol=1e-3))
@@ -1821,7 +1820,6 @@ def test_simulation_1__tensor_trace(n_qubits, depth):
     'n_qubits',
     [(n_qubits) for n_qubits in range(16, 25, 4) for _ in range(10)])
 def test_simulation_1__initialize_state_1a(n_qubits):
-
     # Get random initial_state
     initial_state = ''.join(np.random.choice(list('01'), size=n_qubits))
 
@@ -1841,7 +1839,6 @@ def test_simulation_1__initialize_state_1a(n_qubits):
     'n_qubits',
     [(n_qubits) for n_qubits in range(16, 25, 4) for _ in range(10)])
 def test_simulation_1__initialize_state_1b(n_qubits):
-
     # Get initial_state
     initial_state = '0' * n_qubits
 
@@ -1875,7 +1872,6 @@ def test_simulation_1__initialize_state_1b(n_qubits):
     'n_qubits',
     [(n_qubits) for n_qubits in range(16, 25, 4) for _ in range(10)])
 def test_simulation_1__initialize_state_2(n_qubits):
-
     # Get random initial_state
     initial_state = ''.join(np.random.choice(list('01+-'), size=n_qubits))
 
@@ -1966,8 +1962,9 @@ def test_simulation_2__message(n_qubits, depth):
 
     # Compression should be the same once MessageGate's are removed
     assert ([
-        c for c in compr_msg if len(c) > 1 or not isinstance(c[0], MessageGate)
-    ] == compr)
+                c for c in compr_msg if
+                len(c) > 1 or not isinstance(c[0], MessageGate)
+            ] == compr)
 
     # Get final states
     psi = simulation.simulate(circuit, initial_state='0', verbose=True)
@@ -2071,7 +2068,7 @@ def test_simulation_2__stochastic(n_qubits, depth, n_samples):
     circuit_1 = Circuit(
         utils.to_matrix_gate(g) for g in utils.compress(utils.simplify(
             _get_rqc_non_unitary(n_qubits, depth // 2)),
-                                                        max_n_qubits=4))
+            max_n_qubits=4))
 
     # Fix number of qubits (in case not all n_qubits qubits has beed used)
     n_qubits = len(circuit_1.all_qubits())
@@ -2081,7 +2078,7 @@ def test_simulation_2__stochastic(n_qubits, depth, n_samples):
         utils.to_matrix_gate(g) for g in utils.compress(utils.simplify(
             _get_rqc_non_unitary(
                 n_qubits, depth // 2, indexes=circuit_1.all_qubits())),
-                                                        max_n_qubits=4))
+            max_n_qubits=4))
 
     # Get random initial_state
     initial_state = ''.join(np.random.choice(list('01'), size=3)) + ''.join(
@@ -2123,7 +2120,6 @@ def test_simulation_2__stochastic(n_qubits, depth, n_samples):
 @pytest.mark.parametrize('n_qubits,depth',
                          [(n_qubits, 200) for n_qubits in range(6, 10, 2)])
 def test_simulation_3__simulation(n_qubits, depth):
-
     # Get random initial_state
     initial_state = ''.join(np.random.choice(list('01'), size=3)) + ''.join(
         np.random.choice(list('01+-'), size=n_qubits - 3))
@@ -2176,7 +2172,7 @@ def test_simulation_3__simulation(n_qubits, depth):
                                   simplify=False,
                                   optimize='tn',
                                   initial_state=initial_state,
-                                  max_n_slices=2**12,
+                                  max_n_slices=2 ** 12,
                                   verbose=True)
     except RuntimeError:
         if str(sys.exc_info()[1])[:15] == "Too many slices":
@@ -2200,7 +2196,7 @@ def test_simulation_3__simulation(n_qubits, depth):
         _p5 = simulation.simulate(circuit,
                                   optimize='tn',
                                   simplify=False,
-                                  max_n_slices=2**12,
+                                  max_n_slices=2 ** 12,
                                   initial_state='...' + initial_state[3:],
                                   final_state=final_state,
                                   verbose=True)
@@ -2221,7 +2217,7 @@ def test_simulation_3__simulation(n_qubits, depth):
         ['' if x in xpos else get_symbol(x) for x in range(n_qubits)])
     _map += ''.join([get_symbol(x) for x in xpos])
     _p5b = np.reshape(contract(_map, np.reshape(_p1, [2] * n_qubits)),
-                      [2**(n_qubits - len(xpos)), 2**len(xpos)])
+                      [2 ** (n_qubits - len(xpos)), 2 ** len(xpos)])
     _p5b = _p5b[int(
         final_state.replace('.', '').zfill(n_qubits - len(xpos)), 2)]
 
@@ -2235,15 +2231,16 @@ def test_simulation_3__simulation(n_qubits, depth):
                                                       optimize='tn',
                                                       simplify=False,
                                                       initial_state='...' +
-                                                      initial_state[3:],
+                                                                    initial_state[
+                                                                    3:],
                                                       final_state=final_state,
                                                       tensor_only=True,
                                                       verbose=True)
     try:
         _p6 = simulation.simulate(_p6_tn,
                                   optimize=(_p6_info, _p6_opt),
-                                  max_largest_intermediate=2**10,
-                                  max_n_slices=2**12,
+                                  max_largest_intermediate=2 ** 10,
+                                  max_n_slices=2 ** 12,
                                   verbose=True)
     except RuntimeError:
         if str(sys.exc_info()[1])[:15] == "Too many slices":
@@ -2260,7 +2257,6 @@ def test_simulation_3__simulation(n_qubits, depth):
 @pytest.mark.parametrize('n_qubits,depth',
                          [(n_qubits, 600) for n_qubits in range(16, 23, 2)])
 def test_simulation_4__simulation_large(n_qubits, depth):
-
     # Get random initial_state
     initial_state = ''.join(np.random.choice(list('01'), size=3)) + ''.join(
         np.random.choice(list('01+-'), size=n_qubits - 3))
@@ -2298,7 +2294,6 @@ def test_simulation_4__simulation_large(n_qubits, depth):
 @pytest.mark.parametrize('n_qubits,depth',
                          [(n_qubits, 200) for n_qubits in range(6, 13, 2)])
 def test_simulation_5__expectation_value_1(n_qubits, depth):
-
     # Get random initial_state
     initial_state = ''.join(np.random.choice(list('01+-'), size=n_qubits))
 
@@ -2315,11 +2310,11 @@ def test_simulation_5__expectation_value_1(n_qubits, depth):
         simplify=False,
         remove_id_gates=False,
         verbose=True),
-                                      op=op,
-                                      qubits_order=circuit.all_qubits(),
-                                      remove_id_gates=False,
-                                      simplify=False,
-                                      verbose=True)
+        op=op,
+        qubits_order=circuit.all_qubits(),
+        remove_id_gates=False,
+        simplify=False,
+        verbose=True)
     v2 = simulation.simulate(circuit + op + circuit.inv(),
                              initial_state=initial_state,
                              final_state=initial_state,
@@ -2335,7 +2330,6 @@ def test_simulation_5__expectation_value_1(n_qubits, depth):
 @pytest.mark.parametrize('n_qubits,depth',
                          [(n_qubits, 25) for n_qubits in range(6, 13, 2)])
 def test_simulation_5__expectation_value_2(n_qubits, depth):
-
     # Get random circuit
     circuit = _get_rqc_unitary(n_qubits, depth)
 
@@ -2359,9 +2353,9 @@ def test_simulation_5__expectation_value_2(n_qubits, depth):
         optimize='evolution',
         simplify=False,
         remove_id_gates=False),
-                                      op=op,
-                                      qubits_order=circuit.all_qubits(),
-                                      verbose=False)
+        op=op,
+        qubits_order=circuit.all_qubits(),
+        verbose=False)
     v2 = simulation.simulate(circuit + op + circuit.inv(),
                              initial_state=initial_state,
                              final_state=initial_state,
@@ -2384,7 +2378,6 @@ def test_simulation_5__expectation_value_2(n_qubits, depth):
 @pytest.mark.parametrize('n_qubits,depth',
                          [(n_qubits, 200) for n_qubits in range(6, 21, 4)])
 def test_simulation_5__iswap(n_qubits, depth):
-
     # Get random initial_state
     initial_state = ''.join(np.random.choice(list('01+-'), size=n_qubits))
 
@@ -2511,7 +2504,7 @@ def test_dm_0__supergate_1(n_qubits, k, ndim):
         for i in range(len(s_2))
         for j in range(len(s_2))
     ],
-                axis=0)
+        axis=0)
 
     # Check
     assert (np.allclose(M1, M2, atol=1e-3))
@@ -2581,7 +2574,7 @@ def test_dm_1__simulation_1(n_qubits, n_gates):
                                    verbose=True)
 
     # Get matrix
-    _rho_1 = np.reshape(rho_1, (2**n_qubits, 2**n_qubits))
+    _rho_1 = np.reshape(rho_1, (2 ** n_qubits, 2 ** n_qubits))
 
     # Density matrix should be hermitian
     assert (np.allclose(_rho_1, _rho_1.conj().T, atol=1e-3))
@@ -2614,7 +2607,7 @@ def test_dm_2__simulation_2(n_qubits, n_gates):
     # Get random s
     def _get_s(n):
         s = np.random.random(size=n)
-        s /= np.sum(s**2)
+        s /= np.sum(s ** 2)
         return s
 
     # Get random circuit
@@ -2634,7 +2627,7 @@ def test_dm_2__simulation_2(n_qubits, n_gates):
                     qubits[x]
                     for x in np.random.choice(n_qubits, size=4, replace=False)
                 ]),
-                           s=_get_s(4)))
+                s=_get_s(4)))
 
     # Check pickle
     assert (circuit == pickle.loads(pickle.dumps(circuit)))
@@ -2663,7 +2656,7 @@ def test_dm_2__simulation_2(n_qubits, n_gates):
             initial_state=initial_state,
             verbose=True,
             max_n_slices=16,
-            max_largest_intermediate=2**20,
+            max_largest_intermediate=2 ** 20,
             simplify=dict(use_matrix_commutation=False),
             compress=dict(max_n_qubits=2, use_matrix_commutation=False),
             optimize='tn')
@@ -2702,7 +2695,7 @@ def test_dm_2__simulation_2(n_qubits, n_gates):
             nq = len(qubits)
 
             # Compute Kraus map
-            K = np.reshape(np.kron(U.ravel(), U.ravel().conj()), (2**nq,) * 4)
+            K = np.reshape(np.kron(U.ravel(), U.ravel().conj()), (2 ** nq,) * 4)
             K = np.reshape(np.transpose(K, (0, 2, 1, 3)),
                            (np.prod(U.shape),) * 2)
 
@@ -2714,7 +2707,7 @@ def test_dm_2__simulation_2(n_qubits, n_gates):
 
         # Get axes
         axes = [l_qubits.index(q) for q in qubits[0]
-               ] + [n_l + r_qubits.index(q) for q in qubits[1]]
+                ] + [n_l + r_qubits.index(q) for q in qubits[1]]
 
         # Multiply K to state
         rho_2 = dot(K, rho_2, axes_b=axes, inplace=True)
@@ -2758,7 +2751,7 @@ def test_dm_3__simulation_3(n_qubits, n_gates):
                                    verbose=True)
 
     # Get matrix
-    _rho_1 = np.reshape(rho_1, (2**len(index_open_qubits),) * 2)
+    _rho_1 = np.reshape(rho_1, (2 ** len(index_open_qubits),) * 2)
 
     # Density matrix should be hermitian
     assert (np.allclose(_rho_1, _rho_1.conj().T, atol=1e-3))
@@ -2789,7 +2782,7 @@ def test_dm_3__simulation_3(n_qubits, n_gates):
 @pytest.mark.parametrize('p', [0.0, 0.25, 0.5, 1.0])
 def test_noise_1__GlobalDepolarizingChannel(nq, p):
     np.random.seed(1)
-    d = 2**nq
+    d = 2 ** nq
     psi = np.random.rand(d) + 1j * np.random.rand(d)
     psi = psi / np.linalg.norm(psi)
     rho = np.outer(psi, psi.conj())
@@ -2799,7 +2792,7 @@ def test_noise_1__GlobalDepolarizingChannel(nq, p):
 
     gpc = GlobalDepolarizingChannel(tuple(range(nq)), p)
     E = gpc.map()
-    rho_v = np.reshape(rho, (d**2, 1))
+    rho_v = np.reshape(rho, (d ** 2, 1))
     rho_t = np.reshape(E @ rho_v, (d, d))
 
     np.testing.assert_array_almost_equal(expected, rho_t, decimal=6)
@@ -2810,7 +2803,7 @@ def test_noise_1__local_channels():
     This test checks local channels are simulated correctly,
     in both the tensor network backend, and evolution-einsum.
     """
-    d = 2**4
+    d = 2 ** 4
     adc_gamma = 0.75
     q0, q1, q2, q3 = 0, 1, 2, 3
 
@@ -2871,13 +2864,13 @@ def test_noise_1__choi(n):
     rho = Tr_0[ (I ⊗ rho_0^T) C)
     """
     np.random.seed(1)
-    d = 2**n
+    d = 2 ** n
     psi = np.random.rand(d) + 1j * np.random.rand(d)
     psi = psi / np.linalg.norm(psi)
     rho = np.outer(psi, psi.conj())
 
     g = GlobalDepolarizingChannel(tuple(range(n)), p=0.15)
-    rho_t = np.reshape(g.map() @ np.reshape(rho, (d**2, 1)), (d, d))
+    rho_t = np.reshape(g.map() @ np.reshape(rho, (d ** 2, 1)), (d, d))
 
     C = choi_matrix(g)
     # trace out first n qubits representing the identity part
@@ -2906,7 +2899,7 @@ def test_noise_1__add_noise(p_depol, n_cycles):
     Theta = theta * n_cycles / 2
     psi = [np.exp(-1j * Theta), np.exp(1j * Theta)] / np.sqrt(2)
     rho_ideal = np.outer(psi, psi.conj().T)
-    P_ideal = (1 - p_depol)**n_cycles
+    P_ideal = (1 - p_depol) ** n_cycles
     rho_expected = P_ideal * rho_ideal + ((1 - P_ideal) / 2) * np.eye(2)
 
     np.testing.assert_array_almost_equal(rho_depol, rho_expected)
@@ -2923,5 +2916,84 @@ def test_noise_1__is_channel():
     assert not is_channel(invalid_channel)
     assert is_channel(valid_channel)
 
+
+@pytest.mark.parametrize('p', [0.0, 0.25, 0.5, 0.75, 1.0])
+def test_circuit__unitary_sample(p):
+    """
+    Here we test the pure state Kraus sampler
+    works when the Kraus' are unitary.
+    """
+    nsamples = 1000
+
+    # use random seed for consistency
+    np.random.seed(1)
+
+    # channel with unitary Kraus operators
+    gdc = GlobalDepolarizingChannel([0], p=p)
+    C = SuperCircuit([gdc])
+
+    # arbitrary
+    psi0 = np.array([np.cos(0.5), np.sin(0.5)])
+
+    # note, we do not remove identity gates here, since one of the Kraus
+    # is the identity, and we still want to sample it.
+    states = []
+    for _ in range(nsamples):
+        psi = simulation.simulate(C, psi0, allow_sampling=True,
+                                  remove_id_gates=False,
+                                  optimize='evolution-einsum')
+        states.append(psi)
+    rho = reconstruct_dm(states)
+
+    rho_dm = dm_simulation.simulate(C, psi0, remove_id_gates=False,
+                                    optimize='evolution-einsum')
+
+    expected = (1 - p) * np.outer(psi0.conj(), psi0) + p * np.eye(2) / 2
+
+    # first check the density matrix sampler gives correct result
+    np.testing.assert_array_almost_equal(rho_dm, expected)
+
+    # now check the sampling approach.
+    # since sampling takes a long time to converge,
+    # we only check for 2 decimal places.
+    np.testing.assert_array_almost_equal(rho, expected, decimal=2)
+
+
+@pytest.mark.parametrize('gamma', [0.0, 0.5, 1.0])
+@pytest.mark.parametrize('p', [0.0, 0.5, 1.0])
+def test_circuit__non_unitary_sample(gamma, p):
+    """
+    Here we test the pure state Kraus sampler
+    works when the Kraus' are not unitary,
+    and the Functional gate is implemented.
+    """
+    nsamples = 1000
+
+    # use random seed for consistency
+    np.random.seed(1)
+
+    # channel with unitary Kraus operators
+    adc = AmplitudeDampingChannel([0], gamma=gamma, p=p)
+    C = SuperCircuit(adc)
+
+    psi0 = np.array([np.cos(0.5), np.sin(0.5)])
+
+    states = []
+    for _ in range(nsamples):
+        psi = simulation.simulate(C, psi0, allow_sampling=True,
+                                  remove_id_gates=False,
+                                  optimize='evolution-einsum')
+        states.append(psi)
+
+    # density matrix from the pure states
+    rho = reconstruct_dm(states)
+
+    # full density matrix simulation
+    rho_dm = dm_simulation.simulate(C, psi0, remove_id_gates=False,
+                                    optimize='evolution-einsum')
+
+    # since sampling takes a long time to converge,
+    # we only check for 2 decimal places.
+    np.testing.assert_array_almost_equal(rho, rho_dm, decimal=2)
 
 #########################################################################
