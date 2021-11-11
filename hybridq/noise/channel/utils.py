@@ -184,7 +184,7 @@ def choi_matrix(channel: SuperGate,
     return C
 
 
-def reconstruct_density(pure_states: list[np.ndarray],
+def reconstruct_dm(pure_states: list[np.ndarray],
                         probs: list[float] = None) -> np.ndarray:
     """
     Compute sum of pure states 1/N sum_i |psi_i><psi_i|.
