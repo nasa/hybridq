@@ -255,7 +255,7 @@ def MatrixChannel(LMatrices: tuple[array, ...],
         # Otherwise, return the last projection
         else:
             # Get projection, norm and probability
-            proj, norm, _ = _get_projection(idx)
+            proj, norm, _ = _get_projection(self.__LMatrices_order[-1])
 
         # Normalize state
         proj /= norm
