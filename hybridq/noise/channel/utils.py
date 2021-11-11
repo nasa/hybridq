@@ -174,9 +174,9 @@ def choi_matrix(channel: SuperGate,
     op = channel.map(order, **kwargs)
     d = _channel_dim(channel)
 
-    C = np.zeros((d ** 2, d ** 2), dtype=complex)
-    for ij in range(d ** 2):
-        Eij = np.zeros(d ** 2)
+    C = np.zeros((d**2, d**2), dtype=complex)
+    for ij in range(d**2):
+        Eij = np.zeros(d**2)
         Eij[ij] = 1
         map = op @ Eij  # using vectorization
         C += np.kron(Eij.reshape((d, d)), map.reshape((d, d)))
@@ -215,17 +215,18 @@ def reconstruct_dm(pure_states: list[np.ndarray],
         raise ValueError("Invalid `probs`: length not consistent.")
 
     # here we convert to numpy arrays, then reshape to be one dimensional
-    pure_states = [np.sqrt(probs[i]) * np.asarray(psi) for i, psi in
-                   enumerate(pure_states)]
-    pure_states = [np.reshape(psi, (np.prod(psi.shape),)) for psi in
-                   pure_states]
+    pure_states = [
+        np.sqrt(probs[i]) * np.asarray(psi) for i, psi in enumerate(pure_states)
+    ]
+    pure_states = [
+        np.reshape(psi, (np.prod(psi.shape),)) for psi in pure_states
+    ]
     pure_states = np.asarray(pure_states)
 
     all_dims = set([np.prod(psi.shape) for psi in pure_states])
     if len(all_dims) != 1:
-        raise ValueError(
-            f"Recieved states with inconsistent dimensions. "
-            f"Received {all_dims}.")
+        raise ValueError(f"Recieved states with inconsistent dimensions. "
+                         f"Received {all_dims}.")
 
     return np.einsum('ij,ik', pure_states, pure_states.conj())
 
