@@ -174,14 +174,38 @@ def choi_matrix(channel: SuperGate,
     op = channel.map(order, **kwargs)
     d = _channel_dim(channel)
 
-    C = np.zeros((d**2, d**2), dtype=complex)
-    for ij in range(d**2):
-        Eij = np.zeros(d**2)
+    C = np.zeros((d ** 2, d ** 2), dtype=complex)
+    for ij in range(d ** 2):
+        Eij = np.zeros(d ** 2)
         Eij[ij] = 1
         map = op @ Eij  # using vectorization
         C += np.kron(Eij.reshape((d, d)), map.reshape((d, d)))
 
     return C
+
+
+def reconstruct_density(pure_states: list[np.ndarray]) -> np.ndarray:
+    """
+    Compute sum of pure states 1/N sum_i |psi_i><psi_i|.
+
+    All states will be converted to be one-dimensional psi.shape = (d,).
+    If there are inconsistencies in dims, a ValueError will be raised.
+    """
+
+    # here we convert to numpy arrays, then reshape to be one dimensional
+    pure_states = [np.asarray(psi) for psi in pure_states]
+    pure_states = [np.reshape(psi, (np.prod(psi.shape),)) for psi in
+                   pure_states]
+    pure_states = np.asarray(pure_states)
+
+    all_dims = set([np.prod(psi.shape) for psi in pure_states])
+    if len(all_dims) != 1:
+        raise ValueError(
+            f"Recieved states with inconsistent dimensions. "
+            f"Received {all_dims}.")
+
+    return np.einsum('ij,ik', pure_states, pure_states.conj()) / len(
+        pure_states)
 
 
 def _channel_dim(channel):
