@@ -240,7 +240,7 @@ def MatrixChannel(LMatrices: tuple[array, ...],
         # Initialize cumulative
         c = 0
 
-        # For each Kraus operator (escluding the last one) ...
+        # For each Kraus operator (excluding the last one) ...
         for idx in self.__LMatrices_order[:-1]:
             # Get projection, norm and probability
             proj, norm, prob = _get_projection(idx)
@@ -255,7 +255,7 @@ def MatrixChannel(LMatrices: tuple[array, ...],
         # Otherwise, return the last projection
         else:
             # Get projection, norm and probability
-            proj, norm, _ = _get_projection(idx)
+            proj, norm, _ = _get_projection(self.__LMatrices_order[-1])
 
         # Normalize state
         proj /= norm

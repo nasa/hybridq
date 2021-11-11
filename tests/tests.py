@@ -2958,4 +2958,42 @@ def test_circuit__unitary_sample(p):
     # we only check for 2 decimal places.
     np.testing.assert_array_almost_equal(rho, expected, decimal=2)
 
+
+@pytest.mark.parametrize('gamma', [0.0, 0.5, 1.0])
+@pytest.mark.parametrize('p', [0.0, 0.5, 1.0])
+def test_circuit__non_unitary_sample(gamma, p):
+    """
+    Here we test the pure state Kraus sampler
+    works when the Kraus' are not unitary,
+    and the Functional gate is implemented.
+    """
+    nsamples = 1000
+
+    # use random seed for consistency
+    np.random.seed(1)
+
+    # channel with unitary Kraus operators
+    adc = AmplitudeDampingChannel([0], gamma=gamma, p=p)
+    C = SuperCircuit(adc)
+
+    psi0 = np.array([np.cos(0.5), np.sin(0.5)])
+
+    states = []
+    for _ in range(nsamples):
+        psi = simulation.simulate(C, psi0, allow_sampling=True,
+                                  remove_id_gates=False,
+                                  optimize='evolution-einsum')
+        states.append(psi)
+
+    # density matrix from the pure states
+    rho = reconstruct_dm(states)
+
+    # full density matrix simulation
+    rho_dm = dm_simulation.simulate(C, psi0, remove_id_gates=False,
+                                    optimize='evolution-einsum')
+
+    # since sampling takes a long time to converge,
+    # we only check for 2 decimal places.
+    np.testing.assert_array_almost_equal(rho, rho_dm, decimal=2)
+
 #########################################################################

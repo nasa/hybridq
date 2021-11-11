@@ -224,7 +224,8 @@ def reconstruct_dm(pure_states: list[np.ndarray],
     all_dims = set([np.prod(psi.shape) for psi in pure_states])
     if len(all_dims) != 1:
         raise ValueError(
-            f"Recieved states with inconsistent dimensions. Received {all_dims}.")
+            f"Recieved states with inconsistent dimensions. "
+            f"Received {all_dims}.")
 
     return np.einsum('ij,ik', pure_states, pure_states.conj())
 
