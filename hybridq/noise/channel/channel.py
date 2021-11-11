@@ -277,15 +277,6 @@ def MatrixChannel(LMatrices: tuple[array, ...],
                                "than the absolute tollerance, "
                                f"'norm_atol={norm_atol}'")
 
-        # If c is not close to one within 'norm_atol', warn the user
-        if not np.isclose(c, 1, atol=norm_atol):
-            from hybridq.utils import Warning
-            from warnings import warn
-            warn(
-                f"The final cumulative, 'c={c}', is not close to '1'"
-                f"within the absolute tollerance, "
-                f"'norm_atol={norm_atol}'.", Warning)
-
         # Normalize state
         proj /= norm
 
