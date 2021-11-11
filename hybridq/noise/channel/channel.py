@@ -140,7 +140,8 @@ def MatrixChannel(LMatrices: tuple[array, ...],
                   copy: bool = True,
                   atol: float = 1e-8,
                   methods: dict[any, any] = None,
-                  use_cache: bool = True):
+                  use_cache: bool = True,
+                  norm_atol: float = 1e-6):
     """
     Return a channel described by `LMatrices` and `RMatrices`. More precisely,
     `MatrixChannel` will represent a channel of the form:
@@ -176,13 +177,18 @@ def MatrixChannel(LMatrices: tuple[array, ...],
         Add extra methods to the object.
     use_cache: bool, optional
         If `True`, extra memory is used to store a cached `Matrix`.
+    norm_atol: float, optional
+        State vectors with norm smaller than `norm_atol` are considered zero
+        vectors.
 
     Returns
     -------
     MatrixChannel
     """
-
     from hybridq.utils import isintegral, isnumber
+
+    # Convert norm_atol to float
+    norm_atol = float(norm_atol)
 
     # Define sample
     def __sample__(self, size: int = None, replace: bool = True):
@@ -225,6 +231,11 @@ def MatrixChannel(LMatrices: tuple[array, ...],
             # Get normalization
             norm = np.linalg.norm(proj.ravel())
 
+            # If norm is smaller than 'norm_atol', state vector is assumed to
+            # be zero
+            if norm < norm_atol:
+                norm = 0
+
             # Get probability
             prob = s * norm**2
 
@@ -240,22 +251,40 @@ def MatrixChannel(LMatrices: tuple[array, ...],
         # Initialize cumulative
         c = 0
 
-        # For each Kraus operator (excluding the last one) ...
-        for idx in self.__LMatrices_order[:-1]:
+        # Last non-zero state
+        proj, norm = None, None
+
+        # For each Kraus operator ...
+        for idx in self.__LMatrices_order:
             # Get projection, norm and probability
-            proj, norm, prob = _get_projection(idx)
+            _proj, _norm, _prob = _get_projection(idx)
 
-            # Update cumulative
-            c += prob
+            # If norm is different from zero ...
+            if _norm > 0:
+                # Store state
+                proj, norm = _proj, _norm
 
-            # If the random number if smaller than the cumulative, break
-            if c >= r:
-                break
+                # Update cumulative
+                c += _prob
 
-        # Otherwise, return the last projection
-        else:
-            # Get projection, norm and probability
-            proj, norm, _ = _get_projection(self.__LMatrices_order[-1])
+                # If the random number if smaller than the cumulative, break
+                if c >= r:
+                    break
+
+        # Check that proj and norm have been succesfully assigned
+        if proj is None or norm is None:
+            raise RuntimeError("All state vectors have a norm smaller "
+                               "than the absolute tollerance, "
+                               f"'norm_atol={norm_atol}'")
+
+        # If c is not close to one within 'norm_atol', warn the user
+        if not np.isclose(c, 1, atol=norm_atol):
+            from hybridq.utils import Warning
+            from warnings import warn
+            warn(
+                f"The final cumulative, 'c={c}', is not close to '1'"
+                f"within the absolute tollerance, "
+                f"'norm_atol={norm_atol}'.", Warning)
 
         # Normalize state
         proj /= norm
