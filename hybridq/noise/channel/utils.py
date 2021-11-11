@@ -185,7 +185,7 @@ def choi_matrix(channel: SuperGate,
 
 
 def reconstruct_dm(pure_states: list[np.ndarray],
-                        probs: list[float] = None) -> np.ndarray:
+                   probs: list[float] = None) -> np.ndarray:
     """
     Compute sum of pure states 1/N sum_i |psi_i><psi_i|.
 
@@ -203,7 +203,8 @@ def reconstruct_dm(pure_states: list[np.ndarray],
 
     Notes
     -----
-    All states will be converted to be one-dimensional psi.shape = (d,).
+    All states will be converted to be one-dimensional psi.shape = (d,),
+    and the returned density matrix will be square (d,d).
     If there are inconsistencies in dims, a ValueError will be raised.
     """
 
