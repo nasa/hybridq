@@ -18,7 +18,7 @@ specific language governing permissions and limitations under the License.
 from __future__ import annotations
 from hybridq.base import __Base__, generate
 from hybridq.base import staticvars, compare, requires
-from hybridq.base.property import Tags as TagGate, Name as NameGate, Params, Tuple
+from hybridq.base.property import Tags as TagGate, Name as NameGate, Params, Tuple, DocString
 from scipy.linalg import expm, fractional_matrix_power as powm
 from hybridq.utils import isintegral, isnumber
 from copy import deepcopy
@@ -980,10 +980,6 @@ class SchmidtGate(__Base__):
 
 
 @requires('sample')
-@staticvars(
-    'gates',
-    transform=dict(
-        gates=lambda gates: None if gates is None else BaseTupleGate(gates)))
 class StochasticGate(__Base__):
     pass
 
