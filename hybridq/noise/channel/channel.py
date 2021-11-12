@@ -252,30 +252,44 @@ def MatrixChannel(LMatrices: tuple[array, ...],
         c = 0
 
         # Last non-zero state
-        proj, norm = None, None
+        proj_idx = None
 
         # For each Kraus operator ...
         for idx in self.__LMatrices_order:
             # Get projection, norm and probability
-            _proj, _norm, _prob = _get_projection(idx)
+            proj, norm, prob = _get_projection(idx)
 
             # If norm is different from zero ...
-            if _norm > 0:
-                # Store state
-                proj, norm = _proj, _norm
+            if norm > 0:
+                # Store idx
+                proj_idx = idx
 
                 # Update cumulative
-                c += _prob
+                c += prob
 
                 # If the random number if smaller than the cumulative, break
                 if c >= r:
                     break
 
-        # Check that proj and norm have been succesfully assigned
-        if proj is None or norm is None:
-            raise RuntimeError("All state vectors have a norm smaller "
-                               "than the absolute tollerance, "
-                               f"'norm_atol={norm_atol}'")
+        # This is triggered only if a rounding error happened
+        else:
+            # If c is not close to one within 'norm_atol', warn the user
+            if not np.isclose(c, 1, atol=norm_atol):
+                from hybridq.utils import Warning
+                from warnings import warn
+                warn(
+                    f"The final cumulative, 'c={c}', is not close to '1'"
+                    f"within the absolute tollerance, "
+                    f"'norm_atol={norm_atol}'.", Warning)
+
+            # Check that proj_idx has been succesfully assigned
+            if proj_idx is None:
+                raise RuntimeError("All state vectors have a norm smaller "
+                                   "than the absolute tollerance, "
+                                   f"'norm_atol={norm_atol}'")
+
+            # Get projection, norm and probability
+            proj, norm, _ = _get_projection(proj_idx)
 
         # Normalize state
         proj /= norm
