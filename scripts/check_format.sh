@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Author: Salvatore Mandra (salvatore.mandra@nasa.gov)
 #
