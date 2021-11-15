@@ -21,6 +21,7 @@ jobs:
         run: |
           docker run --rm hybridq bash -c '\
             pip install papermill && \
+            export PATH=$PATH:$HOME/.local/bin && \
             for tutorial in tutorials/*.ipynb; do \
-              ~/.local/bin/papermill $tutorial /dev/null; \
+              papermill $tutorial /dev/null; \
             done'
