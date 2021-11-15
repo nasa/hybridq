@@ -2972,6 +2972,8 @@ def test_circuit__non_unitary_sample(gamma, p):
 
     psi0 = np.array([np.cos(0.5), np.sin(0.5)])
 
+    # the Kraus can be identity (depending on gamma, p),
+    # so we set remove_id_gates=False so not simplified away.
     states = []
     for _ in range(nsamples):
         psi = simulation.simulate(C,
