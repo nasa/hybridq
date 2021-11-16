@@ -221,8 +221,9 @@ def fidelity(state1: np.ndarray, state2: np.ndarray, *,
 
     Notes
     -----
-    `state1` and `state2` must have consistent dimensions, but need to
-    be both ket's or density matrices.
+    `state1` and `state2` must have consistent dimensions (but do not need
+    to be both ket or both density matrix; one can be a ket and the other
+    a density matrix).
 
     To convert shape to ket, one can use np.reshape(state, (d,)).
     To convert shape to density matrix, one can use np.reshape(state, (d, d)).
