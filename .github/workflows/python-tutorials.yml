@@ -19,9 +19,6 @@ jobs:
 
       - name: Run Tutorials
         run: |
-          docker run --rm hybridq bash -c '\
-            pip install papermill && \
-            export PATH=$PATH:$HOME/.local/bin && \
-            for tutorial in tutorials/*.ipynb; do \
-              papermill $tutorial /dev/null; \
-            done'
+          docker run --rm hybridq bash -c 'papermill tutorials/00_installation.ipynb /dev/null'
+          docker run --rm hybridq bash -c 'papermill tutorials/01_gates.ipynb /dev/null'
+          docker run --rm hybridq bash -c 'papermill tutorials/XX_noise.ipynb /dev/null'
