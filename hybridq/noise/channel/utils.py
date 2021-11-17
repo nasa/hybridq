@@ -42,7 +42,7 @@ def is_dm(rho: np.ndarray, atol=1e-6) -> bool:
 
 def ptrace(state: np.ndarray,
            keep: {int, list[int]},
-           dims: {int, list[int]}=None) -> np.ndarray:
+           dims: {int, list[int]} = None) -> np.ndarray:
     """
     compute the partial trace of a pure state (vector) or density matrix.
 
