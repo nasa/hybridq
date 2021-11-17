@@ -140,7 +140,8 @@ def MatrixChannel(LMatrices: tuple[array, ...],
                   copy: bool = True,
                   atol: float = 1e-8,
                   methods: dict[any, any] = None,
-                  use_cache: bool = True):
+                  use_cache: bool = True,
+                  norm_atol: float = 1e-6):
     """
     Return a channel described by `LMatrices` and `RMatrices`. More precisely,
     `MatrixChannel` will represent a channel of the form:
@@ -176,31 +177,125 @@ def MatrixChannel(LMatrices: tuple[array, ...],
         Add extra methods to the object.
     use_cache: bool, optional
         If `True`, extra memory is used to store a cached `Matrix`.
+    norm_atol: float, optional
+        State vectors with norm smaller than `norm_atol` are considered zero
+        vectors.
 
     Returns
     -------
     MatrixChannel
     """
-
     from hybridq.utils import isintegral, isnumber
 
-    ## # Define sample
-    ## def __sample__(self, size: int = None, replace: bool = True):
-    ##     from hybridq.utils import isintegral
-    ##
-    ##     # It is assumed here that s.ndim == 1
-    ##     assert (s.ndim == 1)
-    ##
-    ##     # Get number of elements
-    ##     idxs = np.random.choice(range(len(s)), size=size, replace=replace, p=s)
-    ##
-    ##     # Get gates (it is assumed here that left and right gates are the same)
-    ##     return self.Kraus.gates[0][idxs] if isintegral(idxs) else tuple(
-    ##         self.Kraus.gates[0][x] for x in idxs)
-    ##
-    ## # Define apply
-    ## def __apply__(self, psi, order):
-    ##     raise NotImplementedError
+    # Convert norm_atol to float
+    norm_atol = float(norm_atol)
+
+    # Define sample
+    def __sample__(self, size: int = None, replace: bool = True):
+        from hybridq.utils import isintegral
+
+        # It is assumed here that s.ndim == 1
+        assert (self.s.ndim == 1)
+
+        # Get number of elements
+        idxs = np.random.choice(range(len(self.s)),
+                                size=size,
+                                replace=replace,
+                                p=self.s)
+
+        # Get gates (it is assumed here that left and right gates are the same)
+        return self.Kraus.gates[0][idxs] if isintegral(idxs) else tuple(
+            self.Kraus.gates[0][x] for x in idxs)
+
+    # Define apply
+    def __apply__(self, psi, order):
+        from hybridq.utils import dot
+
+        # It is assumed here that s.ndim == 1
+        assert (self.s.ndim == 1)
+
+        # Define how to get projection
+        def _get_projection(idx):
+            # Get s
+            s = self.s[idx]
+
+            # Get Kraus operator
+            gate = self.Kraus.gates[0][idx]
+
+            # Get projection
+            proj = dot(a=gate.matrix(),
+                       b=psi,
+                       axes=tuple(map(order.index, gate.qubits)),
+                       b_as_complex_array=not np.iscomplexobj(psi))
+
+            # Get normalization
+            norm = np.linalg.norm(proj.ravel())
+
+            # If norm is smaller than 'norm_atol', state vector is assumed to
+            # be zero
+            if norm < norm_atol:
+                norm = 0
+
+            # Get probability
+            prob = s * norm**2
+
+            # Return projection, norm and probability
+            return proj, norm, prob
+
+        # Convert order to tuple
+        order = tuple(order)
+
+        # Get random number
+        r = np.random.random()
+
+        # Initialize cumulative
+        c = 0
+
+        # Last non-zero state
+        proj_idx = None
+
+        # For each Kraus operator ...
+        for idx in self.__LMatrices_order:
+            # Get projection, norm and probability
+            proj, norm, prob = _get_projection(idx)
+
+            # If norm is different from zero ...
+            if norm > 0:
+                # Store idx
+                proj_idx = idx
+
+                # Update cumulative
+                c += prob
+
+                # If the random number if smaller than the cumulative, break
+                if c >= r:
+                    break
+
+        # This is triggered only if a rounding error happened
+        else:
+            # If c is not close to one within 'norm_atol', warn the user
+            if not np.isclose(c, 1, atol=norm_atol):
+                from hybridq.utils import Warning
+                from warnings import warn
+                warn(
+                    f"The final cumulative, 'c={c}', is not close to '1'"
+                    f"within the absolute tollerance, "
+                    f"'norm_atol={norm_atol}'.", Warning)
+
+            # Check that proj_idx has been succesfully assigned
+            if proj_idx is None:
+                raise RuntimeError("All state vectors have a norm smaller "
+                                   "than the absolute tollerance, "
+                                   f"'norm_atol={norm_atol}'")
+
+            # Get projection, norm and probability
+            proj, norm, _ = _get_projection(proj_idx)
+
+        # Normalize state
+        proj /= norm
+
+        # Return projection and order
+        return proj, order
 
     # Get matrices, and copy if needed
     LMatrices = tuple(map(np.array if copy else np.asarray, LMatrices))
@@ -273,36 +368,36 @@ def MatrixChannel(LMatrices: tuple[array, ...],
     # Initialize methods
     _methods = {}
 
-    ## # Initialize _stochastic and _functional
-    ## _stochastic = False
-    ## _functional = False
-    ##
-    ## # Check if all matrices are unitaries
-    ## if s.ndim == 1 and RMatrices is None and np.isclose(np.sum(s), 1,
-    ##                                                     atol=atol):
-    ##     from hybridq.utils import isunitary
-    ##
-    ##     # Check if matrix is unitaries
-    ##     _stochastic = all(map(isunitary, LMatrices))
-    ##
-    ## # If all unitaries, add sample
-    ## if _stochastic:
-    ##     # Update mro
-    ##     mro = mro + (pr.StochasticGate,)
-    ##
-    ##     # Add gates
-    ##     sdict.update(gates=None)
-    ##
-    ##     # Add sample
-    ##     _methods.update(sample=__sample__)
-    ##
-    ## # Add apply
-    ## elif _functional:
-    ##     # Update mro
-    ##     mro = mro + (pr.FunctionalGate,)
-    ##
-    ##     # Add update
-    ##     sdict.update(apply=__apply__)
+    # FunctionalGate/StochasticGate can be used if s.ndim == 1 and left/right
+    # gates are the same
+    if s.ndim == 1 and (RMatrices is None or LMatrices == RMatrices):
+        from hybridq.utils import isunitary
+
+        # Check if StochastiGate's can be used
+        if np.isclose(np.sum(s), 1, atol=atol) and all(map(
+                isunitary, LMatrices)):
+            # Update mro
+            mro = mro + (pr.StochasticGate,)
+
+            # Add sample
+            _methods.update(sample=__sample__)
+
+        # Otherwise, use FunctionalGate's
+        elif np.allclose(sum(
+                s * (m.conj().T @ m) for s, m in zip(s, LMatrices)),
+                         np.eye(LMatrices[0].shape[0]),
+                         atol=atol):
+            from numpy.linalg import eigvals
+
+            # Update mro
+            mro = mro + (pr.FunctionalGate,)
+
+            # Get order of matrices (largest norm first)
+            _methods['__LMatrices_order'] = np.argsort(
+                [np.linalg.norm(eigvals(m)) for m in LMatrices])[::-1]
+
+            # Add update
+            sdict.update(apply=__apply__)
 
     # Merge extra methods
     if methods is not None:

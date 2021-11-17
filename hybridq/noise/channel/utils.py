@@ -42,7 +42,7 @@ def is_dm(rho: np.ndarray, atol=1e-6) -> bool:
 
 def ptrace(state: np.ndarray,
            keep: {int, list[int]},
-           dims: {int, list[int]}=None) -> np.ndarray:
+           dims: {int, list[int]} = None) -> np.ndarray:
     """
     compute the partial trace of a pure state (vector) or density matrix.
 
@@ -195,9 +195,11 @@ def choi_matrix(channel: SuperGate,
     return C
 
 
-def fidelity(state1: np.ndarray, state2: np.ndarray, *,
-             use_sqrt_def: bool=False,
-             atol: float=1e-8) -> float:
+def fidelity(state1: np.ndarray,
+             state2: np.ndarray,
+             *,
+             use_sqrt_def: bool = False,
+             atol: float = 1e-8) -> float:
     """
     Compute the fidelity of two quantum states as:
     F(state1, state2) = ( Tr[ sqrt{sqrt(state1) * state2 * sqrt(state1)} ] )^2
@@ -246,6 +248,7 @@ def fidelity(state1: np.ndarray, state2: np.ndarray, *,
             raise ValueError("Invalid state dimensions. "
                              "Ket type should be 1-dimensional (state.ndim==1)."
                              " Density matrix should be square d x d")
+
     _validate_shape(state1)
     _validate_shape(state2)
 
@@ -269,7 +272,7 @@ def fidelity(state1: np.ndarray, state2: np.ndarray, *,
     power = 1 if use_sqrt_def else 2
     if ket1 and ket2:
         # both states are kets
-        return np.abs(np.inner(state1.conj(), state2)) ** power
+        return np.abs(np.inner(state1.conj(), state2))**power
     elif np.sum([ket1, ket2]) == 1:
         # one of the states is a ket, the other a density matrix
         # compute |<psi | rho | psi>|^2
@@ -278,7 +281,7 @@ def fidelity(state1: np.ndarray, state2: np.ndarray, *,
 
         psi_right = rho @ psi
         F = np.sqrt(np.inner(psi.conj(), psi_right))
-        return _convert_to_real(F) ** power
+        return _convert_to_real(F)**power
     else:
         # both density matrices
         sqrt_rho = scipy.linalg.sqrtm(state1)
@@ -290,7 +293,54 @@ def fidelity(state1: np.ndarray, state2: np.ndarray, *,
         eigs = np.linalg.eigvals(_tmp)
 
         F = np.sum([np.sqrt(e) for e in eigs])
-        return _convert_to_real(F) ** power
+        return _convert_to_real(F)**power
+
+
+def reconstruct_dm(pure_states: list[np.ndarray],
+                   probs: list[float] = None) -> np.ndarray:
+    """
+    Compute sum of pure states 1/N sum_i |psi_i><psi_i|.
+
+    Parameters
+    ----------
+    pure_states: list[np.ndarray]
+        A list of the pure states we wish to sum up to the density matrix.
+    probs: list[float], optional
+        If specified, it must be of the same length as `pure_states`.
+        In this case, the computation will return
+        sum_i P[i] |psi_i><psi_i|
+        where P[i] is the i'th probability.
+        Default will set each prob to 1/len(pure_states).
+
+
+    Notes
+    -----
+    All states will be converted to be one-dimensional psi.shape = (d,),
+    and the returned density matrix will be square (d,d).
+    If there are inconsistencies in dims, a ValueError will be raised.
+    """
+
+    if probs is None:
+        probs = [1 / len(pure_states)] * len(pure_states)
+
+    if len(probs) != len(pure_states):
+        raise ValueError("Invalid `probs`: length not consistent.")
+
+    # here we convert to numpy arrays, then reshape to be one dimensional
+    pure_states = [
+        np.sqrt(probs[i]) * np.asarray(psi) for i, psi in enumerate(pure_states)
+    ]
+    pure_states = [
+        np.reshape(psi, (np.prod(psi.shape),)) for psi in pure_states
+    ]
+    pure_states = np.asarray(pure_states)
+
+    all_dims = set([np.prod(psi.shape) for psi in pure_states])
+    if len(all_dims) != 1:
+        raise ValueError(f"Recieved states with inconsistent dimensions. "
+                         f"Received {all_dims}.")
+
+    return np.einsum('ij,ik', pure_states, pure_states.conj())
 
 
 def _channel_dim(channel):
