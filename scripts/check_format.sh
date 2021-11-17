@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Author: Salvatore Mandra (salvatore.mandra@nasa.gov)
 #
@@ -15,10 +15,25 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+# Check yapf version
+YAPF_VERSION=0.31.0
+if [[ $(yapf --version | awk '{print$2}') != $YAPF_VERSION ]]; then
+  echo "'yapf==${YAPF_VERSION}' is needed."
+  exit 1
+fi
+
+# Check clang-format version
+CLANG_VERSION=13.0.0
+if [[ $(clang-format --version | awk '{print$3}') != $CLANG_VERSION ]]; then
+  echo "'clang-format==${CLANG_VERSION}' is needed."
+  exit 1
+fi
+
+# Check Python files
 PY_FAILED=""
 for file in $(git ls-files $(git rev-parse --show-toplevel) | \grep '\.py$'); do
   echo -ne "[......] $file" >&2
-  if [[ $(yapf --style=google -d $file | wc -l) != "0" ]]; then
+  if [[ $(yapf --style=google -d $file | wc -l) -ne 0 ]]; then
     PY_FAILED="$file $PY_FAILED"
     echo -e "\r[FAILED]" >&2
   else
@@ -26,10 +41,11 @@ for file in $(git ls-files $(git rev-parse --show-toplevel) | \grep '\.py$'); do
   fi
 done
 
+# Check C++ files
 CPP_FAILED=""
 for file in $(git ls-files $(git rev-parse --show-toplevel) | \grep -E '\.cpp$|\.h$'); do
   echo -ne "[......] $file" >&2
-  if [[ $(clang-format --style=google --output-replacements-xml $file | wc -l) -gt "3" ]]; then
+  if [[ $(clang-format --style=google --output-replacements-xml $file | wc -l) -gt 3 ]]; then
     CPP_FAILED="$file $CPP_FAILED"
     echo -e "\r[FAILED]" >&2
   else
