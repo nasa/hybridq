@@ -27,10 +27,14 @@ Tutorials on how to use **HybridQ** can be found in
 [Salvatore Mandrà](https://github.com/s-mandra)<br>
 [Jeffrey Marshall](https://github.com/jsmarsha11) (noise models)<br>
 
-## Publications
+## How To Cite
 
 [1] S. Mandrà, J. Marshall, E. Rieffel, and R. Biswas, *"HybridQ: A Hybrid
-Simulator for Quantum Circuits"*, arXiv (2021)
+Simulator for Quantum Circuits"*, arXiv:2111.06868 (2021)
+
+## Publications Using **HybridQ**
+
+[1] X. Mi, P. Roushan, C. Quintana, S. Mandrà, J. Marshall, *et al.*, *"Information scrambling in quantum circuits"*, arXiv:2101.08870, Science (In Press), 2021
 
 ## Documentation
 
