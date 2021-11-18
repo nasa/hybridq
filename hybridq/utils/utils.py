@@ -525,6 +525,11 @@ class DeprecationWarning(Warning):
     pass
 
 
+# Define new Warning (to always print the warning signal)
+class Warning(Warning):
+    pass
+
+
 # Load library
 def load_library(libname: str,
                  prefix: list[str, ...] = (None, 'lib', 'local/lib', 'usr/lib',

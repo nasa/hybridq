@@ -541,7 +541,10 @@ def _simulate_evolution(circuit: iter[Gate], initial_state: any,
                 # Copy back if needed
                 if new_psi is not _psi:
                     # Align if needed
-                    _psi = aligned.asarray(new_psi, order='C', alignment=32)
+                    _psi = aligned.asarray(new_psi,
+                                           order='C',
+                                           alignment=32,
+                                           dtype=_psi.dtype)
 
                     # Redefine real and imaginary part
                     _psi_re = _psi[0]
