@@ -40,11 +40,11 @@ jobs:
           git config --global user.email "github@action"
           git config --global user.name "GitHub Action"
           git fetch -p
-          git checkout pre-release
+          git checkout pre-release-actions
           git pull
           git add docs/*
           git commit -m "[Automated] Update documentation"
-          git push -u origin pre-release
+          git push -u origin pre-release-actions
 
   linux_wheel:
     needs: documentation
@@ -62,11 +62,11 @@ jobs:
           git config --global user.email "github@action"
           git config --global user.name "GitHub Action"
           git fetch -p
-          git checkout pre-release
+          git checkout pre-release-actions
           git pull
           git add packages/*.whl
           git commit -m "[Automated] Update wheels"
-          git push -u origin pre-release
+          git push -u origin pre-release-actions
 
   macos_wheel:
     needs: linux_wheel
@@ -96,8 +96,8 @@ jobs:
       - name: Add package to repository
         run: |
           git fetch -p
-          git checkout pre-release
+          git checkout pre-release-actions
           git pull
           git add packages/*.whl
           git commit -m "[Automated] Update wheels"
-          git push -u origin pre-release
+          git push -u origin pre-release-actions
