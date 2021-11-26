@@ -120,7 +120,11 @@ class BaseCircuit(list):
         """
         Append `circuit` to an existing `Circuit`.
         """
+        # Extend circuit
         self.extend(circuit)
+
+        # Return
+        return self
 
     def __getitem__(self, key: any) -> {Gate, Circuit}:
         """
