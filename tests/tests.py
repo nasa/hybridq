@@ -1094,6 +1094,28 @@ def test_gate_utils__decompose_gate(n_qubits, k):
 ################################ TEST CIRCUIT ################################
 
 
+@pytest.mark.parametrize('n_qubits,n_gates', [(50, 200) for _ in range(5)])
+def test_circuit__operations(n_qubits, n_gates):
+    # Generate initial random circuit
+    _c = _get_rqc_non_unitary(n_qubits=n_qubits, n_gates=n_gates)
+
+    # Initialize circuit
+    c = Circuit(_c)
+
+    # Append gates one by one
+    for g in _c:
+        c.append(g)
+
+    # Extend circuit
+    c.extend(_c)
+
+    # Use += operator
+    c += _c
+
+    # Check
+    assert (c == Circuit(_c + _c + _c + _c))
+
+
 @pytest.mark.parametrize('n_qubits,n_gates', [(8, 200) for _ in range(5)])
 def test_circuit__conj_T_adj_inv(n_qubits, n_gates):
     # Get random circuit
