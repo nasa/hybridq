@@ -110,11 +110,17 @@ class BaseCircuit(list):
 
     def __add__(self, circuit: Circuit) -> Circuit:
         """
-        Add `Circuit` to an existing `Circuit`, and return a new `Circuit`.
+        Add `circuit` to an existing `Circuit`, and return a new `Circuit`.
         """
 
         # Return new circuit
         return type(self)(list(self) + list(type(self)(circuit)))
+
+    def __iadd__(self, circuit: Circuit) -> None:
+        """
+        Append `circuit` to an existing `Circuit`.
+        """
+        self.extend(circuit)
 
     def __getitem__(self, key: any) -> {Gate, Circuit}:
         """
