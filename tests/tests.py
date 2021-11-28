@@ -1099,21 +1099,59 @@ def test_circuit__operations(n_qubits, n_gates):
     # Generate initial random circuit
     _c = _get_rqc_non_unitary(n_qubits=n_qubits, n_gates=n_gates)
 
+    # Try valid gates
+    try:
+        Circuit([1])
+        raise
+    except:
+        pass
+
     # Initialize circuit
     c = Circuit(_c)
+
+    # Add circuit
+    c = c + c
+
+    # Try valid gates
+    try:
+        c = c + [1]
+        raise
+    except:
+        pass
 
     # Append gates one by one
     for g in _c:
         c.append(g)
 
+    # Try valid gates
+    try:
+        c.append(1)
+        raise
+    except:
+        pass
+
     # Extend circuit
     c.extend(_c)
+
+    # Try valid gates
+    try:
+        c.extend([1])
+        raise
+    except:
+        pass
 
     # Use += operator
     c += _c
 
+    # Try valid gates
+    try:
+        c += [1]
+        raise
+    except:
+        pass
+
     # Check
-    assert (c == Circuit(_c + _c + _c + _c))
+    assert (c == Circuit(_c + _c + _c + _c + _c))
 
 
 @pytest.mark.parametrize('n_qubits,n_gates', [(8, 200) for _ in range(5)])
