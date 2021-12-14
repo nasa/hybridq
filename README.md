@@ -4,6 +4,11 @@
 [![GitHub License](https://img.shields.io/badge/License-Apache-green)](https://github.com/nasa/hybridq/blob/main/LICENSE)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/nasa/hybridq.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/nasa/hybridq/context:python)
 [![Language grade: C++](https://img.shields.io/lgtm/grade/cpp/g/nasa/hybridq.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/nasa/hybridq/context:cpp)
+[![PyPI](https://img.shields.io/pypi/v/hybridq.svg)](https://pypi.org/project/hybridq/#description)
+[![PyPIStats](https://img.shields.io/pypi/dm/hybridq)](https://pypistats.org/packages/hybridq)<br>
+[![Documentation](https://img.shields.io/static/v1?label=Documentation&message=https://nasa.github.io/hybridq&color=success)](https://nasa.github.io/hybridq)
+[![Tutorials](https://github.com/nasa/hybridq/actions/workflows/python-tutorials.yml/badge.svg)](https://github.com/nasa/hybridq/tree/main/tutorials)<br>
+[![Cite](https://img.shields.io/static/v1?label=Cite&message=arXiv:2111.06868&color=success)](https://arxiv.org/abs/2111.06868)
 
 **HybridQ** is a highly extensible platform designed to provide a common framework
 to integrate multiple state-of-the-art techniques to simulate large scale

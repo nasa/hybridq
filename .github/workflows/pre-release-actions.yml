@@ -2,7 +2,7 @@ name: Pre-release actions
 
 on:
   push:
-    branches: [ pre-release ]
+    branches: [ pre-release-actions ]
 
 jobs:
   documentation:
@@ -17,8 +17,7 @@ jobs:
 
       - name: Update documentation
         run: |
-          docker run -v $(pwd)/docs:/opt/hybridq/docs --rm hybridq -c '\
-            export PATH=/opt/python/$PYTHON_VERSION/bin/:$PATH && \
+          docker run -v $(pwd)/docs:/opt/hybridq/docs --user root --rm hybridq bash -c '\
             curl -L https://github.com/jgm/pandoc/releases/download/2.14.2/pandoc-2.14.2-linux-amd64.tar.gz | tar xvzf - -C /opt/ && \
             export PATH=/opt/pandoc-2.13/bin/:$PATH && \
             yum install -y texlive-latex-bin \
@@ -32,7 +31,7 @@ jobs:
                            texlive-polyglossia \
                            texlive-lm-math \
                            texlive-dvipdfmx && \
-            pip install pdoc3==0.9.2 && \
+            pip install pdoc3 && \
             cd /opt/hybridq && \
             bash scripts/generate_documentation.sh'
 
@@ -41,11 +40,11 @@ jobs:
           git config --global user.email "github@action"
           git config --global user.name "GitHub Action"
           git fetch -p
-          git checkout pre-release
+          git checkout pre-release-actions
           git pull
           git add docs/*
           git commit -m "[Automated] Update documentation"
-          git push -u origin pre-release
+          git push -u origin pre-release-actions
 
   linux_wheel:
     needs: documentation
@@ -63,11 +62,11 @@ jobs:
           git config --global user.email "github@action"
           git config --global user.name "GitHub Action"
           git fetch -p
-          git checkout pre-release
+          git checkout pre-release-actions
           git pull
           git add packages/*.whl
           git commit -m "[Automated] Update wheels"
-          git push -u origin pre-release
+          git push -u origin pre-release-actions
 
   macos_wheel:
     needs: linux_wheel
@@ -90,14 +89,16 @@ jobs:
 
       - name: Create package for MacOS
         run: |
+          sed '/git+https/d' requirements.txt > /tmp/requirements.txt
+          mv -f /tmp/requirements.txt requirements.txt
           CXX="clang++ -mmacosx-version-min=10.9" ARCH=core-avx2 pip wheel . -v --no-dependencies -w packages/
           mv packages/hybridq-*-py3-none-any.whl packages/hybridq-$(python setup.py --version)-cp37-cp37m-macosx_10_9_x86_64.whl
 
       - name: Add package to repository
         run: |
           git fetch -p
-          git checkout pre-release
+          git checkout pre-release-actions
           git pull
           git add packages/*.whl
           git commit -m "[Automated] Update wheels"
-          git push -u origin pre-release
+          git push -u origin pre-release-actions
