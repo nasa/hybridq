@@ -761,7 +761,6 @@ def _simulate_evolution(circuit: iter[Gate], initial_state: any,
                 _psi = contract(_path,
                                 *reversed(_gates),
                                 _psi,
-                                dtype=complex_type,
                                 backend=backend,
                                 optimize=optimize)
 
