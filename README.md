@@ -4,6 +4,11 @@
 [![GitHub License](https://img.shields.io/badge/License-Apache-green)](https://github.com/nasa/hybridq/blob/main/LICENSE)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/nasa/hybridq.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/nasa/hybridq/context:python)
 [![Language grade: C++](https://img.shields.io/lgtm/grade/cpp/g/nasa/hybridq.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/nasa/hybridq/context:cpp)
+[![PyPI](https://img.shields.io/pypi/v/hybridq.svg)](https://pypi.org/project/hybridq/#description)
+[![PyPIStats](https://img.shields.io/pypi/dm/hybridq)](https://pypistats.org/packages/hybridq)<br>
+[![Documentation](https://img.shields.io/static/v1?label=Documentation&message=https://nasa.github.io/hybridq&color=success)](https://nasa.github.io/hybridq)
+[![Tutorials](https://github.com/nasa/hybridq/actions/workflows/python-tutorials.yml/badge.svg)](https://github.com/nasa/hybridq/tree/main/tutorials)<br>
+[![Cite](https://img.shields.io/static/v1?label=Cite&message=IEEE/ACM%20(QCS)&color=success)](https://doi.org/10.1109/QCS54837.2021.00015)
 
 **HybridQ** is a highly extensible platform designed to provide a common framework
 to integrate multiple state-of-the-art techniques to simulate large scale
@@ -29,12 +34,15 @@ Tutorials on how to use **HybridQ** can be found in
 
 ## How To Cite
 
-[1] S. Mandrà, J. Marshall, E. Rieffel, and R. Biswas, *"HybridQ: A Hybrid
-Simulator for Quantum Circuits"*, arXiv:2111.06868 (2021)
+[1] S. Mandrà, J. Marshall, E. Rieffel, and R. Biswas, [*"HybridQ: A Hybrid
+Simulator for Quantum Circuits"*](https://doi.org/10.1109/QCS54837.2021.00015), 
+IEEE/ACM Second International Workshop on Quantum Computing Software (QCS) (2021)
 
 ## Publications Using **HybridQ**
 
-[1] X. Mi, P. Roushan, C. Quintana, S. Mandrà, J. Marshall, *et al.*, *"Information scrambling in quantum circuits"*, arXiv:2101.08870, Science (In Press), 2021
+[1] X. Mi, P. Roushan, C. Quintana, S. Mandrà, J. Marshall, *et al.*, 
+[*"Information scrambling in quantum circuits"*](https://doi.org/10.1126/science.abg5029),
+Science 374, 6574 (2021)
 
 ## Documentation
 

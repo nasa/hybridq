@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>hybridq.noise.channel.utils API documentation</title>
 <meta name="description" content="Authors: Salvatore Mandra (salvatore.mandra@nasa.gov),
 Jeffrey Marshall (jeffrey.s.marshall@nasa.gov) …" />
@@ -58,7 +58,9 @@ specific language governing permissions and limitations under the License.
 &#34;&#34;&#34;
 
 from __future__ import annotations
+from warnings import warn
 import numpy as np
+import scipy.linalg
 
 
 def is_dm(rho: np.ndarray, atol=1e-6) -&gt; bool:
@@ -84,6 +86,9 @@ def ptrace(state: np.ndarray,
            dims: {int, list[int]} = None) -&gt; np.ndarray:
     &#34;&#34;&#34;
     compute the partial trace of a pure state (vector) or density matrix.
+
+    Parameters
+    -----------
     state: np.array
         One dimensional for pure state e.g. np.array([1,0,0,0])
         or two dimensional for density matrix e.g. np.array([[1,0],[0,0]])
@@ -96,6 +101,12 @@ def ptrace(state: np.ndarray,
         dimension is `product(dims)`.
         If unspecified, assumes 2 for all.
     Returns the density matrix of the remaining qubits.
+
+    Notes
+    -----
+    To convert shape to ket, one can use np.reshape(state, (d,)),
+    where `d` is the dimension.
+    To convert shape to density matrix, one can use np.reshape(state, (d, d)).
     &#34;&#34;&#34;
     state = np.asarray(state)
     if len(state.shape) not in (1, 2):
@@ -149,7 +160,7 @@ def ptrace(state: np.ndarray,
         return np.einsum(&#39;ijkk-&gt;ij&#39;, state)
 
 
-def is_channel(channel: MatrixChannel,
+def is_channel(channel: SuperGate,
                atol=1e-8,
                order: tuple[any, ...] = None,
                **kwargs) -&gt; bool:
@@ -160,6 +171,8 @@ def is_channel(channel: MatrixChannel,
 
     Parameters
     ----------
+    channel: MatrixSuperGate or KrausSuperGate
+        Must have the method &#39;map()&#39;.
     atol: float, optional
         absolute tolerance to use for determining channel is CPTP.
     order: tuple[any, ...], optional
@@ -186,7 +199,7 @@ def is_channel(channel: MatrixChannel,
     return tp and hp and cp
 
 
-def choi_matrix(channel: MatrixChannel,
+def choi_matrix(channel: SuperGate,
                 order: tuple[any, ...] = None,
                 **kwargs) -&gt; np.ndarray:
     &#34;&#34;&#34;
@@ -199,11 +212,16 @@ def choi_matrix(channel: MatrixChannel,
 
     Parameters
     ----------
+    channel: MatrixSuperGate or KrausSuperGate
+        Must have the method &#39;map()&#39;.
     order: tuple[any, ...], optional
         If provided, Kraus&#39; map is ordered accordingly to `order`.
         See `MatrixChannel.map()`
     kwargs: kwargs for `MatrixChannel.map()`
     &#34;&#34;&#34;
+
+    if not hasattr(channel, &#39;map&#39;):
+        raise ValueError(&#34;&#39;channel&#39; must have method &#39;map()&#39;&#34;)
 
     op = channel.map(order, **kwargs)
     d = _channel_dim(channel)
@@ -218,9 +236,163 @@ def choi_matrix(channel: MatrixChannel,
     return C
 
 
+def fidelity(state1: np.ndarray,
+             state2: np.ndarray,
+             *,
+             use_sqrt_def: bool = False,
+             atol: float = 1e-8) -&gt; float:
+    &#34;&#34;&#34;
+    Compute the fidelity of two quantum states as:
+    F(state1, state2) = ( Tr[ sqrt{sqrt(state1) * state2 * sqrt(state1)} ] )^2
+
+    Parameters
+    ----------
+    state1: np.ndarray
+        Either a ket or density matrix.
+        If a ket, it should have shape (d,), where d is the dimension.
+        If a density matrix, it should have shape (d, d).
+    state2: np.ndarray
+        Either a ket or density matrix.
+        If a ket, it should have shape (d,), where d is the dimension.
+        If a density matrix, it should have shape (d, d).
+    use_sqrt_def: bool, optional
+        If True, return the definition of fidelity without the square.
+    atol: float, optional
+        absolute tolerance used in rounding (imaginary parts
+        smaller than this will be rounded to 0).
+
+
+    Notes
+    -----
+    `state1` and `state2` must have consistent dimensions (but do not need
+    to be both ket or both density matrix; one can be a ket and the other
+    a density matrix).
+
+    To convert shape to ket, one can use np.reshape(state, (d,)).
+    To convert shape to density matrix, one can use np.reshape(state, (d, d)).
+
+    If both states are pure, the definition is equivalent to
+    |&lt;psi1| psi2&gt;|^2
+    &#34;&#34;&#34;
+
+    state1 = np.asarray(state1)
+    state2 = np.asarray(state2)
+
+    def _validate_shape(rho_or_psi):
+        valid = True
+        dims = rho_or_psi.shape
+        if len(dims) not in (1, 2):
+            valid = False
+        if len(dims) == 2 and dims[0] != dims[1]:
+            valid = False
+        if not valid:
+            raise ValueError(&#34;Invalid state dimensions. &#34;
+                             &#34;Ket type should be 1-dimensional (state.ndim==1).&#34;
+                             &#34; Density matrix should be square d x d&#34;)
+
+    _validate_shape(state1)
+    _validate_shape(state2)
+
+    dim1 = state1.shape[0]
+    dim2 = state2.shape[0]
+
+    if dim1 != dim2:
+        raise ValueError(f&#34;state dimensions inconsistent, got {dim1} != {dim2}&#34;)
+
+    # ket or density matrix
+    ket1 = state1.ndim == 1
+    ket2 = state2.ndim == 1
+
+    def _convert_to_real(F):
+        if np.isclose(np.imag(F), 0, atol=atol):
+            F = np.real(F)
+        else:
+            warn(&#34;Fidelity has non-trivial imaginary component&#34;)
+        return F
+
+    power = 1 if use_sqrt_def else 2
+    if ket1 and ket2:
+        # both states are kets
+        return np.abs(np.inner(state1.conj(), state2))**power
+    elif np.sum([ket1, ket2]) == 1:
+        # one of the states is a ket, the other a density matrix
+        # compute |&lt;psi | rho | psi&gt;|^2
+        rho = state2 if ket1 else state1
+        psi = state1 if ket1 else state2
+
+        psi_right = rho @ psi
+        F = np.sqrt(np.inner(psi.conj(), psi_right))
+        return _convert_to_real(F)**power
+    else:
+        # both density matrices
+        sqrt_rho = scipy.linalg.sqrtm(state1)
+
+        _tmp = sqrt_rho @ state2 @ sqrt_rho
+
+        # since we take the trace, we can just sum up the sqrt of the
+        # eigenvalues, instead of computing the full matrix sqrt.
+        eigs = np.linalg.eigvals(_tmp)
+
+        F = np.sum([np.sqrt(e) for e in eigs])
+        return _convert_to_real(F)**power
+
+
+def reconstruct_dm(pure_states: list[np.ndarray],
+                   probs: list[float] = None) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    Compute sum of pure states 1/N sum_i |psi_i&gt;&lt;psi_i|.
+
+    Parameters
+    ----------
+    pure_states: list[np.ndarray]
+        A list of the pure states we wish to sum up to the density matrix.
+    probs: list[float], optional
+        If specified, it must be of the same length as `pure_states`.
+        In this case, the computation will return
+        sum_i P[i] |psi_i&gt;&lt;psi_i|
+        where P[i] is the i&#39;th probability.
+        Default will set each prob to 1/len(pure_states).
+
+
+    Notes
+    -----
+    All states will be converted to be one-dimensional psi.shape = (d,),
+    and the returned density matrix will be square (d,d).
+    If there are inconsistencies in dims, a ValueError will be raised.
+    &#34;&#34;&#34;
+
+    if probs is None:
+        probs = [1 / len(pure_states)] * len(pure_states)
+
+    if len(probs) != len(pure_states):
+        raise ValueError(&#34;Invalid `probs`: length not consistent.&#34;)
+
+    # here we convert to numpy arrays, then reshape to be one dimensional
+    pure_states = [
+        np.sqrt(probs[i]) * np.asarray(psi) for i, psi in enumerate(pure_states)
+    ]
+    pure_states = [
+        np.reshape(psi, (np.prod(psi.shape),)) for psi in pure_states
+    ]
+    pure_states = np.asarray(pure_states)
+
+    all_dims = set([np.prod(psi.shape) for psi in pure_states])
+    if len(all_dims) != 1:
+        raise ValueError(f&#34;Recieved states with inconsistent dimensions. &#34;
+                         f&#34;Received {all_dims}.&#34;)
+
+    return np.einsum(&#39;ij,ik&#39;, pure_states, pure_states.conj())
+
+
 def _channel_dim(channel):
-    # dimension (assume all Kraus&#39; have same shape)
-    return channel.Kraus.gates[0][0].matrix().shape[0]</code></pre>
+    # map() gives the dimension squared of the channel
+    full_dims = channel.map().shape
+    assert len(full_dims) == 2
+    assert full_dims[0] == full_dims[1]
+    d = np.sqrt(full_dims[0])
+    if not np.isclose(d, int(d)):
+        raise ValueError(&#39;invalid shape for channel&#39;)
+    return int(d)</code></pre>
 </details>
 </section>
 <section>
@@ -231,7 +403,7 @@ def _channel_dim(channel):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="hybridq.noise.channel.utils.choi_matrix"><code class="name flex">
-<span>def <span class="ident">choi_matrix</span></span>(<span>channel: MatrixChannel, order: tuple[any, ...] = None, **kwargs) ‑> np.ndarray</span>
+<span>def <span class="ident">choi_matrix</span></span>(<span>channel: SuperGate, order: tuple[any, ...] = None, **kwargs) ‑> np.ndarray</span>
 </code></dt>
 <dd>
 <div class="desc"><p>return the Choi matrix for channel, of shape (d<strong>2, d</strong>2)
@@ -241,6 +413,8 @@ Lambda(rho) = Tr_0[ (I \otimes rho^T) C]
 where C is the Choi matrix.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
+<dt><strong><code>channel</code></strong> :&ensp;<code>MatrixSuperGate</code> or <code>KrausSuperGate</code></dt>
+<dd>Must have the method 'map()'.</dd>
 <dt><strong><code>order</code></strong> :&ensp;<code>tuple[any, &hellip;]</code>, optional</dt>
 <dd>If provided, Kraus' map is ordered accordingly to <code>order</code>.
 See <code>MatrixChannel.map()</code></dd>
@@ -251,7 +425,7 @@ See <code>MatrixChannel.map()</code></dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def choi_matrix(channel: MatrixChannel,
+<pre><code class="python">def choi_matrix(channel: SuperGate,
                 order: tuple[any, ...] = None,
                 **kwargs) -&gt; np.ndarray:
     &#34;&#34;&#34;
@@ -264,11 +438,16 @@ See <code>MatrixChannel.map()</code></dd>
 
     Parameters
     ----------
+    channel: MatrixSuperGate or KrausSuperGate
+        Must have the method &#39;map()&#39;.
     order: tuple[any, ...], optional
         If provided, Kraus&#39; map is ordered accordingly to `order`.
         See `MatrixChannel.map()`
     kwargs: kwargs for `MatrixChannel.map()`
     &#34;&#34;&#34;
+
+    if not hasattr(channel, &#39;map&#39;):
+        raise ValueError(&#34;&#39;channel&#39; must have method &#39;map()&#39;&#34;)
 
     op = channel.map(order, **kwargs)
     d = _channel_dim(channel)
@@ -283,8 +462,143 @@ See <code>MatrixChannel.map()</code></dd>
     return C</code></pre>
 </details>
 </dd>
+<dt id="hybridq.noise.channel.utils.fidelity"><code class="name flex">
+<span>def <span class="ident">fidelity</span></span>(<span>state1: np.ndarray, state2: np.ndarray, *, use_sqrt_def: bool = False, atol: float = 1e-08) ‑> float</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute the fidelity of two quantum states as:
+F(state1, state2) = ( Tr[ sqrt{sqrt(state1) * state2 * sqrt(state1)} ] )^2</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>state1</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Either a ket or density matrix.
+If a ket, it should have shape (d,), where d is the dimension.
+If a density matrix, it should have shape (d, d).</dd>
+<dt><strong><code>state2</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Either a ket or density matrix.
+If a ket, it should have shape (d,), where d is the dimension.
+If a density matrix, it should have shape (d, d).</dd>
+<dt><strong><code>use_sqrt_def</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If True, return the definition of fidelity without the square.</dd>
+<dt><strong><code>atol</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>absolute tolerance used in rounding (imaginary parts
+smaller than this will be rounded to 0).</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p><code>state1</code> and <code>state2</code> must have consistent dimensions (but do not need
+to be both ket or both density matrix; one can be a ket and the other
+a density matrix).</p>
+<p>To convert shape to ket, one can use np.reshape(state, (d,)).
+To convert shape to density matrix, one can use np.reshape(state, (d, d)).</p>
+<p>If both states are pure, the definition is equivalent to
+|<psi1| psi2>|^2</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fidelity(state1: np.ndarray,
+             state2: np.ndarray,
+             *,
+             use_sqrt_def: bool = False,
+             atol: float = 1e-8) -&gt; float:
+    &#34;&#34;&#34;
+    Compute the fidelity of two quantum states as:
+    F(state1, state2) = ( Tr[ sqrt{sqrt(state1) * state2 * sqrt(state1)} ] )^2
+
+    Parameters
+    ----------
+    state1: np.ndarray
+        Either a ket or density matrix.
+        If a ket, it should have shape (d,), where d is the dimension.
+        If a density matrix, it should have shape (d, d).
+    state2: np.ndarray
+        Either a ket or density matrix.
+        If a ket, it should have shape (d,), where d is the dimension.
+        If a density matrix, it should have shape (d, d).
+    use_sqrt_def: bool, optional
+        If True, return the definition of fidelity without the square.
+    atol: float, optional
+        absolute tolerance used in rounding (imaginary parts
+        smaller than this will be rounded to 0).
+
+
+    Notes
+    -----
+    `state1` and `state2` must have consistent dimensions (but do not need
+    to be both ket or both density matrix; one can be a ket and the other
+    a density matrix).
+
+    To convert shape to ket, one can use np.reshape(state, (d,)).
+    To convert shape to density matrix, one can use np.reshape(state, (d, d)).
+
+    If both states are pure, the definition is equivalent to
+    |&lt;psi1| psi2&gt;|^2
+    &#34;&#34;&#34;
+
+    state1 = np.asarray(state1)
+    state2 = np.asarray(state2)
+
+    def _validate_shape(rho_or_psi):
+        valid = True
+        dims = rho_or_psi.shape
+        if len(dims) not in (1, 2):
+            valid = False
+        if len(dims) == 2 and dims[0] != dims[1]:
+            valid = False
+        if not valid:
+            raise ValueError(&#34;Invalid state dimensions. &#34;
+                             &#34;Ket type should be 1-dimensional (state.ndim==1).&#34;
+                             &#34; Density matrix should be square d x d&#34;)
+
+    _validate_shape(state1)
+    _validate_shape(state2)
+
+    dim1 = state1.shape[0]
+    dim2 = state2.shape[0]
+
+    if dim1 != dim2:
+        raise ValueError(f&#34;state dimensions inconsistent, got {dim1} != {dim2}&#34;)
+
+    # ket or density matrix
+    ket1 = state1.ndim == 1
+    ket2 = state2.ndim == 1
+
+    def _convert_to_real(F):
+        if np.isclose(np.imag(F), 0, atol=atol):
+            F = np.real(F)
+        else:
+            warn(&#34;Fidelity has non-trivial imaginary component&#34;)
+        return F
+
+    power = 1 if use_sqrt_def else 2
+    if ket1 and ket2:
+        # both states are kets
+        return np.abs(np.inner(state1.conj(), state2))**power
+    elif np.sum([ket1, ket2]) == 1:
+        # one of the states is a ket, the other a density matrix
+        # compute |&lt;psi | rho | psi&gt;|^2
+        rho = state2 if ket1 else state1
+        psi = state1 if ket1 else state2
+
+        psi_right = rho @ psi
+        F = np.sqrt(np.inner(psi.conj(), psi_right))
+        return _convert_to_real(F)**power
+    else:
+        # both density matrices
+        sqrt_rho = scipy.linalg.sqrtm(state1)
+
+        _tmp = sqrt_rho @ state2 @ sqrt_rho
+
+        # since we take the trace, we can just sum up the sqrt of the
+        # eigenvalues, instead of computing the full matrix sqrt.
+        eigs = np.linalg.eigvals(_tmp)
+
+        F = np.sum([np.sqrt(e) for e in eigs])
+        return _convert_to_real(F)**power</code></pre>
+</details>
+</dd>
 <dt id="hybridq.noise.channel.utils.is_channel"><code class="name flex">
-<span>def <span class="ident">is_channel</span></span>(<span>channel: MatrixChannel, atol=1e-08, order: tuple[any, ...] = None, **kwargs) ‑> bool</span>
+<span>def <span class="ident">is_channel</span></span>(<span>channel: SuperGate, atol=1e-08, order: tuple[any, ...] = None, **kwargs) ‑> bool</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Checks using the Choi matrix whether or not <code>channel</code> defines
@@ -292,6 +606,8 @@ a valid quantum channel.
 That is, we check it is a valid CPTP map.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
+<dt><strong><code>channel</code></strong> :&ensp;<code>MatrixSuperGate</code> or <code>KrausSuperGate</code></dt>
+<dd>Must have the method 'map()'.</dd>
 <dt><strong><code>atol</code></strong> :&ensp;<code>float</code>, optional</dt>
 <dd>absolute tolerance to use for determining channel is CPTP.</dd>
 <dt><strong><code>order</code></strong> :&ensp;<code>tuple[any, &hellip;]</code>, optional</dt>
@@ -304,7 +620,7 @@ See <code>MatrixChannel.map()</code></dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def is_channel(channel: MatrixChannel,
+<pre><code class="python">def is_channel(channel: SuperGate,
                atol=1e-8,
                order: tuple[any, ...] = None,
                **kwargs) -&gt; bool:
@@ -315,6 +631,8 @@ See <code>MatrixChannel.map()</code></dd>
 
     Parameters
     ----------
+    channel: MatrixSuperGate or KrausSuperGate
+        Must have the method &#39;map()&#39;.
     atol: float, optional
         absolute tolerance to use for determining channel is CPTP.
     order: tuple[any, ...], optional
@@ -372,19 +690,26 @@ See <code>MatrixChannel.map()</code></dd>
 <span>def <span class="ident">ptrace</span></span>(<span>state: np.ndarray, keep: {int, list[int]}, dims: {int, list[int]} = None) ‑> np.ndarray</span>
 </code></dt>
 <dd>
-<div class="desc"><p>compute the partial trace of a pure state (vector) or density matrix.
-state: np.array
-One dimensional for pure state e.g. np.array([1,0,0,0])
-or two dimensional for density matrix e.g. np.array([[1,0],[0,0]])
-keep: list of int
-the qubits we want to keep (all others traced out).
-Can also specify a single int if only keeping one qubit.
-dims: list of int, optional
-List of qudit dimensions respecting the ordering of <code>state</code>.
+<div class="desc"><p>compute the partial trace of a pure state (vector) or density matrix.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<code>np.array</code></dt>
+<dd>One dimensional for pure state e.g. np.array([1,0,0,0])
+or two dimensional for density matrix e.g. np.array([[1,0],[0,0]])</dd>
+<dt><strong><code>keep</code></strong> :&ensp;<code>list</code> of <code>int</code></dt>
+<dd>the qubits we want to keep (all others traced out).
+Can also specify a single int if only keeping one qubit.</dd>
+<dt><strong><code>dims</code></strong> :&ensp;<code>list</code> of <code>int</code>, optional</dt>
+<dd>List of qudit dimensions respecting the ordering of <code>state</code>.
 Number of qubits is <code>len(dims)</code>, and full Hilbert space
 dimension is <code>product(dims)</code>.
-If unspecified, assumes 2 for all.
-Returns the density matrix of the remaining qubits.</p></div>
+If unspecified, assumes 2 for all.</dd>
+</dl>
+<p>Returns the density matrix of the remaining qubits.</p>
+<h2 id="notes">Notes</h2>
+<p>To convert shape to ket, one can use np.reshape(state, (d,)),
+where <code>d</code> is the dimension.
+To convert shape to density matrix, one can use np.reshape(state, (d, d)).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -394,6 +719,9 @@ Returns the density matrix of the remaining qubits.</p></div>
            dims: {int, list[int]} = None) -&gt; np.ndarray:
     &#34;&#34;&#34;
     compute the partial trace of a pure state (vector) or density matrix.
+
+    Parameters
+    -----------
     state: np.array
         One dimensional for pure state e.g. np.array([1,0,0,0])
         or two dimensional for density matrix e.g. np.array([[1,0],[0,0]])
@@ -406,6 +734,12 @@ Returns the density matrix of the remaining qubits.</p></div>
         dimension is `product(dims)`.
         If unspecified, assumes 2 for all.
     Returns the density matrix of the remaining qubits.
+
+    Notes
+    -----
+    To convert shape to ket, one can use np.reshape(state, (d,)),
+    where `d` is the dimension.
+    To convert shape to density matrix, one can use np.reshape(state, (d, d)).
     &#34;&#34;&#34;
     state = np.asarray(state)
     if len(state.shape) not in (1, 2):
@@ -459,6 +793,77 @@ Returns the density matrix of the remaining qubits.</p></div>
         return np.einsum(&#39;ijkk-&gt;ij&#39;, state)</code></pre>
 </details>
 </dd>
+<dt id="hybridq.noise.channel.utils.reconstruct_dm"><code class="name flex">
+<span>def <span class="ident">reconstruct_dm</span></span>(<span>pure_states: list[np.ndarray], probs: list[float] = None) ‑> np.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute sum of pure states 1/N sum_i |psi_i&gt;&lt;psi_i|.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>pure_states</code></strong> :&ensp;<code>list[np.ndarray]</code></dt>
+<dd>A list of the pure states we wish to sum up to the density matrix.</dd>
+<dt><strong><code>probs</code></strong> :&ensp;<code>list[float]</code>, optional</dt>
+<dd>If specified, it must be of the same length as <code>pure_states</code>.
+In this case, the computation will return
+sum_i P[i] |psi_i&gt;&lt;psi_i|
+where P[i] is the i'th probability.
+Default will set each prob to 1/len(pure_states).</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>All states will be converted to be one-dimensional psi.shape = (d,),
+and the returned density matrix will be square (d,d).
+If there are inconsistencies in dims, a ValueError will be raised.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reconstruct_dm(pure_states: list[np.ndarray],
+                   probs: list[float] = None) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    Compute sum of pure states 1/N sum_i |psi_i&gt;&lt;psi_i|.
+
+    Parameters
+    ----------
+    pure_states: list[np.ndarray]
+        A list of the pure states we wish to sum up to the density matrix.
+    probs: list[float], optional
+        If specified, it must be of the same length as `pure_states`.
+        In this case, the computation will return
+        sum_i P[i] |psi_i&gt;&lt;psi_i|
+        where P[i] is the i&#39;th probability.
+        Default will set each prob to 1/len(pure_states).
+
+
+    Notes
+    -----
+    All states will be converted to be one-dimensional psi.shape = (d,),
+    and the returned density matrix will be square (d,d).
+    If there are inconsistencies in dims, a ValueError will be raised.
+    &#34;&#34;&#34;
+
+    if probs is None:
+        probs = [1 / len(pure_states)] * len(pure_states)
+
+    if len(probs) != len(pure_states):
+        raise ValueError(&#34;Invalid `probs`: length not consistent.&#34;)
+
+    # here we convert to numpy arrays, then reshape to be one dimensional
+    pure_states = [
+        np.sqrt(probs[i]) * np.asarray(psi) for i, psi in enumerate(pure_states)
+    ]
+    pure_states = [
+        np.reshape(psi, (np.prod(psi.shape),)) for psi in pure_states
+    ]
+    pure_states = np.asarray(pure_states)
+
+    all_dims = set([np.prod(psi.shape) for psi in pure_states])
+    if len(all_dims) != 1:
+        raise ValueError(f&#34;Recieved states with inconsistent dimensions. &#34;
+                         f&#34;Received {all_dims}.&#34;)
+
+    return np.einsum(&#39;ij,ik&#39;, pure_states, pure_states.conj())</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -476,18 +881,20 @@ Returns the density matrix of the remaining qubits.</p></div>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="hybridq.noise.channel.utils.choi_matrix" href="#hybridq.noise.channel.utils.choi_matrix">choi_matrix</a></code></li>
+<li><code><a title="hybridq.noise.channel.utils.fidelity" href="#hybridq.noise.channel.utils.fidelity">fidelity</a></code></li>
 <li><code><a title="hybridq.noise.channel.utils.is_channel" href="#hybridq.noise.channel.utils.is_channel">is_channel</a></code></li>
 <li><code><a title="hybridq.noise.channel.utils.is_dm" href="#hybridq.noise.channel.utils.is_dm">is_dm</a></code></li>
 <li><code><a title="hybridq.noise.channel.utils.ptrace" href="#hybridq.noise.channel.utils.ptrace">ptrace</a></code></li>
+<li><code><a title="hybridq.noise.channel.utils.reconstruct_dm" href="#hybridq.noise.channel.utils.reconstruct_dm">reconstruct_dm</a></code></li>
 </ul>
 </li>
 </ul>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>
