@@ -62,8 +62,6 @@ def _simulate_tn_mpi(circuit: Circuit, initial_state: any, final_state: any,
     kwargs.setdefault('max_time', 120)
     kwargs.setdefault('max_repeats', 16)
     kwargs.setdefault('minimize', 'combo')
-    kwargs.setdefault('optlib', 'optuna')
-    kwargs.setdefault('sampler', 'GP')
     kwargs.setdefault('target_largest_intermediate', 0)
     kwargs.setdefault('max_largest_intermediate', 2**26)
     kwargs.setdefault('temperatures', [1.0, 0.1, 0.01])
@@ -227,8 +225,6 @@ def _simulate_tn_mpi(circuit: Circuit, initial_state: any, final_state: any,
                 max_time=kwargs['max_time'],
                 max_repeats=kwargs['max_repeats'],
                 minimize=kwargs['minimize'],
-                optlib=kwargs['optlib'],
-                sampler=kwargs['sampler'],
                 progbar=False,
                 parallel=False,
                 **kwargs['cotengra'])
