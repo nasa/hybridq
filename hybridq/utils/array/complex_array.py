@@ -30,7 +30,7 @@ class ComplexArray:
     ----------
     real: list[number]
         Real part of `ComplexArray`.
-    imag: list[number]
+    imag: list[number], optional
         Imaginary part of `ComplexArray`.
     copy: bool, optional
         If `True`, `real` and `imag` are copied instead of being referenced.
@@ -39,13 +39,15 @@ class ComplexArray:
 
     def __init__(self,
                  real: list[number],
-                 imag: list[number],
+                 imag: list[number] = None,
                  copy: bool = False):
+        from hybridq.utils.aligned import zeros_like
         from hybridq.utils import isnumber
 
         # Convert to np.ndarray
         real = (np.array if copy else np.asarray)(real)
-        imag = (np.array if copy else np.asarray)(imag)
+        imag = zeros_like(real) if imag is None else (
+            np.array if copy else np.asarray)(imag)
 
         # Checks
         if real.dtype != imag.dtype:
@@ -73,6 +75,16 @@ class ComplexArray:
 
     def __len__(self) -> int:
         return len(self.real)
+
+    def __str__(self) -> str:
+        return f'ComplexArray(shape={self.shape}, dtype={self.dtype}, alignment={self.alignment})'
+
+    def __repr__(self) -> str:
+        return str(self)
+
+    # Conver to list
+    def tolist(self) -> list:
+        return np.asarray(self).tolist()
 
     # Convert to np.ndarray
     def __array__(self, dtype=None) -> numpy.ndarray:
