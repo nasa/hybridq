@@ -3047,4 +3047,114 @@ def test_circuit__non_unitary_sample(gamma, p):
     np.testing.assert_array_almost_equal(rho, rho_dm, decimal=2)
 
 
+############################ TEST COMPLEXARRAY ##########################
+
+
+@pytest.mark.parametrize('dtype,alignment',
+                         [(dtype, alignment)
+                          for dtype in ['float32', 'float64', 'float128']
+                          for alignment in [32, 64, 128, 256, 1024]])
+def test_complex_array__1(dtype, alignment):
+    from hybridq.utils.array import ComplexArray
+    from hybridq.utils.aligned import aligned_array
+
+    # Get random shape
+    shape = tuple(np.random.randint(5, size=8) + 1)
+
+    # Get real and imaginary part
+    real = aligned_array.asarray(np.random.random(shape).astype(dtype),
+                                 alignment=alignment)
+    imag = aligned_array.asarray(np.random.random(shape).astype(dtype),
+                                 alignment=alignment)
+
+    # Combine
+    _c = real + 1j * imag
+
+    # Get complex array (without copying, default)
+    c = ComplexArray(real, imag)
+
+    # Check lenght
+    assert (len(c) == len(_c))
+
+    # Check
+    assert (ComplexArray(real, imag, copy=True).dtype == _c.dtype)
+    assert (ComplexArray(real, imag, copy=True).shape == _c.shape)
+    assert (c.dtype == _c.dtype)
+    assert (c.shape == _c.shape)
+    assert (c.ndim == _c.ndim)
+    assert (np.all(np.iscomplex(c)) and np.iscomplexobj(c))
+    if alignment < len(c.ravel()):
+        assert (c.alignment % alignment == 0)
+        assert (aligned_array.isaligned(c.real, alignment))
+        assert (aligned_array.isaligned(c.imag, alignment))
+
+    # Check that c and real + 1j * imag are the same
+    assert (np.all(c == _c))
+    assert (np.all(np.asarray(c) == _c))
+
+    # Check shared memory
+    assert (np.shares_memory(c, real) and np.shares_memory(c, imag))
+    assert (c.real is real and np.shares_memory(real, c.real))
+    assert (c.imag is imag and np.shares_memory(imag, c.imag))
+    assert (not np.shares_memory(c.real, c.imag))
+    assert (not np.shares_memory(c.imag, c.real))
+    assert (c.real is np.real(c))
+    assert (c.imag is np.imag(c))
+    assert (not np.shares_memory(np.asarray(c), real) and
+            not np.shares_memory(np.asarray(c), imag))
+    assert (not np.shares_memory(ComplexArray(real, imag, copy=True), real) and
+            not np.shares_memory(ComplexArray(real, imag, copy=True), imag))
+
+    for _ in range(100):
+
+        # Get random key
+        key = tuple(
+            np.random.randint(_c.shape[i]) if r < 0.5 else slice(_c.shape[i])
+            for i, r in enumerate(np.random.random(size=_c.ndim)))
+
+        # Check
+        np.testing.assert_allclose(c[key], _c[key])
+        np.testing.assert_allclose(np.asarray(c[key]), _c[key])
+
+        # Get random array
+        _real = np.random.random([x.stop for x in key if isinstance(x, slice)])
+        _imag = np.random.random([x.stop for x in key if isinstance(x, slice)])
+
+        # Assign
+        _c[key] = _real + 1j * _imag
+        c[key] = _real + 1j * _imag
+
+        # Check
+        np.testing.assert_allclose(c, _c)
+        np.testing.assert_allclose(np.asarray(c), _c)
+
+    # Check functions
+    assert (np.shares_memory(c, c.T) and np.all(c.T == _c.T))
+    assert (np.shares_memory(c, c.ravel()) and np.all(c.ravel() == _c.ravel()))
+    assert (np.all(c.conj() == _c.conj()))
+    assert (np.all(c.flatten() == _c.flatten()))
+    assert (np.isclose(np.linalg.norm(c), np.linalg.norm(_c)))
+    assert (np.isclose(np.sum(c), np.sum(_c)))
+    assert (np.isclose(np.prod(c), np.prod(_c)))
+
+    # Get random array
+    _r = np.random.random(c.shape) + 1j * np.random.random(c.shape)
+    assert (np.isclose(np.vdot(c, c), np.vdot(_c, _c)))
+    assert (np.isclose(np.vdot(c, _r), np.vdot(_c, _r)))
+    assert (np.isclose(np.vdot(_r, c), np.vdot(_r, _c)))
+
+    # Check reshape
+    new_shape = tuple(np.random.permutation(c.shape))
+
+    # Check
+    np.testing.assert_allclose(np.reshape(c, new_shape),
+                               np.reshape(_c, new_shape))
+    assert (np.shares_memory(c, np.reshape(c, new_shape)))
+    assert (np.shares_memory(np.reshape(c, new_shape), c))
+    assert (np.shares_memory(np.reshape(c, new_shape).real, c.real))
+    assert (np.shares_memory(np.reshape(c, new_shape).imag, c.imag))
+    assert (not np.shares_memory(np.reshape(c, new_shape).imag, c.real))
+    assert (not np.shares_memory(np.reshape(c, new_shape).real, c.imag))
+
+
 #########################################################################
