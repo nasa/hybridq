@@ -39,28 +39,26 @@ def isaligned(a: np.ndarray, alignment: int) -> bool:
     return (a.ctypes.data % alignment) == 0
 
 
-def get_alignment(a: np.ndarray, max_alignment: int = 128) -> int:
+def get_alignment(a: np.ndarray) -> int:
     """
-    Get the largest alignment for `a`, up to `max_alignment`.
+    Get the largest alignment for `a`.
 
     Parameters
     ----------
     a: np.ndarray
         Array to get the alignment.
-    max_alignment: int, optional
-        Maximum alignment to check.
 
     Returns
     -------
     int
-        The maximum alignment of `a`, up to `max_alignment`.
+        The maximum alignment of `a`.
     """
-    # Check max_alignment
-    if bin(max_alignment).count('1') != 1:
-        raise ValueError("'max_alignment' must be a power of 2.")
+    # Check 'a' is an numpy array
+    if type(a) != np.ndarray:
+        raise TypeError("'a' is unsupported")
 
     # Get largest base
-    b = int(np.log2(max_alignment))
+    b = int(np.log2(len(a.ravel()))) + 1
 
     # Get best alignment
     return next(2**x for x in range(b, 0, -1) if (a.ctypes.data % 2**x) == 0)
