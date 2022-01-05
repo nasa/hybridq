@@ -25,97 +25,54 @@ HANDLED_FUNCTIONS = {}
 class ComplexArray:
     """
     Dispatched NumPy array representing an array of complex numbers.
+
+    Parameters
+    ----------
+    real: list[number]
+        Real part of `ComplexArray`.
+    imag: list[number]
+        Imaginary part of `ComplexArray`.
+    copy: bool, optional
+        If `True`, `real` and `imag` are copied instead of being referenced.
+        (default: `False`)
     """
 
     def __init__(self,
-                 object,
-                 object_im=None,
-                 *,
-                 dtype: any = None,
-                 copy: bool = True,
-                 order: any = 'C',
-                 alignment: int = 16) -> None:
-        """
-        Initialize `ComplexArray`.
+                 real: list[number],
+                 imag: list[number],
+                 copy: bool = False):
+        from hybridq.utils import isnumber
 
-        Parameters
-        ----------
-        object: array_like
-            Array used as base for `ComplexArray`. It can be an array of either
-            real of complex numbers. However, if `object_im` is specified,
-            `object` must be an array of real numbers.
-        object_im: array_like, optional
-            Array used for the imaginary part of `ComplexArray`. It must be an
-            array of real numbers.
-        dype: any, optional
-            Type for `ComplexArray`. It must be a valid complex type.
-        copy: bool, optional
-            Copy `object` and `object_im`. (default: `True`)
-        order: any, optional
-            Order in which data are stored in `ComplexArray`. (default: `C`)
-        alignment: int, optional
-            Alignment to use for `ComplexArray`. (default: 16)
+        # Convert to np.ndarray
+        real = (np.array if copy else np.asarray)(real)
+        imag = (np.array if copy else np.asarray)(imag)
 
-        See Also
-        --------
-        numpy.ndarray
-        """
-        from functools import partial
-        from hybridq.utils.aligned import array, asarray, zeros_like
-
-        # Check that dtype is a complex type
-        if dtype is not None and not np.iscomplexobj(np.array(1, dtype=dtype)):
-            raise ValueError("'dtype' must be a valid complex type.")
-
-        # Copy if needed
-        _array = partial(array if copy else asarray,
-                         alignment=alignment,
-                         order=order)
-
-        # Convert objects to aligned arrays
-        object = _array(object, alignment=alignment)
-
-        # Convert dtype
-        dtype = object.dtype if dtype is None else np.dtype(dtype)
-
-        # Get real type
-        dtype_re = np.real(1j * np.array([1], dtype=dtype)).dtype
-
-        # If object_im is None, split object in real and imaginary parts
-        if object_im is None:
-            if np.iscomplexobj(object):
-                object_im = _array(np.imag(object), dtype=dtype_re)
-                object_re = _array(np.real(object), dtype=dtype_re)
-            else:
-                object_re = _array(object, dtype=dtype_re)
-                object_im = zeros_like(object_re)
-
-        # Otherwise, convert to array
-        else:
-            # If 'object_im' is specified, 'object' must be an array of real numbers
-            if np.iscomplexobj(object):
-                raise ValueError(
-                    "'object' cannot be an array of complex numbers if 'object_im' is specified"
-                )
-
-            # 'object_im' must be an array of real numbers
-            if np.iscomplexobj(object_im):
-                raise ValueError("'object_im' must be an array of real numbers")
-
-            # Get real part
-            object_re = _array(object, dtype=dtype_re)
-
-            # Convert 'object_im' to array
-            object_im = _array(object_im, dtype=dtype_re)
-
-        # Check that real and imaginary parts have the same shape
-        if object_re.shape != object_im.shape:
-            raise ValueError(
-                "Real and imaginary parts must have the same shape")
+        # Checks
+        if real.dtype != imag.dtype:
+            raise ValueError("'real' and 'imag' must have the same type")
+        if type(real) != np.ndarray or np.iscomplexobj(real):
+            raise ValueError("'real' must be a non-complex 'numpy.ndarray'")
+        if type(imag) != np.ndarray or np.iscomplexobj(imag):
+            raise ValueError("'imag' must be a non-complex 'numpy.ndarray'")
+        if real.shape != imag.shape:
+            raise ValueError("'real' and 'imag' must have the same shape")
+        if real.flags.c_contiguous != imag.flags.c_contiguous:
+            raise ValueError("'real' and 'imag' must have the same order")
 
         # Assign real and imaginary part
-        self.re = object_re
-        self.im = object_im
+        self.__real = real
+        self.__imag = imag
+
+    @property
+    def real(self) -> numpy.ndarray:
+        return self.__real
+
+    @property
+    def imag(self) -> numpy.ndarray:
+        return self.__imag
+
+    def __len__(self) -> int:
+        return len(self.real)
 
     # Convert to np.ndarray
     def __array__(self, dtype=None) -> numpy.ndarray:
@@ -123,7 +80,7 @@ class ComplexArray:
         Array to return when converted to `numpy.ndarray`.
         """
         # Get complex array
-        c = self.re + 1j * self.im
+        c = self.real + 1j * self.imag
 
         # Return
         return c if dtype is None else c.astype(dtype)
@@ -132,27 +89,37 @@ class ComplexArray:
         """
         Using the dispatch mechanism, apply NumPy functions to `ComplexArray`.
         """
+        # Check that 'func' has been implemented
         if func not in HANDLED_FUNCTIONS:
             return NotImplemented
+
         # Note: this allows subclasses that don't override
-        # __array_function__ to handle DiagonalArray objects.
-        if not all(issubclass(t, self.__class__) for t in types):
+        # __array_function__ to handle ComplexArray objects.
+        if not all(
+                any(issubclass(t, c)
+                    for c in (self.__class__, np.ndarray))
+                for t in types):
             return NotImplemented
+
+        # Call handler
         return HANDLED_FUNCTIONS[func](*args, **kwargs)
 
     def __setitem__(self, key, value):
-        self.re[key] = np.real(value)
-        self.im[key] = np.imag(value)
+        self.real[key] = np.real(value)
+        self.imag[key] = np.imag(value)
 
-    def __getitem__(self, key):
-        from hybridq.utils import isintegral
-        if isintegral(key):
-            return self.re[key] + 1j * self.im[key]
+    def __getitem__(self, key) -> ComplexArray:
+        # Get real and imaginary parts
+        real = self.real[key]
+        imag = self.imag[key]
+
+        # If numbers, return complex
+        if real.ndim == 0:
+            return real + 1j * imag
+
+        # Otherwise, return a view
         else:
-            return ComplexArray(self.re[key],
-                                self.im[key],
-                                dtype=self.dtype,
-                                alignment=self.alignment)
+            return ComplexArray(real, imag)
 
     @property
     def dtype(self) -> numpy.dtype:
@@ -164,7 +131,7 @@ class ComplexArray:
         numpy.dtype
             The type of `ComplexArray`.
         """
-        return (1j * np.array([1], dtype=self.re.dtype)).dtype
+        return (1j * np.array([1], dtype=self.real.dtype)).dtype
 
     @property
     def shape(self) -> tuple[int, ...]:
@@ -176,7 +143,7 @@ class ComplexArray:
         tuple[int, ...]
             The tuple of dimensions.
         """
-        return self.re.shape
+        return self.real.shape
 
     @property
     def ndim(self) -> int:
@@ -188,7 +155,7 @@ class ComplexArray:
         int
             The number of dimensions.
         """
-        return self.re.ndim
+        return self.real.ndim
 
     @property
     def alignment(self) -> int:
@@ -201,52 +168,19 @@ class ComplexArray:
             The alignment of `ComplexArray`.
         """
         from hybridq.utils.aligned import get_alignment
-        return np.gcd(get_alignment(self.re), get_alignment(self.im))
-
-    def conj(self) -> ComplexArray:
-        """
-        Return the conjugation of `ComplexArray`.
-
-        Returns
-        -------
-        ComplexArray
-            The conjugated `ComplexArray`.
-        """
-        return ComplexArray(self.re,
-                            -self.im,
-                            dtype=self.dtype,
-                            alignment=self.alignment)
+        return np.gcd(get_alignment(self.real), get_alignment(self.imag))
 
     @property
     def T(self) -> ComplexArray:
         """
-        Return the transposition of `ComplexArray`.
+        Return the transposition of `ComplexArray` without copying.
 
         Returns
         -------
         ComplexArray
             The transposition of `ComplexArray`.
         """
-        return ComplexArray(self.re.T,
-                            self.im.T,
-                            dtype=self.dtype,
-                            alignment=self.alignment,
-                            copy=False)
-
-    def flatten(self) -> ComplexArray:
-        """
-        Return flattened `ComplexArray`.
-
-        Returns
-        -------
-        ComplexArray
-            The flattened `ComplexArray`.
-        """
-        return ComplexArray(self.re.flatten(),
-                            self.im.flatten(),
-                            dtype=self.dtype,
-                            alignment=self.alignment,
-                            copy=False)
+        return ComplexArray(self.real.T, self.imag.T)
 
     def ravel(self) -> ComplexArray:
         """
@@ -257,11 +191,29 @@ class ComplexArray:
         ComplexArray
             The flattened `ComplexArray`.
         """
-        return ComplexArray(self.re.ravel(),
-                            self.im.ravel(),
-                            dtype=self.dtype,
-                            alignment=self.alignment,
-                            copy=False)
+        return ComplexArray(self.real.ravel(), self.imag.ravel())
+
+    def conj(self) -> ComplexArray:
+        """
+        Return the conjugation of `ComplexArray`.
+
+        Returns
+        -------
+        ComplexArray
+            The conjugated `ComplexArray`.
+        """
+        return ComplexArray(self.real, -self.imag)
+
+    def flatten(self) -> ComplexArray:
+        """
+        Return flattened `ComplexArray`.
+
+        Returns
+        -------
+        ComplexArray
+            The flattened `ComplexArray`.
+        """
+        return ComplexArray(self.real.flatten(), self.imag.flatten())
 
 
 def implements(np_function):
@@ -292,7 +244,7 @@ def real(a: ComplexArray) -> numpy.ndarray:
     numpy.ndarray
         The real part of `ComplexArray`.
     """
-    return a.re
+    return a.real
 
 
 @implements(np.imag)
@@ -309,7 +261,17 @@ def imag(a: ComplexArray) -> numpy.ndarray:
     numpy.ndarray
         The imaginary part of `ComplexArray`.
     """
-    return a.im
+    return a.imag
+
+
+@implements(np.iscomplexobj)
+def iscomplexobj(a: ComplexArray) -> bool:
+    return True
+
+
+@implements(np.iscomplex)
+def iscomplex(a: ComplexArray) -> numpy.ndarray:
+    return np.full(a.shape, True)
 
 
 @implements(np.sum)
@@ -326,7 +288,7 @@ def sum(a: ComplexArray) -> complex:
     complex
         The sum of all the components of `ComplexArray`.
     """
-    return np.sum(a.re) + 1j * np.sum(a.re)
+    return np.sum(a.real) + 1j * np.sum(a.imag)
 
 
 @implements(np.prod)
@@ -346,27 +308,10 @@ def prod(a: ComplexArray) -> complex:
     return np.prod(np.asarray(a))
 
 
-@implements(np.conj)
-def conj(a: ComplexArray) -> ComplexArray:
-    """
-    Return the conjugation of `ComplexArray`.
-
-    Parameters
-    ----------
-    a: ComplexArray
-
-    Returns
-    -------
-    ComplexArray
-        The conjugation of `ComplexArray`.
-    """
-    return a.conj()
-
-
 @implements(np.linalg.norm)
-def norm(a: ComplexArray) -> ComplexArray:
+def norm(a: ComplexArray) -> float:
     """
-    Return the transposition of `ComplexArray`.
+    Return the norm `ComplexArray`.
 
     Parameters
     ----------
@@ -374,29 +319,10 @@ def norm(a: ComplexArray) -> ComplexArray:
 
     Returns
     -------
-    ComplexArray
-        The transposition of `ComplexArray`.
+    float
+        The norm of `ComplexArray`.
     """
-    return np.sqrt(np.linalg.norm(a.re)**2 + np.linalg.norm(a.im)**2)
-
-
-@implements(np.vdot)
-def vdot(a: ComplexArray, b: ComplexArray) -> complex:
-    """
-    Compute the scalar product of two `ComplexArray`s. The conjugate of `a` is
-    taken.
-
-    Parameters
-    ----------
-    a, b: ComplexArray
-
-    Returns
-    -------
-    ComplexArray
-        Scalar product between `a` and `b`.
-    """
-    return np.sum(a.re * b.re + a.im * b.im + 1j * a.re * b.im -
-                  1j * a.im * b.re)
+    return np.sqrt(np.linalg.norm(a.real)**2 + np.linalg.norm(a.imag)**2)
 
 
 @implements(np.reshape)
@@ -420,18 +346,69 @@ def reshape(a: ComplexArray,
     ComplexArray
         The reshaped `ComplexArray`.
     """
-    return ComplexArray(np.reshape(a.re, newshape=newshape, order=order),
-                        np.reshape(a.im, newshape=newshape, order=order),
-                        dtype=a.dtype,
-                        order=order,
-                        alignment=a.alignment,
-                        copy=False)
+    return ComplexArray(np.reshape(a.real, newshape=newshape, order=order),
+                        np.reshape(a.imag, newshape=newshape, order=order))
 
 
-@implements(np.may_share_memory)
-def reshape(a: ComplexArray, b: ComplexArray) -> bool:
+@implements(np.vdot)
+def vdot(a: ComplexArray, b: ComplexArray) -> complex:
     """
-    Check whetever `a` and `b` may share memory.
+    Compute the scalar product of two `ComplexArray`s. The conjugate of `a`
+    is taken.
+
+    Parameters
+    ----------
+    a, b: ComplexArray
+
+    Returns
+    -------
+    complex
+        Scalar product between `a` and `b`.
+    """
+    if isinstance(a, ComplexArray) and isinstance(b, ComplexArray):
+        return np.sum(a.real * b.real + a.imag * b.imag + 1j * a.real * b.imag -
+                      1j * a.imag * b.real)
+    else:
+        return np.vdot(np.asarray(a), np.asarray(b))
+
+
+def _shares_memory(a: ComplexArray | numpy.ndarray,
+                   b: ComplexArray | numpy.ndarray, _func: callable) -> bool:
+    """
+    Check whetever `a` and `b` share memory.
+
+    Parameters
+    ----------
+    a, b: ComplexArray | numpy.ndarray
+
+    Returns
+    -------
+    bool
+        `True` is `a` and `b` share memory, and `False` otherwise.
+    """
+
+    # Expand 'a' if a is a ComplexArray
+    if isinstance(a, ComplexArray):
+        return any(_shares_memory(x, b, _func=_func) for x in (a.real, a.imag))
+
+    # Otherwise ...
+    else:
+
+        # Expand 'b' if b is a ComplexArray
+        if isinstance(b, ComplexArray):
+            return any(
+                _shares_memory(a, x, _func=_func) for x in (b.real, b.imag))
+
+        # Check if memory is shared
+        else:
+            return _func(a, b)
+
+
+@implements(np.shares_memory)
+def shares_memory(a: ComplexArray | numpy.ndarray,
+                  b: ComplexArray | numpy.ndarray) -> bool:
+    """
+    Check whetever `a` and `b` share memory.
 
     Parameters
     ----------
@@ -440,7 +417,24 @@ def reshape(a: ComplexArray, b: ComplexArray) -> bool:
     Returns
     -------
     bool
+        `True` is `a` and `b` share memory, and `False` otherwise.
+    """
+    return _shares_memory(a, b, _func=np.shares_memory)
+
+
+@implements(np.may_share_memory)
+def may_share_memory(a: ComplexArray | numpy.ndarray,
+                     b: ComplexArray | numpy.ndarray) -> bool:
+    """
+    Check whetever `a` and `b` may share memory.
+
+    Parameters
+    ----------
+    a, b: ComplexArray | numpy.ndarray
+
+    Returns
+    -------
+    bool
         `True` is `a` and `b` may share memory, and `False` otherwise.
     """
-    return any(
-        np.may_share_memory(x, y) for x in (a.re, a.im) for y in (b.re, b.im))
+    return _shares_memory(a, b, _func=np.may_share_memory)
