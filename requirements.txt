@@ -1,5 +1,4 @@
 autoray
-baytune
 cirq
 cotengra @ git+https://github.com/jcmgray/cotengra@master
 dask
