@@ -211,7 +211,7 @@ def simulate(circuit: {Circuit, TensorNetwork},
         `cotengra` for more information).
     methods: list[str] (default: ['kahypar', 'greedy'])
         Heuristics used by `cotengra` to find optimal contraction.
-    optlib: str (default: 'baytune')
+    optlib: str (default: 'optuna')
         Library used by `cotengra` to tune hyper-parameters while looking for
         the best contraction.
     sampler: str (default: 'GP')
@@ -343,7 +343,7 @@ def simulate(circuit: {Circuit, TensorNetwork},
         kwargs.setdefault('max_time', 120)
         kwargs.setdefault('max_repeats', 16)
         kwargs.setdefault('minimize', 'combo')
-        kwargs.setdefault('optlib', 'baytune')
+        kwargs.setdefault('optlib', 'optuna')
         kwargs.setdefault('sampler', 'GP')
         kwargs.setdefault('target_largest_intermediate', 0)
         kwargs.setdefault('max_largest_intermediate', 2**26)
