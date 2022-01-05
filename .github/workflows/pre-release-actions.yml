@@ -70,7 +70,7 @@ jobs:
 
   macos_wheel:
     needs: linux_wheel
-    runs-on: macos-10.15
+    runs-on: macos-latest
     strategy:
       matrix:
         python-version: [ 3.7 ]
