@@ -58,10 +58,10 @@ def get_alignment(a: np.ndarray) -> int:
         raise TypeError("'a' is unsupported")
 
     # Get largest base
-    b = int(np.log2(len(a.ravel()))) + 1
+    b = 200
 
     # Get best alignment
-    return next(2**x for x in range(b, 0, -1) if (a.ctypes.data % 2**x) == 0)
+    return next(2**(x - 1) for x in range(1, b) if (a.ctypes.data % 2**x) != 0)
 
 
 def empty(shape: any,
