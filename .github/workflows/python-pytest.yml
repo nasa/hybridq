@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [cp37-cp37, cp38-cp38, cp39-cp39]
+        version: [cp37-cp37m, cp38-cp38, cp39-cp39]
         name: ${{fromJson(needs.collect.outputs.matrix)}}
     steps:
       - name: Checkout repository
@@ -34,13 +34,15 @@ jobs:
       - name: Build HybridQ container
         env:
           PYTHON_VERSION: ${{ matrix.version }}
-          NAME: ${{ matrix.name }}
         run: |
           docker-compose build --build-arg ARCH=x86-64 \
+                               --build-arg SKIP_PRE_CACHING=true \
                                --build-arg BASELINE=docker.io/smandra/hybridq-baseline:$PYTHON_VERSION \
                                hybridq
 
       - name: Run tests
+        env:
+          NAME: ${{ matrix.name }}
         run: |
           docker run --rm hybridq bash -c 'python -m pip install pytest-random-order && \
             python -m pytest -sv --random-order -k ${NAME}__ /opt/hybridq/tests/tests.py'
