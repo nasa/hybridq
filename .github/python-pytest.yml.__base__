@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        py: [[[:PYTHON_VERSIONS:]]]
+        py: [[:PYTHON_VERSIONS:]]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
