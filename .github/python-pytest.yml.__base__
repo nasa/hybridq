@@ -1,4 +1,4 @@
-name: Python ([[::PYTHON_VERSION::]]) PyTest - [[:TESTNAME:]]
+name: PyTest - [[:TESTNAME:]]
 
 on:
   push:
@@ -9,14 +9,19 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        py: [[[:PYTHON_VERSIONS:]]]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Build HybridQ container
+        env: |
+          PYTHON_VERSION: ${{ matrix.py }}
         run: |
           docker-compose build --build-arg ARCH=x86-64 \
-                               --build-arg BASELINE=docker.io/smandra/hybridq-baseline:[[::PYTHON_VERSION::]] \
+                               --build-arg BASELINE=docker.io/smandra/hybridq-baseline:$PYTHON_VERSION \
                                hybridq
 
       - name: Run tests
