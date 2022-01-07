@@ -44,5 +44,5 @@ jobs:
         env:
           NAME: ${{ matrix.name }}
         run: |
-          docker run --rm hybridq bash -c 'python -m pip install pytest-random-order && \
-            python -m pytest -sv --random-order -k ${NAME}__ /opt/hybridq/tests/tests.py'
+          docker run --rm hybridq bash -c "python -m pip install pytest-random-order && \
+                                           python -m pytest -sv --random-order -k ${NAME}__ /opt/hybridq/tests/tests.py"
