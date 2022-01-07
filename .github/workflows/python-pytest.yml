@@ -1,4 +1,4 @@
-name: PyTest - [[:TESTNAME:]]
+name: PyTest
 
 on:
   push:
@@ -36,12 +36,11 @@ jobs:
           PYTHON_VERSION: ${{ matrix.version }}
           NAME: ${{ matrix.name }}
         run: |
-          echo $PYTHON_VERSION $NAME
-          #docker-compose build --build-arg ARCH=x86-64 \
-          #                     --build-arg BASELINE=docker.io/smandra/hybridq-baseline:$PYTHON_VERSION \
-          #                     hybridq
+          docker-compose build --build-arg ARCH=x86-64 \
+                               --build-arg BASELINE=docker.io/smandra/hybridq-baseline:$PYTHON_VERSION \
+                               hybridq
 
-      #- name: Run tests
-      #  run: |
-      #    docker run --rm hybridq bash -c 'python -m pip install pytest-random-order && \
-      #      python -m pytest -sv --random-order -k ${NAME}__ /opt/hybridq/tests/tests.py'
+      - name: Run tests
+        run: |
+          docker run --rm hybridq bash -c 'python -m pip install pytest-random-order && \
+            python -m pytest -sv --random-order -k ${NAME}__ /opt/hybridq/tests/tests.py'
