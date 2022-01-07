@@ -27,5 +27,4 @@ for name in $TEST_NAMES; do
   cat .github/python-pytest.yml.__base__ | \
     sed -e "s/\[\[:TESTNAME:\]\]/${name}/g" \
         -e "s/\[\[:PYTHON_VERSIONS:\]\]/${PYTHON_VERSIONS}/g" > ".github/workflows/python-pytest_${name}.yml"
-  break
 done
