@@ -24,15 +24,20 @@ Types
 
 Attributes
 ----------
-gmon54: QpuLayout
+layout: QpuLayout
     Qubits available in Google Sycamore QPU.
+
+get_layers: callable[QpuLayout] -> dict[str, list[Coupling]]
+    Given a `QpuLayout` returns layers of couplings as defined in
+    "Quantum supremacy using a programmable superconducting processor"
+    [Nature 574 (7779), 505-510].
 """
 
 from __future__ import annotations
 from typing import List, Tuple, Callable
 from hybridq.utils import sort, argsort
 
-__all__ = ['gmon54', 'get_layers']
+__all__ = ['layout', 'gmon54', 'get_layers']
 
 # Define Qubit type
 Qubit = Tuple[int, int]
@@ -44,7 +49,7 @@ Coupling = Tuple[Qubit, Qubit]
 QpuLayout = List[Qubit]
 
 # (x,y) layout of Google Sycamore QPU
-gmon54 = [
+layout = [
     (0, 5), (0, 6), (1, 4), (1, 5), (1, 6), (1, 7), (2, 4), (2, 5), (2, 6),
     (2, 7), (2, 8), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8),
     (3, 9), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8),
@@ -52,6 +57,9 @@ gmon54 = [
     (5, 8), (6, 1), (6, 2), (6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (7, 2),
     (7, 3), (7, 4), (7, 5), (7, 6), (8, 3), (8, 4), (8, 5), (9, 4)
 ]
+
+# For consistency with previous HybridQ versions
+gmon54 = layout
 
 
 def _in_simplifiable_layout(layout_idx: int) -> Callable[[Coupling], bool]:
@@ -100,6 +108,7 @@ def get_layers(qpu_layout: list[Qubit]) -> dict[str, list[Coupling]]:
 
     Example
     -------
+    >>> from hybridq.architecture.google.sycamore import layout as gmon54, get_layers
     >>> from hybridq.architecture.plot import plot_qubits
     >>> qpu_layout = [(x, y) for x, y in gmon54 if x + y < 10]
     >>> layers = get_layers(qpu_layout=qpu_layout)
@@ -122,31 +131,14 @@ def get_layers(qpu_layout: list[Qubit]) -> dict[str, list[Coupling]]:
 
     .. image:: ../../images/qpu_layout_plot_small.png
     """
+    from hybridq.architecture.utils import get_all_couplings
 
-    layer_A = list(
-        filter(_in_supremacy_layout(1), get_all_couplings(qpu_layout)))
-    layer_B = list(
-        filter(_in_supremacy_layout(2), get_all_couplings(qpu_layout)))
-    layer_C = list(
-        filter(_in_supremacy_layout(3), get_all_couplings(qpu_layout)))
-    layer_D = list(
-        filter(_in_supremacy_layout(0), get_all_couplings(qpu_layout)))
-    layer_E = list(
-        filter(_in_simplifiable_layout(0), get_all_couplings(qpu_layout)))
-    layer_F = list(
-        filter(_in_simplifiable_layout(2), get_all_couplings(qpu_layout)))
-    layer_G = list(
-        filter(_in_simplifiable_layout(1), get_all_couplings(qpu_layout)))
-    layer_H = list(
-        filter(_in_simplifiable_layout(3), get_all_couplings(qpu_layout)))
+    # Get all couplings
+    all_couplings = get_all_couplings(qpu_layout)
 
     return {
-        'A': layer_A,
-        'B': layer_B,
-        'C': layer_C,
-        'D': layer_D,
-        'E': layer_E,
-        'F': layer_F,
-        'G': layer_G,
-        'H': layer_H,
+        l: list(filter(f(x), all_couplings))
+        for l, f, x in zip('ABCDEFGH', [_in_supremacy_layout] * 4 +
+                           [_in_simplifiable_layout] *
+                           4, [1, 2, 3, 0, 0, 2, 1, 3])
     }
