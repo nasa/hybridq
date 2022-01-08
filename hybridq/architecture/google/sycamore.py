@@ -32,9 +32,7 @@ from __future__ import annotations
 from typing import List, Tuple, Callable
 from hybridq.utils import sort, argsort
 
-__all__ = [
-    'gmon54', 'xy_to_index', 'index_to_xy', 'get_all_couplings', 'get_layers'
-]
+__all__ = ['gmon54', 'get_layers']
 
 # Define Qubit type
 Qubit = Tuple[int, int]
@@ -54,96 +52,6 @@ gmon54 = [
     (5, 8), (6, 1), (6, 2), (6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (7, 2),
     (7, 3), (7, 4), (7, 5), (7, 6), (8, 3), (8, 4), (8, 5), (9, 4)
 ]
-
-
-# Map from (x,y) -> idx (qpu_layout order is preserved)
-def xy_to_index(qpu_layout: QpuLayout) -> dict[Qubit, int]:
-    """
-    Given `qpu_layout` of `Qubit`s, return a one-to-one between `Qubit`s and
-    indexes.
-
-    Parameters
-    ----------
-    qpu_layout: QpuLayout
-        List of `Qubit`s to use as `QpuLayout`.
-
-    Returns
-    -------
-    dict[Qubit, int]
-        One-to-one map between `Qubit`s and indexes.
-
-    Note
-    ----
-    ```xy_to_index``` and ```index_to_xy``` are by construction one the inverse
-    of the other.
-
-    Example
-    -------
-    >>> sum(q != sycamore.index_to_xy(qpu_layout=sycamore.gmon54)[x]
-    >>>     for q, x in sycamore.xy_to_index(qpu_layout=sycamore.gmon54).items())
-    0
-    """
-
-    return {q: index for index, q in enumerate(qpu_layout)}
-
-
-# Map from idx -> (x,y) (qpu_layout order is preserved)
-def index_to_xy(qpu_layout: QpuLayout) -> dict[int, Qubit]:
-    """
-    Given `qpu_layout` of `Qubit`s, return a one-to-one between indexes and
-    `Qubit`s.
-
-    Parameters
-    ----------
-    qpu_layout: QpuLayout
-        List of `Qubit`s to use as `QpuLayout`.
-
-    Returns
-    -------
-    dict[int, Qubit]
-        One-to-one map between indexes and `Qubit`s.
-
-    Note
-    ----
-    ```xy_to_index``` and ```index_to_xy``` are by construction one the inverse
-    of the other.
-
-    Example
-    -------
-    >>> sum(q != sycamore.index_to_xy(qpu_layout=sycamore.gmon54)[x]
-    >>>     for q, x in sycamore.xy_to_index(qpu_layout=sycamore.gmon54).items())
-    0
-    """
-    return {index: q for q, index in xy_to_index(qpu_layout).items()}
-
-
-def get_all_couplings(qpu_layout: QpuLayout) -> list[Coupling]:
-    """
-    Given `qpu_layout` of `Qubit`s, return all couplings between nearest
-    neighbors.
-
-    Parameters
-    ----------
-    qpu_layout: QpuLayout
-        List of `Qubit`s to use as `QpuLayout`.
-
-    Returns
-    -------
-    list[Coupling]
-        List of all possible couplings between nearest neighbor `Qubit`s.
-
-    Example
-    -------
-    >>> get_all_couplings(qpu_layout=((0, 0), (0, 1), (1, 0), (1, 1)))
-    [((0, 0), (0, 1)), ((0, 0), (1, 0)), ((0, 1), (1, 1)), ((1, 0), (1, 1))]
-    """
-
-    return sort({
-        tuple(sort(((x1, y1), (x2, y2))))
-        for x1, y1 in qpu_layout
-        for x2, y2 in qpu_layout
-        if x1 == x2 and abs(y1 - y2) == 1 or y1 == y2 and abs(x1 - x2) == 1
-    })
 
 
 def _in_simplifiable_layout(layout_idx: int) -> Callable[[Coupling], bool]:

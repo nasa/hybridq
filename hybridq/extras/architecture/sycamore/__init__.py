@@ -16,6 +16,7 @@ specific language governing permissions and limitations under the License.
 """
 
 from hybridq.architecture.google.sycamore import *
+from hybridq.architecture.utils import xy_to_index, index_to_xy, get_all_couplings
 from hybridq.utils import DeprecationWarning
 from warnings import warn
 
