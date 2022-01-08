@@ -25,6 +25,8 @@ from __future__ import annotations
 from matplotlib import pyplot as plt
 from typing import List, Tuple
 
+__all__ = ['plot_qubits']
+
 # Define Qubit type
 Qubit = Tuple[int, int]
 
