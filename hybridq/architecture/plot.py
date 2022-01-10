@@ -41,8 +41,9 @@ def plot_qubits(qpu_layout: QpuLayout,
                 layout: list[Coupling] = None,
                 subset: list[Qubit] = None,
                 selection: list[Qubit] = None,
-                figsize: tuple[int, int] = (6, 6),
-                draw_border: bool = True,
+                scale: float = 6,
+                figsize: tuple[int, int] = None,
+                draw_border: bool = False,
                 title: str = None) -> None:
     """
     Plot qubits for 2D architectures.
@@ -82,22 +83,36 @@ def plot_qubits(qpu_layout: QpuLayout,
     if selection is None:
         selection = []
 
-    plt.figure(figsize=figsize)
+    # Get ratio
+    _ratio = (max(y for _, y in qpu_layout) - min(y for _, y in qpu_layout)) / (
+        max(x for x, _ in qpu_layout) - min(x for x, _ in qpu_layout))
+
+    # Set figsize
+    plt.figure(figsize=(scale, scale * _ratio) if figsize is None else figsize)
+
+    # Plot couplings in layout
     for (x1, y1), (x2, y2) in layout:
         c = 'tab:red' if ((x1, y1) in subset) ^ (
             (x2, y2) in subset) else 'tab:green'
         plt.plot([x1, x2], [y1, y2], lw=5, c=c)
 
+    # Plot qubits
     for x, y in qpu_layout:
         c = 'tab:orange' if (x, y) in subset else 'tab:blue'
         plt.plot([x], [y], 'o', mfc='white', ms=15, mew=3, c=c)
 
+    # Plot qubits in selection
     for x, y in selection:
         plt.plot([x], [y], 's', mfc='none', ms=25, mew=3, c='tab:purple')
 
+    # Set limits of the plot
     plt.xlim(plt.xlim()[0] - 0.5, plt.xlim()[1] + 0.5)
     plt.ylim(plt.ylim()[0] - 0.5, plt.ylim()[1] + 0.5)
+
+    # Plot grid
     plt.grid(linestyle=':')
+
+    # Plot ticks
     plt.xticks(
         range(min([x for x, _ in qpu_layout]),
               max([x + 1 for x, _ in qpu_layout])))

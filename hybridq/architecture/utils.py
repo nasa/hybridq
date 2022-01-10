@@ -26,7 +26,7 @@ Types
 from __future__ import annotations
 from typing import List, Tuple, Callable
 
-__all__ = ['xy_to_index', 'index_to_xy', 'get_all_couplings']
+__all__ = ['get_layout']
 
 # Define Qubit type
 Qubit = Tuple[int, int]
@@ -38,80 +38,115 @@ Coupling = Tuple[Qubit, Qubit]
 QpuLayout = List[Qubit]
 
 
-# Map from (x,y) -> idx (qpu_layout order is preserved)
-def xy_to_index(qpu_layout: QpuLayout) -> dict[Qubit, int]:
+def get_layout(layout: str) -> tuple[list[Qubit], list[Coupling]]:
     """
-    Given `qpu_layout` of `Qubit`s, return a one-to-one between `Qubit`s and
-    indexes.
+    Given a valid `layout`, return the corresponding qubits and couplings. A
+    valid `layout` is a string with `X` representing a qubit and one of the
+    following token `/\|-` to represent a coupling.
 
     Parameters
     ----------
-    qpu_layout: QpuLayout
-        List of `Qubit`s to use as `QpuLayout`.
+    layout: str
+        A valid layout.
 
     Returns
     -------
-    dict[Qubit, int]
-        One-to-one map between `Qubit`s and indexes.
-
-    Note
-    ----
-    ```xy_to_index``` and ```index_to_xy``` are by construction one the inverse
-    of the other.
-    """
-
-    return {q: index for index, q in enumerate(qpu_layout)}
-
-
-# Map from idx -> (x,y) (qpu_layout order is preserved)
-def index_to_xy(qpu_layout: QpuLayout) -> dict[int, Qubit]:
-    """
-    Given `qpu_layout` of `Qubit`s, return a one-to-one between indexes and
-    `Qubit`s.
-
-    Parameters
-    ----------
-    qpu_layout: QpuLayout
-        List of `Qubit`s to use as `QpuLayout`.
-
-    Returns
-    -------
-    dict[int, Qubit]
-        One-to-one map between indexes and `Qubit`s.
-
-    Note
-    ----
-    ```xy_to_index``` and ```index_to_xy``` are by construction one the inverse
-    of the other.
-    """
-    return {index: q for q, index in xy_to_index(qpu_layout).items()}
-
-
-def get_all_couplings(qpu_layout: QpuLayout) -> list[Coupling]:
-    """
-    Given `qpu_layout` of `Qubit`s, return all couplings between nearest
-    neighbors.
-
-    Parameters
-    ----------
-    qpu_layout: QpuLayout
-        List of `Qubit`s to use as `QpuLayout`.
-
-    Returns
-    -------
-    list[Coupling]
-        List of all possible couplings between nearest neighbor `Qubit`s.
+    tuple[list[Qubit], list[Coupling]]
+        Qubits and couplings representing the layout
 
     Example
     -------
-    >>> get_all_couplings(qpu_layout=((0, 0), (0, 1), (1, 0), (1, 1)))
-    [((0, 0), (0, 1)), ((0, 0), (1, 0)), ((0, 1), (1, 1)), ((1, 0), (1, 1))]
-    """
-    from hybridq.utils import sort
+    # Define layout
+    layout = r\"\"\"
+      X-X
+     /  |
+    X   X
+    |   |
+    X-X-X
+    \"\"\"
 
-    return sort({
-        tuple(sort(((x1, y1), (x2, y2))))
-        for x1, y1 in qpu_layout
-        for x2, y2 in qpu_layout
-        if x1 == x2 and abs(y1 - y2) == 1 or y1 == y2 and abs(x1 - x2) == 1
-    })
+    # Get qubits and couplings
+    get_layout(layout)
+    > ([(0, 0), (0, 1), (1, 0), (1, 2), (2, 0), (2, 1), (2, 2)],
+    >  [((0, 0), (1, 0)),
+    >   ((0, 1), (0, 0)),
+    >   ((1, 0), (2, 0)),
+    >   ((1, 2), (0, 1)),
+    >   ((1, 2), (2, 2)),
+    >   ((2, 1), (2, 0)),
+    >   ((2, 2), (2, 1))])
+    """
+    # Layout must be a valid string
+    if not isinstance(layout, str):
+        raise ValueError("'layout' must be a valid string")
+
+    # Split layout and remove empty rows
+    layout = [x for x in layout.upper().split('\n') if x]
+
+    # Trim left
+    layout = [
+        l[min(next(x
+                   for x, c in enumerate(l)
+                   if c != ' ')
+              for l in layout):]
+        for l in layout
+    ]
+
+    # Layout must contain only X to indicate a qubit and either /, \ or | to indicate a coupling.
+    if any(set(l).difference(r'X-|/\ ') for l in layout):
+        raise ValueError("'layout' must be a valid layout")
+
+    # Get qubits locations
+    qubits = sorted((x, y)
+                    for y, l in enumerate(layout)
+                    for x, q in enumerate(l)
+                    if q == 'X')
+
+    # Given coupling, get qubits in coupling
+    def _get_qubits(c, x, y):
+        if c == '-':
+            return ((x - 1, y), (x + 1, y))
+        elif c == '|':
+            return ((x, y - 1), (x, y + 1))
+        elif c == '\\':
+            return ((x - 1, y - 1), (x + 1, y + 1))
+        elif c == '/':
+            return ((x + 1, y - 1), (x - 1, y + 1))
+        else:
+            raise ValueError(f"'{c}' is not supported")
+
+    # Check all couplings are valid
+    if not all(
+            all(q in qubits
+                for q in _get_qubits(c, x, y))
+            for y, l in enumerate(layout)
+            for x, c in enumerate(l)
+            if c in r'/\|-'):
+        raise ValueError("'layout' has not valid couplings")
+
+    # Get all couplings
+    couplings = sorted(
+        _get_qubits(c, x, y)
+        for y, l in enumerate(layout)
+        for x, c in enumerate(l)
+        if c in r'/\|-')
+
+    # Find common denominator of qubits indexes
+    from numpy import gcd
+    _gcd = gcd.reduce([x for q in qubits for x in q])
+
+    # If gcd is different from 1, rescale everything
+    if _gcd > 1:
+        qubits = [(x // _gcd, y // _gcd) for x, y in qubits]
+        couplings = [((x1 // _gcd, y1 // _gcd), (x2 // _gcd, y2 // _gcd))
+                     for (x1, y1), (x2, y2) in couplings]
+
+    # Reverse y
+    _sy = max(y for _, y in qubits)
+    qubits = sorted((x, _sy - y) for x, y in qubits)
+    couplings = sorted(
+        tuple(sorted(((x1, _sy - y1), (x2, _sy - y2))))
+        for (x1, y1), (x2, y2) in couplings)
+
+    # Return layout
+    return qubits, couplings

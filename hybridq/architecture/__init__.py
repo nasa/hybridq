@@ -14,14 +14,3 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-
-from __future__ import annotations
-from hybridq.extras.architecture.sycamore.sycamore import gmon54, xy_to_index, index_to_xy, get_all_couplings
-from hybridq.utils import DeprecationWarning
-from typing import List, Tuple
-from warnings import warn
-
-warn(
-    DeprecationWarning(
-        "Importing from 'hybridq.extras.architecture.sycamore' "
-        "is deprecated. Please use: 'hybridq.architecture.google.sycamore'"))

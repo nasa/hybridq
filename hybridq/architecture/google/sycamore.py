@@ -24,8 +24,14 @@ Types
 
 Attributes
 ----------
+drawing: str
+    Drawing of the Google Sycamore QPU.
+
 layout: QpuLayout
     Qubits available in Google Sycamore QPU.
+
+couplings: list[Coupling]
+    All couplings available in Google Sycamore QPU.
 
 get_layers: callable[QpuLayout] -> dict[str, list[Coupling]]
     Given a `QpuLayout` returns layers of couplings as defined in
@@ -35,9 +41,10 @@ get_layers: callable[QpuLayout] -> dict[str, list[Coupling]]
 
 from __future__ import annotations
 from typing import List, Tuple, Callable
+from hybridq.architecture.utils import get_layout
 from hybridq.utils import sort, argsort
 
-__all__ = ['layout', 'gmon54', 'get_layers']
+__all__ = ['drawing', 'layout', 'couplings', 'get_layers']
 
 # Define Qubit type
 Qubit = Tuple[int, int]
@@ -48,18 +55,37 @@ Coupling = Tuple[Qubit, Qubit]
 # Define QpuLayout
 QpuLayout = List[Qubit]
 
-# (x,y) layout of Google Sycamore QPU
-layout = [
-    (0, 5), (0, 6), (1, 4), (1, 5), (1, 6), (1, 7), (2, 4), (2, 5), (2, 6),
-    (2, 7), (2, 8), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8),
-    (3, 9), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8),
-    (4, 9), (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7),
-    (5, 8), (6, 1), (6, 2), (6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (7, 2),
-    (7, 3), (7, 4), (7, 5), (7, 6), (8, 3), (8, 4), (8, 5), (9, 4)
-]
+# Drawing
+drawing = r"""
+      X-X
+      | |
+    X-X-X-X
+    | | | |
+  X-X-X-X-X-X
+  | | | | | |
+X-X-X-X-X-X-X-X
+| | | | | | | |
+X-X-X-X-X-X-X-X-X
+  | | | | | | | |
+  X-X-X-X-X-X-X-X-X
+      | | | | | |
+      X-X-X-X-X-X
+      | | | | |
+      X-X-X-X-X
+        | | |
+        X-X-X
+          |
+          X
+"""
 
-# For consistency with previous HybridQ versions
-gmon54 = layout
+# Get couplings and layout
+layout, couplings = get_layout(drawing)
+
+# Check for consistency
+from hybridq.extras.architecture.sycamore.sycamore import gmon54 as __gmon54, \
+        get_all_couplings as __get_all_couplings
+assert (layout == __gmon54)
+assert (couplings == __get_all_couplings(__gmon54))
 
 
 def _in_simplifiable_layout(layout_idx: int) -> Callable[[Coupling], bool]:
@@ -131,13 +157,8 @@ def get_layers(qpu_layout: list[Qubit]) -> dict[str, list[Coupling]]:
 
     .. image:: ../../images/qpu_layout_plot_small.png
     """
-    from hybridq.architecture.utils import get_all_couplings
-
-    # Get all couplings
-    all_couplings = get_all_couplings(qpu_layout)
-
     return {
-        l: list(filter(f(x), all_couplings))
+        l: list(filter(f(x), couplings))
         for l, f, x in zip('ABCDEFGH', [_in_supremacy_layout] * 4 +
                            [_in_simplifiable_layout] *
                            4, [1, 2, 3, 0, 0, 2, 1, 3])
