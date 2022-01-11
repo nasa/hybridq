@@ -52,13 +52,13 @@ QpuLayout = List[Qubit]
 
 # Drawing of the QPU
 drawing = r"""
-  X-X       X     X-X     X-X
- /   \       \   /   \   /   \
-X     X-X     X-X     X-X     X
-|     | |     | |     | |     |
-X     X-X     X-X     X-X     X
- \   /   \   /   \   /   \   /
-  X-X     X-X     X-X     X-X
+  X-X     X-X     X-X     X-X     X-X
+ /   \   /   \   /   \   /   \   /   \
+X     X-X     X-X     X-X     X-X     X
+|     | |     | |     | |     | |     |
+X     X-X     X-X     X-X     X X     X
+ \   /   \   /   \   /   \   /   \   /
+  X-X     X-X     X-X     X-X     X-X
 """
 
 # Get couplings and layout
