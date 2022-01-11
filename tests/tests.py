@@ -2109,57 +2109,86 @@ def test_simulation_2__fn(n_qubits, depth):
 def test_simulation_2__stochastic(n_qubits, depth, n_samples):
     import pickle
 
-    # Get first random circuits
-    circuit_1 = Circuit(
-        utils.to_matrix_gate(g) for g in utils.compress(utils.simplify(
-            _get_rqc_non_unitary(n_qubits, depth // 2)),
-                                                        max_n_qubits=4))
+    # Stochastic simulation may fail because of the limited number of samples.
+    # To avoid false positive, let's repeat the test a couple of times and
+    # raise in the case all of them fail.
 
-    # Fix number of qubits (in case not all n_qubits qubits has beed used)
-    n_qubits = len(circuit_1.all_qubits())
+    for _ in range(3):
+        # Get first random circuits
+        circuit_1 = Circuit(
+            utils.to_matrix_gate(g) for g in utils.compress(utils.simplify(
+                _get_rqc_non_unitary(n_qubits, depth // 2)),
+                                                            max_n_qubits=4))
 
-    # Get second random circuits reusing the indexes in circuit_1
-    circuit_2 = Circuit(
-        utils.to_matrix_gate(g) for g in utils.compress(utils.simplify(
-            _get_rqc_non_unitary(
-                n_qubits, depth // 2, indexes=circuit_1.all_qubits())),
-                                                        max_n_qubits=4))
+        # Fix number of qubits (in case not all n_qubits qubits has beed used)
+        n_qubits = len(circuit_1.all_qubits())
 
-    # Get random initial_state
-    initial_state = ''.join(np.random.choice(list('01'), size=3)) + ''.join(
-        np.random.choice(list('01+-'), size=n_qubits - 3))
+        # Get second random circuits reusing the indexes in circuit_1
+        circuit_2 = Circuit(
+            utils.to_matrix_gate(g) for g in utils.compress(utils.simplify(
+                _get_rqc_non_unitary(
+                    n_qubits, depth // 2, indexes=circuit_1.all_qubits())),
+                                                            max_n_qubits=4))
 
-    # Add a stochastic gate
-    _prob = np.random.random(20)
-    _prob /= np.sum(_prob)
-    _gates = _get_rqc_non_unitary(n_qubits, 20, indexes=circuit_1.all_qubits())
-    _stoc_gate = Gate('STOC', gates=_gates, p=_prob)
+        # Get random initial_state
+        initial_state = ''.join(np.random.choice(list('01'), size=3)) + ''.join(
+            np.random.choice(list('01+-'), size=n_qubits - 3))
 
-    # Check pickle
-    assert (_stoc_gate == pickle.loads(pickle.dumps(_stoc_gate)))
+        # Add a stochastic gate
+        _prob = np.random.random(20)
+        _prob /= np.sum(_prob)
+        _gates = _get_rqc_non_unitary(n_qubits,
+                                      20,
+                                      indexes=circuit_1.all_qubits())
+        _stoc_gate = Gate('STOC', gates=_gates, p=_prob)
 
-    # Get exact result
-    _psi_exact = np.zeros((2,) * n_qubits, dtype='complex64')
-    for gate, p in tqdm(zip(_stoc_gate.gates, _stoc_gate.p)):
-        _psi_exact += p * simulation.simulate(circuit_1 + [gate] + circuit_2,
-                                              initial_state=initial_state,
-                                              optimize='evolution',
-                                              simplify=False,
-                                              compress=0)
+        # Check pickle
+        assert (_stoc_gate == pickle.loads(pickle.dumps(_stoc_gate)))
 
-    # Sample
-    _psi_sample = np.zeros((2,) * n_qubits, dtype='complex64')
-    for _ in tqdm(range(n_samples)):
-        _psi_sample += simulation.simulate(circuit_1 + [_stoc_gate] + circuit_2,
-                                           initial_state=initial_state,
-                                           optimize='evolution',
-                                           allow_sampling=True,
-                                           simplify=False,
-                                           compress=0)
-    _psi_sample /= n_samples
+        # Get exact result
+        _psi_exact = np.zeros((2,) * n_qubits, dtype='complex64')
+        for gate, p in tqdm(zip(_stoc_gate.gates, _stoc_gate.p)):
+            _psi_exact += p * simulation.simulate(
+                circuit_1 + [gate] + circuit_2,
+                initial_state=initial_state,
+                optimize='evolution',
+                simplify=False,
+                compress=0)
 
-    # Check if close
-    assert_allclose(_psi_exact, _psi_sample, atol=1 / np.sqrt(n_samples))
+        # Sample
+        _psi_sample = np.zeros((2,) * n_qubits, dtype='complex64')
+        for _ in tqdm(range(n_samples)):
+            _psi_sample += simulation.simulate(circuit_1 + [_stoc_gate] +
+                                               circuit_2,
+                                               initial_state=initial_state,
+                                               optimize='evolution',
+                                               allow_sampling=True,
+                                               simplify=False,
+                                               compress=0)
+        _psi_sample /= n_samples
+
+        # Check if close
+        try:
+            # Try assert
+            assert_allclose(_psi_exact,
+                            _psi_sample,
+                            atol=1 / np.sqrt(n_samples))
+
+            # If it doesn't fail return
+            return
+
+        except Exception as e:
+            from sys import stderr
+
+            # Print exception
+            print(e, file=stderr)
+
+            # Continue
+            continue
+
+    # If failed all the times, raise last exception
+    else:
+        raise RuntimeError("All tests have failed")
 
 
 @pytest.mark.parametrize('n_qubits,depth',
