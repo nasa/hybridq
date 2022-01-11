@@ -53,7 +53,7 @@ _get_rqc_unitary = partial_func(get_rqc,
                                 use_random_indexes=True,
                                 use_unitary_only=True)
 
-assert_allclose = partial_func(np.testing.assert_allclose, rtol=1e-4, atol=1e-4)
+assert_allclose = partial_func(np.testing.assert_allclose, rtol=1e-3, atol=1e-3)
 
 
 @pytest.fixture(autouse=True)
@@ -2835,7 +2835,7 @@ def test_noise_1__GlobalDepolarizingChannel(nq, p):
     rho_v = np.reshape(rho, (d**2, 1))
     rho_t = np.reshape(E @ rho_v, (d, d))
 
-    np.testing.assert_array_almost_equal(expected, rho_t, decimal=6)
+    assert_allclose(expected, rho_t)
 
 
 def test_noise_1__local_channels():
@@ -2886,15 +2886,15 @@ def test_noise_1__local_channels():
                                      final_state='abc.abc.',
                                      optimize='tn')
 
-    np.testing.assert_array_almost_equal(rho0, rho0_expected)
-    np.testing.assert_array_almost_equal(rho1, rho1_expected)
-    np.testing.assert_array_almost_equal(rho2, rho2_expected)
-    np.testing.assert_array_almost_equal(rho3, rho3_expected)
+    assert_allclose(rho0, rho0_expected)
+    assert_allclose(rho1, rho1_expected)
+    assert_allclose(rho2, rho2_expected)
+    assert_allclose(rho3, rho3_expected)
 
-    np.testing.assert_array_almost_equal(rho0_tn, rho0_expected)
-    np.testing.assert_array_almost_equal(rho1_tn, rho1_expected)
-    np.testing.assert_array_almost_equal(rho2_tn, rho2_expected)
-    np.testing.assert_array_almost_equal(rho3_tn, rho3_expected)
+    assert_allclose(rho0_tn, rho0_expected)
+    assert_allclose(rho1_tn, rho1_expected)
+    assert_allclose(rho2_tn, rho2_expected)
+    assert_allclose(rho3_tn, rho3_expected)
 
 
 @pytest.mark.parametrize('n', [1, 2])
@@ -2916,7 +2916,7 @@ def test_noise_1__choi(n):
     # trace out first n qubits representing the identity part
     rho_t_choi = ptrace(np.kron(np.eye(d), rho.T) @ C, list(range(n)))
 
-    np.testing.assert_array_almost_equal(rho_t, rho_t_choi)
+    assert_allclose(rho_t, rho_t_choi)
 
 
 @pytest.mark.parametrize('n_cycles', [1, 5, 10, 20])
@@ -2942,8 +2942,8 @@ def test_noise_1__add_noise(p_depol, n_cycles):
     P_ideal = (1 - p_depol)**n_cycles
     rho_expected = P_ideal * rho_ideal + ((1 - P_ideal) / 2) * np.eye(2)
 
-    np.testing.assert_array_almost_equal(rho_depol, rho_expected)
-    np.testing.assert_array_almost_equal(rho_depol, rho_dephase)
+    assert_allclose(rho_depol, rho_expected)
+    assert_allclose(rho_depol, rho_dephase)
 
 
 def test_noise_1__is_channel():
@@ -2995,12 +2995,12 @@ def test_circuit__unitary_sample(p):
     expected = (1 - p) * np.outer(psi0.conj(), psi0) + p * np.eye(2) / 2
 
     # first check the density matrix sampler gives correct result
-    np.testing.assert_array_almost_equal(rho_dm, expected)
+    assert_allclose(rho_dm, expected)
 
     # now check the sampling approach.
     # since sampling takes a long time to converge,
     # we only check for 2 decimal places.
-    np.testing.assert_array_almost_equal(rho, expected, decimal=2)
+    assert_allclose(rho, expected, rtol=1e-2, atol=1e-2)
 
 
 @pytest.mark.parametrize('gamma', [0.0, 0.5, 1.0])
@@ -3044,7 +3044,7 @@ def test_circuit__non_unitary_sample(gamma, p):
 
     # since sampling takes a long time to converge,
     # we only check for 2 decimal places.
-    np.testing.assert_array_almost_equal(rho, rho_dm, decimal=2)
+    assert_allclose(rho, rho_dm, rtol=1e-2, atol=1e-2)
 
 
 #########################################################################
