@@ -86,6 +86,9 @@ def get_random_gate(randomize_power: bool = True,
         M += 1j * (2 * np.random.random((2**n_qubits, 2**n_qubits)) - 1)
         M /= 2
 
+        # Normalize random matrix
+        M /= np.sqrt(np.linalg.norm(np.linalg.eigvalsh(M.conj().T @ M)))
+
         # Get gate
         gate = MatrixGate(M)
 
