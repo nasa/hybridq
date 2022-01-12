@@ -44,7 +44,7 @@ def plot_qubits(qpu_layout: QpuLayout,
                 scale: float = 6,
                 figsize: tuple[int, int] = None,
                 draw_border: bool = False,
-                title: str = None) -> None:
+                title: str = None) -> matplotlib.figure.Figure:
     """
     Plot qubits for 2D architectures.
 
@@ -61,9 +61,9 @@ def plot_qubits(qpu_layout: QpuLayout,
     figsize: tuple[int, int], optional
         Size of figure.
     draw_border: bool, optional
-        Draw border around qubits in `qpu_layout`.
+        Draw border around qubits in `qpu_layout` (default: False).
     title: str, optional
-        Add title to plot.
+        Add title to plot (default: "").
 
     Example
     -------
@@ -88,7 +88,8 @@ def plot_qubits(qpu_layout: QpuLayout,
         max(x for x, _ in qpu_layout) - min(x for x, _ in qpu_layout))
 
     # Set figsize
-    plt.figure(figsize=(scale, scale * _ratio) if figsize is None else figsize)
+    fig = plt.figure(figsize=(scale,
+                              scale * _ratio) if figsize is None else figsize)
 
     # Plot couplings in layout
     for (x1, y1), (x2, y2) in layout:
@@ -150,4 +151,8 @@ def plot_qubits(qpu_layout: QpuLayout,
                                  ls='-',
                                  lw=1.5)
 
-    plt.show()
+    # Close plot
+    plt.close()
+
+    # Return figure
+    return fig
