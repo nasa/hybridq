@@ -20,28 +20,69 @@ jobs:
         echo "::set-output name=matrix::${NAMES}"
 
   build:
-    runs-on: ubuntu-latest
     needs: collect
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [cp37-cp37m, cp38-cp38, cp39-cp39]
+    steps:
+      - name: Build
+        env:
+          PYTHON_VERSION: ${{ matrix.version }}
+        run: |
+          docker pull docker.io/smandra/hybridq-baseline:$PYTHON_VERSION
+          docker save docker.io/smandra/hybridq-baseline:$PYTHON_VERSION > /tmp/hybridq_baseline_${PYTHON_VERSION}.tar
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: hybridq_baseline_${{ matrix.version }}
+          path: /tmp/hybridq_baseline_${{ matrix.version }}.tar
+          retention-days: 1
+
+  run:
+    needs: [build, collect]
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         version: [cp37-cp37m, cp38-cp38, cp39-cp39]
         name: ${{fromJson(needs.collect.outputs.matrix)}}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Build HybridQ container
-        env:
-          PYTHON_VERSION: ${{ matrix.version }}
-        run: |
-          docker-compose build --build-arg ARCH=x86-64 \
-                               --build-arg SKIP_PRE_CACHING=true \
-                               --build-arg BASELINE=docker.io/smandra/hybridq-baseline:$PYTHON_VERSION \
-                               hybridq
-
-      - name: Run tests
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: hybridq_baseline_${{ matrix.version }}
+          path: /tmp
+      - name: Load docker image
         env:
           NAME: ${{ matrix.name }}
+          PYTHON_VERSION: ${{ matrix.version }}
         run: |
-          docker run --rm hybridq bash -c "python -m pip install pytest-random-order && \
-                                           python -m pytest -sv --random-order -k ${NAME}__ /opt/hybridq/tests/tests.py"
+          docker load --input /tmp/hybridq_baseline_${PYTHON_VERSION}.tar
+          docker images -a
+
+  #build:
+  #  runs-on: ubuntu-latest
+  #  needs: collect
+  #  strategy:
+  #    matrix:
+  #      version: [cp37-cp37m, cp38-cp38, cp39-cp39]
+  #      name: ${{fromJson(needs.collect.outputs.matrix)}}
+  #  steps:
+  #    - name: Checkout repository
+  #      uses: actions/checkout@v2
+
+  #    - name: Build HybridQ container
+  #      env:
+  #        PYTHON_VERSION: ${{ matrix.version }}
+  #      run: |
+  #        docker-compose build --build-arg ARCH=x86-64 \
+  #                             --build-arg SKIP_PRE_CACHING=true \
+  #                             --build-arg BASELINE=docker.io/smandra/hybridq-baseline:$PYTHON_VERSION \
+  #                             hybridq
+
+  #    - name: Run tests
+  #      env:
+  #        NAME: ${{ matrix.name }}
+  #      run: |
+  #        docker run --rm hybridq bash -c "python -m pip install pytest-random-order && \
+  #                                         python -m pytest -sv --random-order -k ${NAME}__ /opt/hybridq/tests/tests.py"
