@@ -16,7 +16,8 @@ specific language governing permissions and limitations under the License.
 """
 
 from __future__ import annotations
-from hybridq.extras.architecture.sycamore.sycamore import gmon54, xy_to_index, index_to_xy, get_all_couplings
+from hybridq.extras.architecture.sycamore.sycamore import gmon54, xy_to_index, \
+        index_to_xy, get_all_couplings, get_layers
 from hybridq.utils import DeprecationWarning
 from typing import List, Tuple
 from warnings import warn
