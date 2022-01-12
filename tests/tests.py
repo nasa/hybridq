@@ -1021,7 +1021,7 @@ def test_gates__commutation(dummy):
 
     # Check commutation
     assert (np.allclose(U1 @ U2, U2 @ U1,
-                        atol=_atol) == g1.commutes_with(g2, atol=_atol))
+                        atol=1e-5) == g1.commutes_with(g2, atol=1e-5))
 
 
 ################################ TEST GATE UTILS ################################
