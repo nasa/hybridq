@@ -1212,7 +1212,7 @@ def test_circuit__projection(n_qubits, n_gates):
     import pickle
 
     # Generate random circuit
-    circuit = _get_rqc_non_unitary(n_qubits, n_gates)
+    circuit = _get_rqc_unitary(n_qubits, n_gates)
 
     # Get qubits
     qubits = circuit.all_qubits()
