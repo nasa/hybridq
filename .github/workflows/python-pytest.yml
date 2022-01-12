@@ -17,17 +17,19 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.version }}
         run: |
-          docker pull docker.io/smandra/hybridq-baseline:$PYTHON_VERSION
-          docker save docker.io/smandra/hybridq-baseline:$PYTHON_VERSION > /tmp/hybridq_baseline_${PYTHON_VERSION}.tar
+          docker-compose build --build-arg ARCH=x86-64 \
+                               --build-arg SKIP_PRE_CACHING=true \
+                               --build-arg BASELINE=docker.io/smandra/hybridq-baseline:$PYTHON_VERSION \
+                               hybridq
+          docker save hybridq > /tmp/hybridq_${PYTHON_VERSION}.tar
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: hybridq_baseline_${{ matrix.version }}
-          path: /tmp/hybridq_baseline_${{ matrix.version }}.tar
+          name: hybridq_${{ matrix.version }}
+          path: /tmp/hybridq_${{ matrix.version }}.tar
           retention-days: 1
 
   collect:
-    needs: build
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -50,14 +52,14 @@ jobs:
   #    - name: Download artifact
   #      uses: actions/download-artifact@v2
   #      with:
-  #        name: hybridq_baseline_${{ matrix.version }}
+  #        name: hybridq_${{ matrix.version }}
   #        path: /tmp
   #    - name: Load docker image
   #      env:
   #        NAME: ${{ matrix.name }}
   #        PYTHON_VERSION: ${{ matrix.version }}
   #      run: |
-  #        docker load --input /tmp/hybridq_baseline_${PYTHON_VERSION}.tar
+  #        docker load --input /tmp/hybridq_${PYTHON_VERSION}.tar
   #        docker images -a
 
   #build:
