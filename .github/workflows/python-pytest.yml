@@ -47,7 +47,7 @@ jobs:
 
     - id: set-matrix
       run: |
-        NAMES=$(echo [$(cat tests/tests.py | grep ^'def test' | sed -e 's/def test_//g' -e 's/__.*//g' | sort -g | uniq | awk '{print "\""$1"\"" }' | tr '\n' ',' | sed 's/.$//g')])
+        NAMES=$(echo [$(cat tests/tests.py | grep -o -P '(?<=def )test.*(?=\()' | tr '\n' ',' | sed 's/,$//')])
         echo "::set-output name=matrix::${NAMES}"
 
   run:
@@ -78,33 +78,5 @@ jobs:
           NAME: ${{ matrix.name }}
           PYTHON_VERSION: ${{ matrix.version }}
         run: |
-          docker run --rm hybridq:${PYTHON_VERSION} bash -c "python -m pip install pytest-random-order && \
-                                                             python -m pytest -sv --random-order \
-                                                                  -k ${NAME}__ /opt/hybridq/tests/tests.py"
-
-  #build:
-  #  runs-on: ubuntu-latest
-  #  needs: collect
-  #  strategy:
-  #    matrix:
-  #      version: [cp37-cp37m, cp38-cp38, cp39-cp39]
-  #      name: ${{fromJson(needs.collect.outputs.matrix)}}
-  #  steps:
-  #    - name: Checkout repository
-  #      uses: actions/checkout@v2
-
-  #    - name: Build HybridQ container
-  #      env:
-  #        PYTHON_VERSION: ${{ matrix.version }}
-  #      run: |
-  #        docker-compose build --build-arg ARCH=x86-64 \
-  #                             --build-arg SKIP_PRE_CACHING=true \
-  #                             --build-arg BASELINE=docker.io/smandra/hybridq-baseline:$PYTHON_VERSION \
-  #                             hybridq
-
-  #    - name: Run tests
-  #      env:
-  #        NAME: ${{ matrix.name }}
-  #      run: |
-  #        docker run --rm hybridq bash -c "python -m pip install pytest-random-order && \
-  #                                         python -m pytest -sv --random-order -k ${NAME}__ /opt/hybridq/tests/tests.py"
+          docker run --rm hybridq:${PYTHON_VERSION} \
+            bash -c "python -m pytest -sv /opt/hybridq/tests/tests.py::$NAME"
