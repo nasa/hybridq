@@ -53,7 +53,13 @@ _get_rqc_unitary = partial_func(get_rqc,
                                 use_random_indexes=True,
                                 use_unitary_only=True)
 
-assert_allclose = partial_func(np.testing.assert_allclose, rtol=1e-4, atol=1e-4)
+# Define tollerance
+_atol = 1e-3
+
+# Define assert function
+assert_allclose = partial_func(np.testing.assert_allclose,
+                               rtol=_atol,
+                               atol=_atol)
 
 
 @pytest.fixture(autouse=True)
@@ -894,7 +900,7 @@ def test_gates__measure(n_qubits, k):
     assert_allclose(order, new_order)
 
     # Check normalization
-    assert (np.isclose(np.linalg.norm(psi_norm.flatten()), 1, atol=1e-3))
+    assert (np.isclose(np.linalg.norm(psi_norm.flatten()), 1, atol=_atol))
 
     # Check that psi and psi_norm are the same after normalization
     assert_allclose(psi / np.linalg.norm(psi.flatten()), psi_norm)
@@ -966,7 +972,7 @@ def test_gates__projection(n_qubits, k):
     psi_norm, _ = P(r, order)
 
     # Check normalization
-    assert (np.isclose(np.linalg.norm(psi_norm.flatten()), 1, atol=1e-3))
+    assert (np.isclose(np.linalg.norm(psi_norm.flatten()), 1, atol=_atol))
 
     # Check that psi and psi_norm are the same after normalization
     assert_allclose(psi / np.linalg.norm(psi.flatten()), psi_norm)
@@ -1161,16 +1167,16 @@ def test_circuit__conj_T_adj_inv(n_qubits, n_gates):
 
     # Check single gates
     assert (all(
-        np.allclose(g.adj().matrix(), g.matrix().conj().T, atol=1e-3)
+        np.allclose(g.adj().matrix(), g.matrix().conj().T, atol=_atol)
         for g in tqdm(circuit)))
     assert (all(
-        np.allclose(g.conj().matrix(), g.matrix().conj(), atol=1e-3)
+        np.allclose(g.conj().matrix(), g.matrix().conj(), atol=_atol)
         for g in tqdm(circuit)))
     assert (all(
-        np.allclose(g.T().matrix(), g.matrix().T, atol=1e-3)
+        np.allclose(g.T().matrix(), g.matrix().T, atol=_atol)
         for g in tqdm(circuit)))
     assert (all(
-        np.allclose(g.inv().matrix(), np.linalg.inv(g.matrix()), atol=1e-3)
+        np.allclose(g.inv().matrix(), np.linalg.inv(g.matrix()), atol=_atol)
         for g in tqdm(circuit)))
 
     assert (all(g1.adj().isclose(g2)
@@ -1206,7 +1212,7 @@ def test_circuit__projection(n_qubits, n_gates):
     import pickle
 
     # Generate random circuit
-    circuit = _get_rqc_non_unitary(n_qubits, n_gates)
+    circuit = _get_rqc_unitary(n_qubits, n_gates)
 
     # Get qubits
     qubits = circuit.all_qubits()
@@ -1464,7 +1470,7 @@ def test_circuit_utils__circuit_compress(use_matrix_commutation, max_n_qubits):
     # Two circuits should be identical
     assert (utils.isclose(Circuit(g for c in compressed_circuit for g in c),
                           circuit,
-                          atol=1e-5,
+                          atol=_atol,
                           verbose=True))
 
 
@@ -1684,7 +1690,7 @@ def test_cliffords__circuit_1(n_qubits, n_gates, compress, parallel):
 
     # Check
     assert (all(
-        np.isclose(all_op[k], op2[k], atol=1e-3) for k in chain(all_op, op2)))
+        np.isclose(all_op[k], op2[k], atol=_atol) for k in chain(all_op, op2)))
     # Contruct full operator
     U1 = np.zeros(shape=(2**n_qubits, 2**n_qubits), dtype='complex64')
     for op, ph in tqdm(all_op.items()):
@@ -1712,7 +1718,7 @@ def test_cliffords__circuit_1(n_qubits, n_gates, compress, parallel):
 
     # Check
     assert (len(all_op) == 1 and 'I' * n_qubits in all_op and
-            np.isclose(all_op['I' * n_qubits], 1, atol=1e-3))
+            np.isclose(all_op['I' * n_qubits], 1, atol=_atol))
 
 
 @pytest.mark.parametrize('n_qubits,n_gates', [(200, 1000) for _ in range(5)])
@@ -1751,7 +1757,7 @@ def test_cliffords__circuit_2(n_qubits, n_gates):
 
     # Checks
     assert (len(all_op) == 1)
-    assert (np.isclose(np.abs(next(iter(all_op.values()))), 1, atol=1e-3))
+    assert (np.isclose(np.abs(next(iter(all_op.values()))), 1, atol=_atol))
     assert (infos['n_explored_branches'] == 2)
     assert (infos['largest_n_branches_in_memory'] == 1)
     assert (infos['log2_n_expected_branches'] == 0)
@@ -2109,57 +2115,86 @@ def test_simulation_2__fn(n_qubits, depth):
 def test_simulation_2__stochastic(n_qubits, depth, n_samples):
     import pickle
 
-    # Get first random circuits
-    circuit_1 = Circuit(
-        utils.to_matrix_gate(g) for g in utils.compress(utils.simplify(
-            _get_rqc_non_unitary(n_qubits, depth // 2)),
-                                                        max_n_qubits=4))
+    # Stochastic simulation may fail because of the limited number of samples.
+    # To avoid false positive, let's repeat the test a couple of times and
+    # raise in the case all of them fail.
 
-    # Fix number of qubits (in case not all n_qubits qubits has beed used)
-    n_qubits = len(circuit_1.all_qubits())
+    for _ in range(3):
+        # Get first random circuits
+        circuit_1 = Circuit(
+            utils.to_matrix_gate(g) for g in utils.compress(utils.simplify(
+                _get_rqc_non_unitary(n_qubits, depth // 2)),
+                                                            max_n_qubits=4))
 
-    # Get second random circuits reusing the indexes in circuit_1
-    circuit_2 = Circuit(
-        utils.to_matrix_gate(g) for g in utils.compress(utils.simplify(
-            _get_rqc_non_unitary(
-                n_qubits, depth // 2, indexes=circuit_1.all_qubits())),
-                                                        max_n_qubits=4))
+        # Fix number of qubits (in case not all n_qubits qubits has beed used)
+        n_qubits = len(circuit_1.all_qubits())
 
-    # Get random initial_state
-    initial_state = ''.join(np.random.choice(list('01'), size=3)) + ''.join(
-        np.random.choice(list('01+-'), size=n_qubits - 3))
+        # Get second random circuits reusing the indexes in circuit_1
+        circuit_2 = Circuit(
+            utils.to_matrix_gate(g) for g in utils.compress(utils.simplify(
+                _get_rqc_non_unitary(
+                    n_qubits, depth // 2, indexes=circuit_1.all_qubits())),
+                                                            max_n_qubits=4))
 
-    # Add a stochastic gate
-    _prob = np.random.random(20)
-    _prob /= np.sum(_prob)
-    _gates = _get_rqc_non_unitary(n_qubits, 20, indexes=circuit_1.all_qubits())
-    _stoc_gate = Gate('STOC', gates=_gates, p=_prob)
+        # Get random initial_state
+        initial_state = ''.join(np.random.choice(list('01'), size=3)) + ''.join(
+            np.random.choice(list('01+-'), size=n_qubits - 3))
 
-    # Check pickle
-    assert (_stoc_gate == pickle.loads(pickle.dumps(_stoc_gate)))
+        # Add a stochastic gate
+        _prob = np.random.random(20)
+        _prob /= np.sum(_prob)
+        _gates = _get_rqc_non_unitary(n_qubits,
+                                      20,
+                                      indexes=circuit_1.all_qubits())
+        _stoc_gate = Gate('STOC', gates=_gates, p=_prob)
 
-    # Get exact result
-    _psi_exact = np.zeros((2,) * n_qubits, dtype='complex64')
-    for gate, p in tqdm(zip(_stoc_gate.gates, _stoc_gate.p)):
-        _psi_exact += p * simulation.simulate(circuit_1 + [gate] + circuit_2,
-                                              initial_state=initial_state,
-                                              optimize='evolution',
-                                              simplify=False,
-                                              compress=0)
+        # Check pickle
+        assert (_stoc_gate == pickle.loads(pickle.dumps(_stoc_gate)))
 
-    # Sample
-    _psi_sample = np.zeros((2,) * n_qubits, dtype='complex64')
-    for _ in tqdm(range(n_samples)):
-        _psi_sample += simulation.simulate(circuit_1 + [_stoc_gate] + circuit_2,
-                                           initial_state=initial_state,
-                                           optimize='evolution',
-                                           allow_sampling=True,
-                                           simplify=False,
-                                           compress=0)
-    _psi_sample /= n_samples
+        # Get exact result
+        _psi_exact = np.zeros((2,) * n_qubits, dtype='complex64')
+        for gate, p in tqdm(zip(_stoc_gate.gates, _stoc_gate.p)):
+            _psi_exact += p * simulation.simulate(
+                circuit_1 + [gate] + circuit_2,
+                initial_state=initial_state,
+                optimize='evolution',
+                simplify=False,
+                compress=0)
 
-    # Check if close
-    assert_allclose(_psi_exact, _psi_sample, atol=1 / np.sqrt(n_samples))
+        # Sample
+        _psi_sample = np.zeros((2,) * n_qubits, dtype='complex64')
+        for _ in tqdm(range(n_samples)):
+            _psi_sample += simulation.simulate(circuit_1 + [_stoc_gate] +
+                                               circuit_2,
+                                               initial_state=initial_state,
+                                               optimize='evolution',
+                                               allow_sampling=True,
+                                               simplify=False,
+                                               compress=0)
+        _psi_sample /= n_samples
+
+        # Check if close
+        try:
+            # Try assert
+            assert_allclose(_psi_exact,
+                            _psi_sample,
+                            atol=1 / np.sqrt(n_samples))
+
+            # If it doesn't fail return
+            return
+
+        except Exception as e:
+            from sys import stderr
+
+            # Print exception
+            print(e, file=stderr)
+
+            # Continue
+            continue
+
+    # If failed all the times, raise last exception
+    else:
+        raise RuntimeError("All tests have failed")
 
 
 @pytest.mark.parametrize('n_qubits,depth',
@@ -2414,8 +2449,8 @@ def test_simulation_5__expectation_value_2(n_qubits, depth):
                                                verbose=True,
                                                parallel=True)
 
-    assert (np.isclose(v1, v2, atol=1e-3))
-    assert (np.isclose(v1, v3, atol=1e-3))
+    assert (np.isclose(v1, v2, atol=_atol))
+    assert (np.isclose(v1, v3, atol=_atol))
 
 
 @pytest.mark.parametrize('n_qubits,depth',
@@ -2626,7 +2661,7 @@ def test_dm_1__simulation_1(n_qubits, n_gates):
     assert_allclose(_rho_1, _rho_1 @ _rho_1)
 
     # Density matrix^2 should have trace == 1
-    assert (np.isclose(np.trace(_rho_1 @ _rho_1), 1, atol=1e-3))
+    assert (np.isclose(np.trace(_rho_1 @ _rho_1), 1, atol=_atol))
 
     # Density matrix should be semi-positive definite
     assert (np.alltrue(np.round(eigvalsh(_rho_1), 5) >= 0))
@@ -2812,7 +2847,7 @@ def test_dm_3__simulation_3(n_qubits, n_gates):
     probs = _Measure(psi_1, axes=index_open_qubits, get_probs_only=True)
 
     # Check normalization
-    assert (np.isclose(np.sum(probs), 1, atol=1e-3))
+    assert (np.isclose(np.sum(probs), 1, atol=_atol))
 
     # Check
     assert_allclose(np.diag(_rho_1), probs)
@@ -2835,7 +2870,7 @@ def test_noise_1__GlobalDepolarizingChannel(nq, p):
     rho_v = np.reshape(rho, (d**2, 1))
     rho_t = np.reshape(E @ rho_v, (d, d))
 
-    np.testing.assert_array_almost_equal(expected, rho_t, decimal=6)
+    assert_allclose(expected, rho_t)
 
 
 def test_noise_1__local_channels():
@@ -2886,15 +2921,15 @@ def test_noise_1__local_channels():
                                      final_state='abc.abc.',
                                      optimize='tn')
 
-    np.testing.assert_array_almost_equal(rho0, rho0_expected)
-    np.testing.assert_array_almost_equal(rho1, rho1_expected)
-    np.testing.assert_array_almost_equal(rho2, rho2_expected)
-    np.testing.assert_array_almost_equal(rho3, rho3_expected)
+    assert_allclose(rho0, rho0_expected)
+    assert_allclose(rho1, rho1_expected)
+    assert_allclose(rho2, rho2_expected)
+    assert_allclose(rho3, rho3_expected)
 
-    np.testing.assert_array_almost_equal(rho0_tn, rho0_expected)
-    np.testing.assert_array_almost_equal(rho1_tn, rho1_expected)
-    np.testing.assert_array_almost_equal(rho2_tn, rho2_expected)
-    np.testing.assert_array_almost_equal(rho3_tn, rho3_expected)
+    assert_allclose(rho0_tn, rho0_expected)
+    assert_allclose(rho1_tn, rho1_expected)
+    assert_allclose(rho2_tn, rho2_expected)
+    assert_allclose(rho3_tn, rho3_expected)
 
 
 @pytest.mark.parametrize('n', [1, 2])
@@ -2916,7 +2951,7 @@ def test_noise_1__choi(n):
     # trace out first n qubits representing the identity part
     rho_t_choi = ptrace(np.kron(np.eye(d), rho.T) @ C, list(range(n)))
 
-    np.testing.assert_array_almost_equal(rho_t, rho_t_choi)
+    assert_allclose(rho_t, rho_t_choi)
 
 
 @pytest.mark.parametrize('n_cycles', [1, 5, 10, 20])
@@ -2942,8 +2977,8 @@ def test_noise_1__add_noise(p_depol, n_cycles):
     P_ideal = (1 - p_depol)**n_cycles
     rho_expected = P_ideal * rho_ideal + ((1 - P_ideal) / 2) * np.eye(2)
 
-    np.testing.assert_array_almost_equal(rho_depol, rho_expected)
-    np.testing.assert_array_almost_equal(rho_depol, rho_dephase)
+    assert_allclose(rho_depol, rho_expected)
+    assert_allclose(rho_depol, rho_dephase)
 
 
 def test_noise_1__is_channel():
@@ -2995,12 +3030,12 @@ def test_circuit__unitary_sample(p):
     expected = (1 - p) * np.outer(psi0.conj(), psi0) + p * np.eye(2) / 2
 
     # first check the density matrix sampler gives correct result
-    np.testing.assert_array_almost_equal(rho_dm, expected)
+    assert_allclose(rho_dm, expected)
 
     # now check the sampling approach.
     # since sampling takes a long time to converge,
     # we only check for 2 decimal places.
-    np.testing.assert_array_almost_equal(rho, expected, decimal=2)
+    assert_allclose(rho, expected, rtol=1e-2, atol=1e-2)
 
 
 @pytest.mark.parametrize('gamma', [0.0, 0.5, 1.0])
@@ -3044,7 +3079,7 @@ def test_circuit__non_unitary_sample(gamma, p):
 
     # since sampling takes a long time to converge,
     # we only check for 2 decimal places.
-    np.testing.assert_array_almost_equal(rho, rho_dm, decimal=2)
+    assert_allclose(rho, rho_dm, rtol=1e-2, atol=1e-2)
 
 
 #########################################################################
