@@ -66,14 +66,21 @@ jobs:
         with:
           name: hybridq_${{ matrix.version }}
           path: /tmp
+
       - name: Load docker image
+        env:
+          PYTHON_VERSION: ${{ matrix.version }}
+        run: |
+          docker load --input /tmp/hybridq_${PYTHON_VERSION}.tar
+
+      - name: Run test
         env:
           NAME: ${{ matrix.name }}
           PYTHON_VERSION: ${{ matrix.version }}
         run: |
-          echo $PYTHON_VERSION $NAME
-          docker load --input /tmp/hybridq_${PYTHON_VERSION}.tar
-          docker images -a
+          docker run --rm hybridq:${PYTHON_VERSION} bash -c "python -m pip install pytest-random-order && \
+                                                             python -m pytest -sv --random-order \
+                                                                  -k ${NAME}__ /opt/hybridq/tests/tests.py"
 
   #build:
   #  runs-on: ubuntu-latest
