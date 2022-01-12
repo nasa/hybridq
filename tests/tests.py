@@ -53,7 +53,13 @@ _get_rqc_unitary = partial_func(get_rqc,
                                 use_random_indexes=True,
                                 use_unitary_only=True)
 
-assert_allclose = partial_func(np.testing.assert_allclose, rtol=1e-3, atol=1e-3)
+# Define tollerance
+_atol = 1e-3
+
+# Define assert function
+assert_allclose = partial_func(np.testing.assert_allclose,
+                               rtol=_atol,
+                               atol=_atol)
 
 
 @pytest.fixture(autouse=True)
@@ -894,7 +900,7 @@ def test_gates__measure(n_qubits, k):
     assert_allclose(order, new_order)
 
     # Check normalization
-    assert (np.isclose(np.linalg.norm(psi_norm.flatten()), 1, atol=1e-3))
+    assert (np.isclose(np.linalg.norm(psi_norm.flatten()), 1, atol=_atol))
 
     # Check that psi and psi_norm are the same after normalization
     assert_allclose(psi / np.linalg.norm(psi.flatten()), psi_norm)
@@ -966,7 +972,7 @@ def test_gates__projection(n_qubits, k):
     psi_norm, _ = P(r, order)
 
     # Check normalization
-    assert (np.isclose(np.linalg.norm(psi_norm.flatten()), 1, atol=1e-3))
+    assert (np.isclose(np.linalg.norm(psi_norm.flatten()), 1, atol=_atol))
 
     # Check that psi and psi_norm are the same after normalization
     assert_allclose(psi / np.linalg.norm(psi.flatten()), psi_norm)
@@ -1015,7 +1021,7 @@ def test_gates__commutation(dummy):
 
     # Check commutation
     assert (np.allclose(U1 @ U2, U2 @ U1,
-                        atol=1e-5) == g1.commutes_with(g2, atol=1e-5))
+                        atol=_atol) == g1.commutes_with(g2, atol=_atol))
 
 
 ################################ TEST GATE UTILS ################################
@@ -1161,16 +1167,16 @@ def test_circuit__conj_T_adj_inv(n_qubits, n_gates):
 
     # Check single gates
     assert (all(
-        np.allclose(g.adj().matrix(), g.matrix().conj().T, atol=1e-3)
+        np.allclose(g.adj().matrix(), g.matrix().conj().T, atol=_atol)
         for g in tqdm(circuit)))
     assert (all(
-        np.allclose(g.conj().matrix(), g.matrix().conj(), atol=1e-3)
+        np.allclose(g.conj().matrix(), g.matrix().conj(), atol=_atol)
         for g in tqdm(circuit)))
     assert (all(
-        np.allclose(g.T().matrix(), g.matrix().T, atol=1e-3)
+        np.allclose(g.T().matrix(), g.matrix().T, atol=_atol)
         for g in tqdm(circuit)))
     assert (all(
-        np.allclose(g.inv().matrix(), np.linalg.inv(g.matrix()), atol=1e-3)
+        np.allclose(g.inv().matrix(), np.linalg.inv(g.matrix()), atol=_atol)
         for g in tqdm(circuit)))
 
     assert (all(g1.adj().isclose(g2)
@@ -1464,7 +1470,7 @@ def test_circuit_utils__circuit_compress(use_matrix_commutation, max_n_qubits):
     # Two circuits should be identical
     assert (utils.isclose(Circuit(g for c in compressed_circuit for g in c),
                           circuit,
-                          atol=1e-5,
+                          atol=_atol,
                           verbose=True))
 
 
@@ -1684,7 +1690,7 @@ def test_cliffords__circuit_1(n_qubits, n_gates, compress, parallel):
 
     # Check
     assert (all(
-        np.isclose(all_op[k], op2[k], atol=1e-3) for k in chain(all_op, op2)))
+        np.isclose(all_op[k], op2[k], atol=_atol) for k in chain(all_op, op2)))
     # Contruct full operator
     U1 = np.zeros(shape=(2**n_qubits, 2**n_qubits), dtype='complex64')
     for op, ph in tqdm(all_op.items()):
@@ -1712,7 +1718,7 @@ def test_cliffords__circuit_1(n_qubits, n_gates, compress, parallel):
 
     # Check
     assert (len(all_op) == 1 and 'I' * n_qubits in all_op and
-            np.isclose(all_op['I' * n_qubits], 1, atol=1e-3))
+            np.isclose(all_op['I' * n_qubits], 1, atol=_atol))
 
 
 @pytest.mark.parametrize('n_qubits,n_gates', [(200, 1000) for _ in range(5)])
@@ -1751,7 +1757,7 @@ def test_cliffords__circuit_2(n_qubits, n_gates):
 
     # Checks
     assert (len(all_op) == 1)
-    assert (np.isclose(np.abs(next(iter(all_op.values()))), 1, atol=1e-3))
+    assert (np.isclose(np.abs(next(iter(all_op.values()))), 1, atol=_atol))
     assert (infos['n_explored_branches'] == 2)
     assert (infos['largest_n_branches_in_memory'] == 1)
     assert (infos['log2_n_expected_branches'] == 0)
@@ -2443,8 +2449,8 @@ def test_simulation_5__expectation_value_2(n_qubits, depth):
                                                verbose=True,
                                                parallel=True)
 
-    assert (np.isclose(v1, v2, atol=1e-3))
-    assert (np.isclose(v1, v3, atol=1e-3))
+    assert (np.isclose(v1, v2, atol=_atol))
+    assert (np.isclose(v1, v3, atol=_atol))
 
 
 @pytest.mark.parametrize('n_qubits,depth',
@@ -2655,7 +2661,7 @@ def test_dm_1__simulation_1(n_qubits, n_gates):
     assert_allclose(_rho_1, _rho_1 @ _rho_1)
 
     # Density matrix^2 should have trace == 1
-    assert (np.isclose(np.trace(_rho_1 @ _rho_1), 1, atol=1e-3))
+    assert (np.isclose(np.trace(_rho_1 @ _rho_1), 1, atol=_atol))
 
     # Density matrix should be semi-positive definite
     assert (np.alltrue(np.round(eigvalsh(_rho_1), 5) >= 0))
@@ -2841,7 +2847,7 @@ def test_dm_3__simulation_3(n_qubits, n_gates):
     probs = _Measure(psi_1, axes=index_open_qubits, get_probs_only=True)
 
     # Check normalization
-    assert (np.isclose(np.sum(probs), 1, atol=1e-3))
+    assert (np.isclose(np.sum(probs), 1, atol=_atol))
 
     # Check
     assert_allclose(np.diag(_rho_1), probs)
