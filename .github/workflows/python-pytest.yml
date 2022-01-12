@@ -7,20 +7,7 @@ on:
     branches: [ main, devel ]
 
 jobs:
-  collect:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-    - id: set-matrix
-      run: |
-        NAMES=$(echo [$(cat tests/tests.py | grep ^'def test' | sed -e 's/def test_//g' -e 's/__.*//g' | sort -g | uniq | awk '{print "\""$1"\"" }' | tr '\n' ',' | sed 's/.$//g')])
-        echo "::set-output name=matrix::${NAMES}"
-
   build:
-    needs: collect
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -39,26 +26,39 @@ jobs:
           path: /tmp/hybridq_baseline_${{ matrix.version }}.tar
           retention-days: 1
 
-  run:
-    needs: [build, collect]
+  collect:
+    needs: build
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        version: [cp37-cp37m, cp38-cp38, cp39-cp39]
-        name: ${{fromJson(needs.collect.outputs.matrix)}}
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: hybridq_baseline_${{ matrix.version }}
-          path: /tmp
-      - name: Load docker image
-        env:
-          NAME: ${{ matrix.name }}
-          PYTHON_VERSION: ${{ matrix.version }}
-        run: |
-          docker load --input /tmp/hybridq_baseline_${PYTHON_VERSION}.tar
-          docker images -a
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - id: set-matrix
+      run: |
+        NAMES=$(echo [$(cat tests/tests.py | grep ^'def test' | sed -e 's/def test_//g' -e 's/__.*//g' | sort -g | uniq | awk '{print "\""$1"\"" }' | tr '\n' ',' | sed 's/.$//g')])
+        echo "::set-output name=matrix::${NAMES}"
+
+  #run:
+  #  needs: [build, collect]
+  #  runs-on: ubuntu-latest
+  #  strategy:
+  #    matrix:
+  #      version: [cp37-cp37m, cp38-cp38, cp39-cp39]
+  #      name: ${{fromJson(needs.collect.outputs.matrix)}}
+  #  steps:
+  #    - name: Download artifact
+  #      uses: actions/download-artifact@v2
+  #      with:
+  #        name: hybridq_baseline_${{ matrix.version }}
+  #        path: /tmp
+  #    - name: Load docker image
+  #      env:
+  #        NAME: ${{ matrix.name }}
+  #        PYTHON_VERSION: ${{ matrix.version }}
+  #      run: |
+  #        docker load --input /tmp/hybridq_baseline_${PYTHON_VERSION}.tar
+  #        docker images -a
 
   #build:
   #  runs-on: ubuntu-latest
