@@ -26,7 +26,7 @@ Types
 from __future__ import annotations
 from typing import List, Tuple, Callable
 
-__all__ = ['get_layout']
+__all__ = ['get_layout_from_drawing']
 
 # Define Qubit type
 Qubit = Tuple[int, int]
@@ -38,26 +38,26 @@ Coupling = Tuple[Qubit, Qubit]
 QpuLayout = List[Qubit]
 
 
-def get_layout(layout: str) -> tuple[list[Qubit], list[Coupling]]:
+def get_layout_from_drawing(drawing: str) -> tuple[list[Qubit], list[Coupling]]:
     """
-    Given a valid `layout`, return the corresponding qubits and couplings. A
-    valid `layout` is a string with `X` representing a qubit and one of the
+    Given a valid `drawing`, return the corresponding qubits and couplings. A
+    valid `drawing` is a string with `X` representing a qubit and one of the
     following token `/\|-` to represent a coupling.
 
     Parameters
     ----------
-    layout: str
+    drawing: str
         A valid layout.
 
     Returns
     -------
     tuple[list[Qubit], list[Coupling]]
-        Qubits and couplings representing the layout
+        Qubits and couplings representing the layout.
 
     Example
     -------
     # Define layout
-    layout = r\"\"\"
+    layout = r\"\"\".
       X-X
      /  |
     X   X
@@ -66,7 +66,7 @@ def get_layout(layout: str) -> tuple[list[Qubit], list[Coupling]]:
     \"\"\"
 
     # Get qubits and couplings
-    get_layout(layout)
+    get_layout_from_drawing(layout)
     > ([(0, 0), (0, 1), (1, 0), (1, 2), (2, 0), (2, 1), (2, 2)],
     >  [((0, 0), (1, 0)),
     >   ((0, 1), (0, 0)),
@@ -77,28 +77,28 @@ def get_layout(layout: str) -> tuple[list[Qubit], list[Coupling]]:
     >   ((2, 2), (2, 1))])
     """
     # Layout must be a valid string
-    if not isinstance(layout, str):
-        raise ValueError("'layout' must be a valid string")
+    if not isinstance(drawing, str):
+        raise ValueError("'drawing' must be a valid string")
 
-    # Split layout and remove empty rows
-    layout = [x for x in layout.upper().split('\n') if x]
+    # Split drawing and remove empty rows
+    drawing = [x for x in drawing.upper().split('\n') if x]
 
     # Trim left
-    layout = [
+    drawing = [
         l[min(next(x
                    for x, c in enumerate(l)
                    if c != ' ')
-              for l in layout):]
-        for l in layout
+              for l in drawing):]
+        for l in drawing
     ]
 
     # Layout must contain only X to indicate a qubit and either /, \ or | to indicate a coupling.
-    if any(set(l).difference(r'X-|/\ ') for l in layout):
-        raise ValueError("'layout' must be a valid layout")
+    if any(set(l).difference(r'X-|/\ ') for l in drawing):
+        raise ValueError("'drawing' must be a valid layout")
 
     # Get qubits locations
     qubits = sorted((x, y)
-                    for y, l in enumerate(layout)
+                    for y, l in enumerate(drawing)
                     for x, q in enumerate(l)
                     if q == 'X')
 
@@ -119,15 +119,15 @@ def get_layout(layout: str) -> tuple[list[Qubit], list[Coupling]]:
     if not all(
             all(q in qubits
                 for q in _get_qubits(c, x, y))
-            for y, l in enumerate(layout)
+            for y, l in enumerate(drawing)
             for x, c in enumerate(l)
             if c in r'/\|-'):
-        raise ValueError("'layout' has not valid couplings")
+        raise ValueError("'drawing' has not valid couplings")
 
     # Get all couplings
     couplings = sorted(
         _get_qubits(c, x, y)
-        for y, l in enumerate(layout)
+        for y, l in enumerate(drawing)
         for x, c in enumerate(l)
         if c in r'/\|-')
 
