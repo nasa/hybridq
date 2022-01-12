@@ -36,7 +36,7 @@ couplings: list[Coupling]
 
 from __future__ import annotations
 from typing import List, Tuple, Callable
-from hybridq.architecture.utils import get_layout
+from hybridq.architecture.utils import get_layout_from_drawing as get_layout
 from hybridq.utils import sort, argsort
 
 __all__ = ['drawing', 'layout', 'couplings']
