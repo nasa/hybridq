@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations under the License.
 
 # Specify Python versions
-PYTHON_VERSIONS="cp37-cp37m cp38-cp38"
+PYTHON_VERSIONS="cp37-cp37m cp38-cp38 cp39-cp39"
 
 # Get all tests names
 TEST_NAMES=$(cat tests/tests.py | grep ^'def test' | sed -e 's/def test_//g' -e 's/__.*//g' | sort -g | uniq)

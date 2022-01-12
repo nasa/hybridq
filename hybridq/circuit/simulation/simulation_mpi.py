@@ -43,6 +43,30 @@ from hybridq.utils import sort, argsort
 TensorNetwork = TypeVar('TensorNetwork')
 
 
+class __FunctionWrap:
+    """
+    Function wrapper to make unpickeable functions pickeable.
+    """
+
+    def __init__(self, f: callable = None):
+        # Save function
+        self.__f = f
+
+    def __call__(self, *args, **kwargs):
+        # Call function
+        return self.__f(*args, **kwargs)
+
+    def __getstate__(self):
+        from dill import dumps
+        # Dump state
+        return dumps(self.__dict__)
+
+    def __setstate__(self, state):
+        from dill import loads
+        # Load state
+        self.__dict__ = loads(state)
+
+
 def _simulate_tn_mpi(circuit: Circuit, initial_state: any, final_state: any,
                      optimize: any, backend: any, complex_type: any,
                      tensor_only: bool, verbose: bool, **kwargs):
@@ -62,8 +86,6 @@ def _simulate_tn_mpi(circuit: Circuit, initial_state: any, final_state: any,
     kwargs.setdefault('max_time', 120)
     kwargs.setdefault('max_repeats', 16)
     kwargs.setdefault('minimize', 'combo')
-    kwargs.setdefault('optlib', 'baytune')
-    kwargs.setdefault('sampler', 'GP')
     kwargs.setdefault('target_largest_intermediate', 0)
     kwargs.setdefault('max_largest_intermediate', 2**26)
     kwargs.setdefault('temperatures', [1.0, 0.1, 0.01])
@@ -222,16 +244,22 @@ def _simulate_tn_mpi(circuit: Circuit, initial_state: any, final_state: any,
         if optimize == 'cotengra' and kwargs['max_iterations'] > 0:
 
             # Set cotengra parameters
-            cotengra_params = lambda: ctg.HyperOptimizer(
-                methods=kwargs['methods'],
-                max_time=kwargs['max_time'],
-                max_repeats=kwargs['max_repeats'],
-                minimize=kwargs['minimize'],
-                optlib=kwargs['optlib'],
-                sampler=kwargs['sampler'],
-                progbar=False,
-                parallel=False,
-                **kwargs['cotengra'])
+            def cotengra_params():
+                # Get HyperOptimizer
+                q = ctg.HyperOptimizer(methods=kwargs['methods'],
+                                       max_time=kwargs['max_time'],
+                                       max_repeats=kwargs['max_repeats'],
+                                       minimize=kwargs['minimize'],
+                                       progbar=False,
+                                       parallel=False,
+                                       **kwargs['cotengra'])
+
+                # For some optlib, HyperOptimizer._retrieve_params is not
+                # pickeable. Let's fix the problem by hand.
+                q._retrieve_params = __FunctionWrap(q._retrieve_params)
+
+                # Return HyperOptimizer
+                return q
 
             # Get target size
             tli = kwargs['target_largest_intermediate']
