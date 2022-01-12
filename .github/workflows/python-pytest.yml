@@ -49,7 +49,7 @@ jobs:
     - id: set-matrix
       run: |
         #NAMES=$(echo [$(cat tests/tests.py | grep ^'def test' | sed -e 's/def test_//g' -e 's/__.*//g' | sort -g | uniq | awk '{print "\""$1"\"" }' | tr '\n' ',' | sed 's/.$//g')])
-        NAMES=$(echo [$(cat tests/tests.py | grep -o -P '(?<=def )test.*(?=\()' | tr '\n' ',' | sed 's/,$//')])
+        NAMES=$(echo [$(cat tests/tests.py | grep -o -P '(?<=def )test.*(?=\()'  | awk '{print "\""$1"\"" }' | tr '\n' ',' | sed 's/,$//')])
         echo $NAMES
         echo "::set-output name=matrix::${NAMES}"
 
