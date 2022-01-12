@@ -9,11 +9,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
         version: [cp37-cp37m, cp38-cp38, cp39-cp39]
+
     steps:
-      - name: Build
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build containers
         env:
           PYTHON_VERSION: ${{ matrix.version }}
         run: |
@@ -22,6 +27,7 @@ jobs:
                                --build-arg BASELINE=docker.io/smandra/hybridq-baseline:$PYTHON_VERSION \
                                hybridq
           docker save hybridq > /tmp/hybridq_${PYTHON_VERSION}.tar
+
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
@@ -31,11 +37,14 @@ jobs:
 
   collect:
     runs-on: ubuntu-latest
+
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+
     - id: set-matrix
       run: |
         NAMES=$(echo [$(cat tests/tests.py | grep ^'def test' | sed -e 's/def test_//g' -e 's/__.*//g' | sort -g | uniq | awk '{print "\""$1"\"" }' | tr '\n' ',' | sed 's/.$//g')])
