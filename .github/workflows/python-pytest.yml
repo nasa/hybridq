@@ -22,12 +22,11 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.version }}
         run: |
-          #docker-compose build --build-arg ARCH=x86-64 \
-          #                     --build-arg BASELINE=docker.io/smandra/hybridq-baseline:$PYTHON_VERSION \
-          #                     hybridq
-          #docker tag hybridq:latest hybridq:${PYTHON_VERSION}
-          #docker save hybridq:${PYTHON_VERSION} > /tmp/hybridq_${PYTHON_VERSION}.tar
-          echo $PYTHON_VERSION > /tmp/hybridq_${PYTHON_VERSION}.tar
+          docker-compose build --build-arg ARCH=x86-64 \
+                               --build-arg BASELINE=docker.io/smandra/hybridq-baseline:$PYTHON_VERSION \
+                               hybridq
+          docker tag hybridq:latest hybridq:${PYTHON_VERSION}
+          docker save hybridq:${PYTHON_VERSION} > /tmp/hybridq_${PYTHON_VERSION}.tar
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
@@ -48,9 +47,7 @@ jobs:
 
     - id: set-matrix
       run: |
-        #NAMES=$(echo [$(cat tests/tests.py | grep ^'def test' | sed -e 's/def test_//g' -e 's/__.*//g' | sort -g | uniq | awk '{print "\""$1"\"" }' | tr '\n' ',' | sed 's/.$//g')])
         NAMES=$(echo [$(cat tests/tests.py | grep -o -P '(?<=def )test.*(?=\()'  | awk '{print "\""$1"\"" }' | tr '\n' ',' | sed 's/,$//')])
-        echo $NAMES
         echo "::set-output name=matrix::${NAMES}"
 
   run:
@@ -74,14 +71,12 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.version }}
         run: |
-          cat /tmp/hybridq_${PYTHON_VERSION}.tar
-          #docker load --input /tmp/hybridq_${PYTHON_VERSION}.tar
+          docker load --input /tmp/hybridq_${PYTHON_VERSION}.tar
 
       - name: Run test
         env:
           NAME: ${{ matrix.name }}
           PYTHON_VERSION: ${{ matrix.version }}
         run: |
-          echo $NAME $PYTHON_VERSION
-          #docker run --rm hybridq:${PYTHON_VERSION} \
-          #  bash -c "python -m pytest -sv /opt/hybridq/tests/tests.py::$NAME"
+          docker run --rm hybridq:${PYTHON_VERSION} \
+            bash -c "python -m pytest -sv /opt/hybridq/tests/tests.py::$NAME"
