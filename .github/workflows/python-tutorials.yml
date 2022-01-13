@@ -1,0 +1,42 @@
+name: Python Tutorials
+
+on:
+  push:
+    branches: [ main, devel ]
+  pull_request:
+    branches: [ main, devel ]
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - id: set-matrix
+      run: |
+        NAMES=$(echo [$(ls -1 tutorials/*.ipynb | awk '{print "\""$1"\"" }' | tr '\n' ',' | sed 's/.$//g')])
+        echo "::set-output name=matrix::${NAMES}"
+
+  build:
+    runs-on: ubuntu-latest
+    needs: collect
+    strategy:
+      matrix:
+        name: ${{fromJson(needs.collect.outputs.matrix)}}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build HybridQ container
+        run: |
+          docker-compose build --build-arg ARCH=x86-64 \
+                               --build-arg SKIP_PRE_CACHING=true \
+                               hybridq
+
+      - name: Run Tutorials
+        env:
+          NAME: ${{ matrix.name }}
+        run: |
+          docker run --rm hybridq bash -c "papermill $NAME /dev/null"

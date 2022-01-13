@@ -1,0 +1,38 @@
+name: Python Examples
+
+on:
+  push:
+    branches: [ main, devel ]
+  pull_request:
+    branches: [ main, devel ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build HybridQ container
+        run: |
+          docker-compose build --build-arg ARCH=x86-64 hybridq
+
+      - name: Run example
+        run: |
+          docker run --rm hybridq bash -c 'python examples/example.py'
+
+      - name: Run MPI example
+        run: |
+          docker run --rm hybridq bash -c '\
+            mpiexec -n 2 --allow-run-as-root python examples/example-mpi.py && \
+            mpiexec -n 2 --allow-run-as-root python examples/example-mpi-trace.py && \
+            mpiexec -n 2 --allow-run-as-root python examples/example-mpi-clifford.py && \
+            DISABLE_MPI_AUTODETECT=1 mpiexec -n 2 --allow-run-as-root python examples/example-mpi.py && \
+            DISABLE_MPI_AUTODETECT=1 mpiexec -n 2 --allow-run-as-root python examples/example-mpi-trace.py && \
+            DISABLE_MPI_AUTODETECT=1 mpiexec -n 2 --allow-run-as-root python examples/example-mpi-clifford.py'
+
+      - name: Run simulator
+        run: |
+          docker run --rm hybridq bash -c '\
+            hybridq examples/circuit.qasm /dev/null --verbose --optimize=evolution
+            hybridq-dm examples/circuit_simple.qasm XIZXYZXZYZIXIZXXXZIZXIYY /dev/null --verbose --parallel'
