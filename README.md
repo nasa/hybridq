@@ -81,7 +81,7 @@ docker pull smandra/hybridq
 requires the [Boost C++ Library](https://www.boost.org/) installed in the
 system. To properly install KaHyPar, the following steps usually work:
 
-1. Clone KaHyPar: `git clone --depth=1 --recursive git@github.com:SebastianSchlag/kahypar.git /tmp/kahypar`
+1. Clone KaHyPar: `git clone --depth=1 --recursive git@github.com:SebastianSchlag/kahypar.git --branch 1.2.1 /tmp/kahypar`
 2. Force installation of minimal Boost library: 
 ```
 sed -i '' -e "$(echo -e '/option(KAHYPAR_PYTHON_INTERFACE/,/)/c\' "\noption(KAHYPAR_PYTHON_INTERFACE \"\" ON)")" \
