@@ -83,7 +83,10 @@ system. To properly install KaHyPar, the following steps usually work:
 
 1. Clone KaHyPar: 
 ```
-git clone --depth=1 --recursive git@github.com:SebastianSchlag/kahypar.git --branch 1.2.1 /tmp/kahypar
+git clone git@github.com:SebastianSchlag/kahypar.git /tmp/kahypar \
+    --depth=1 \
+    --recursive \
+    --branch 1.2.1
 ```
 2. Force installation of minimal Boost library:
 * BSD:
