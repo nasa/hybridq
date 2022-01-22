@@ -81,14 +81,26 @@ docker pull smandra/hybridq
 requires the [Boost C++ Library](https://www.boost.org/) installed in the
 system. To properly install KaHyPar, the following steps usually work:
 
-1. Clone KaHyPar: `git clone --depth=1 --recursive git@github.com:SebastianSchlag/kahypar.git --branch 1.2.1 /tmp/kahypar`
-2. Force installation of minimal Boost library: 
+1. Clone KaHyPar: 
 ```
-sed -i '' -e "$(echo -e '/option(KAHYPAR_PYTHON_INTERFACE/,/)/c\' "\noption(KAHYPAR_PYTHON_INTERFACE \"\" ON)")" \
-          -e "$(echo -e '/option(KAHYPAR_USE_MINIMAL_BOOST/,/)/c\' "\noption(KAHYPAR_USE_MINIMAL_BOOST \"\" ON)")" \
+git clone --depth=1 --recursive git@github.com:SebastianSchlag/kahypar.git --branch 1.2.1 /tmp/kahypar
+```
+2. Force installation of minimal Boost library:
+* BSD:
+```
+sed -i '' -e "$(echo -e '/option(KAHYPAR_USE_MINIMAL_BOOST/,/)/c\' \
+                "\noption(KAHYPAR_USE_MINIMAL_BOOST \"\" ON)")" \
           /tmp/kahypar/CMakeLists.txt
 ```
-3. Install KaHyPar: `export CXXFLAGS='-fPIC' && pip install -U /tmp/kahypar/ --force-reinstall`
+* GNU:
+```
+sed -i '/option(KAHYPAR_USE_MINIMAL_BOOST/,/)/c\option(KAHYPAR_USE_MINIMAL_BOOST \"\" ON)'  \
+          /tmp/kahypar/CMakeLists.txt
+```
+3. Install KaHyPar:
+```
+export CXXFLAGS='-fPIC' && pip install -U /tmp/kahypar/ --force-reinstall
+```
 
 Alternatively, it is possible to use Conda to properly install KaHyPar:
 
