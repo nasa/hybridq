@@ -56,7 +56,7 @@ function check_py_files() {
 }
 
 # Check yapf version
-YAPF_VERSION=0.31.0
+YAPF_VERSION=0.32.0
 if [[ $(yapf --version | awk '{print$2}') != $YAPF_VERSION ]]; then
   echo "'yapf==${YAPF_VERSION}' is needed."
   exit 1
