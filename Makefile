@@ -82,9 +82,9 @@ print_support:
 	$(info # Support OpenMP? $(is_openmp_supported))
 
 	@# Print support for AVX
-	$(info # Support AVX? $(avx))
-	$(info # Support AVX2? $(avx2))
-	$(info # Support AVX512? $(avx512))
+	$(info # Support AVX? $(shell (exit $(avx)) && echo no || echo yes))
+	$(info # Support AVX-2? $(shell (exit $(avx2)) && echo no || echo yes))
+	$(info # Support AVX-512? $(shell (exit $(avx512)) && echo no || echo yes))
 
 	@# Print pack size
 	$(info # Size of Pack: 2^$(LOG2_PACK_SIZE))
