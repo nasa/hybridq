@@ -13,29 +13,96 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+# Fix size of packs
+LOG2_PACK_SIZE ?= 0
+
+# Set default compiler
 CXX ?= g++
+
+# Set default architecture
 ARCH ?= native
-CXXFLAGS ?= -Wall -Wpedantic -O3 -ffast-math -march=$(ARCH)
-CXXFLAGS := $(CXXFLAGS) -std=c++17 -shared -fPIC
-LOG2_PACK_SIZE ?= 3
+
+# Set default C++ flags
+CXXFLAGS ?= -Wall \
+            -Wpedantic \
+            -Wno-vla \
+            -Ofast \
+            -ffast-math \
+            -march=$(ARCH)
+
+# Add flags for shared library
+CXXFLAGS := $(CXXFLAGS) \
+            -std=c++17 \
+            -shared \
+            -fPIC
+
+# Add extra CXXFLAGS
+CXXFLAGS += $(CXXFLAGS_EXTRA)
+
+# Check support for openMP
+is_openmp_supported := $(shell echo | \
+                       $(CXX) $(CPPFLAGS) $(LDFLAGS) $(CXXFLAGS) \
+                          -fopenmp -x c++ -c - -o /dev/null 2>/dev/null && \
+                       echo yes || \
+                       echo no)
+
+# Update CXXFLAGS is OpenMP is supported
+ifeq ($(is_openmp_supported), yes)
+  CXXFLAGS += -fopenmp
+endif
+
+# Define command for compilation
+COMPILE := $(CXX) $(CPPFLAGS) $(LDFLAGS) $(CXXFLAGS)
+
+# Check support for AVX
+avx := $(shell $(COMPILE) -x c++ -dM -E - < /dev/null | grep -i '__AVX__' | head -n 1 | wc -l)
+avx2 := $(shell $(COMPILE) -x c++ -dM -E - < /dev/null | grep -i '__AVX2__' | head -n 1 | wc -l)
+avx512 := $(shell $(COMPILE) -x c++ -dM -E - < /dev/null | grep -i '__AVX512' | head -n 1 | wc -l)
+
+# If not specified, infer pack size
+ifeq ($(LOG2_PACK_SIZE), 0)
+  LOG2_PACK_SIZE := $(shell \
+                      if [ $(avx512) -eq 1 ]; then \
+                        echo 4; \
+                      elif [ $(avx2) -eq 1 ]; then \
+                        echo 3; \
+                      else \
+                        echo 3; \
+                      fi)
+endif
 
 .PHONY=all
-all: hybridq/utils/hybridq_swap.so hybridq/utils/hybridq.so
+all: print_support \
+     hybridq/utils/hybridq_swap.so \
+     hybridq/utils/hybridq.so
 
-hybridq/utils/hybridq_swap.so: include/python_swap.cpp include/swap.h include/utils.h include/pack.h
-	$(CXX) $(CPPFLAGS) $(LDFLAGS) \
-		$(CXXFLAGS) $(USE_OPENMP) \
-		$(shell sh scripts/check_prerequisite.sh $(CXX) $(CPPFLAGS) $(LDFLAGS) $(CXXFLAGS)) \
-		-DMAX_SWAP_SIZE=$(MAX_SWAP_SIZE) \
-		$< -o $@
+.PHONY=print_support
+print_support:
+	@# Print support for OpenMP
+	$(info # Support OpenMP? $(is_openmp_supported))
 
-hybridq/utils/hybridq.so: include/python_U.cpp include/U.h include/utils.h include/pack.h
-	$(CXX) $(CPPFLAGS) $(LDFLAGS) \
-		$(CXXFLAGS) $(USE_OPENMP) \
-		$(shell sh scripts/check_prerequisite.sh $(CXX) $(CPPFLAGS) $(LDFLAGS) $(CXXFLAGS)) \
-		-DLOG2_PACK_SIZE=$(LOG2_PACK_SIZE) \
-		-DLARGEST_GATE=$(LARGEST_GATE) \
-		$< -o $@
+	@# Print support for AVX
+	$(info # Support AVX? $(avx))
+	$(info # Support AVX2? $(avx2))
+	$(info # Support AVX512? $(avx512))
+
+	@# Print pack size
+	$(info # Size of Pack: 2^$(LOG2_PACK_SIZE))
+
+hybridq/utils/hybridq_swap.so: include/python_swap.cpp \
+                               include/swap.h \
+                               include/utils.h \
+                               include/pack.h
+	@# Compile
+	$(COMPILE) $< -o $@
+
+hybridq/utils/hybridq.so: include/python_U.cpp \
+                          include/U.h \
+                          include/utils.h \
+                          include/pack.h
+	@# Compile
+	$(COMPILE) $< -o $@ \
+    -DLOG2_PACK_SIZE=$(LOG2_PACK_SIZE)
 
 clean:
 	-rm -f hybridq/utils/hybridq.so
