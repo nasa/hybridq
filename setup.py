@@ -77,7 +77,7 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Operating System :: Unix',
-        'Operating System :: iOS'
+        'Operating System :: MacOS'
     ],
     python_requires='>=3.7, <3.10',
     keywords=['simulator quantum circuits', 'quantum computing'],
