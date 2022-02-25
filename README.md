@@ -3,12 +3,13 @@
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/nasa/hybridq/main)
 [![GitHub License](https://img.shields.io/badge/License-Apache-green)](https://github.com/nasa/hybridq/blob/main/LICENSE)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/nasa/hybridq.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/nasa/hybridq/context:python)
-[![Language grade: C++](https://img.shields.io/lgtm/grade/cpp/g/nasa/hybridq.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/nasa/hybridq/context:cpp)
-[![PyPI](https://img.shields.io/pypi/v/hybridq.svg)](https://pypi.org/project/hybridq/#description)
-[![PyPIStats](https://img.shields.io/pypi/dm/hybridq)](https://pypistats.org/packages/hybridq)<br>
-[![Documentation](https://img.shields.io/static/v1?label=Documentation&message=https://nasa.github.io/hybridq&color=success)](https://nasa.github.io/hybridq)
+[![Language grade: C++](https://img.shields.io/lgtm/grade/cpp/g/nasa/hybridq.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/nasa/hybridq/context:cpp)<br>
 [![Tutorials](https://github.com/nasa/hybridq/actions/workflows/python-tutorials.yml/badge.svg)](https://github.com/nasa/hybridq/tree/main/tutorials)<br>
-[![Cite](https://img.shields.io/static/v1?label=Cite&message=IEEE/ACM%20(QCS)&color=success)](https://doi.org/10.1109/QCS54837.2021.00015)
+[![PyPI](https://img.shields.io/pypi/v/hybridq.svg)](https://pypi.org/project/hybridq/#description)
+[![Downloads](https://static.pepy.tech/personalized-badge/hybridq?period=total&units=international_system&left_color=gray&right_color=orange&left_text=downloads)](https://pepy.tech/project/hybridq)
+[![Downloads-week](https://static.pepy.tech/personalized-badge/hybridq?period=week&units=international_system&left_color=grey&right_color=orange&left_text=downloads/week)](https://pepy.tech/project/hybridq)<br>
+[![Documentation](https://img.shields.io/static/v1?label=documentation&message=https://nasa.github.io/hybridq&color=success)](https://nasa.github.io/hybridq)
+[![Cite](https://img.shields.io/static/v1?label=cite&message=IEEE/ACM%20(QCS)&color=success)](https://doi.org/10.1109/QCS54837.2021.00015)
 
 **HybridQ** is a highly extensible platform designed to provide a common framework
 to integrate multiple state-of-the-art techniques to simulate large scale
@@ -80,20 +81,29 @@ docker pull smandra/hybridq
 requires the [Boost C++ Library](https://www.boost.org/) installed in the
 system. To properly install KaHyPar, the following steps usually work:
 
-1. Download the boost library: https://dl.bintray.com/boostorg/release/1.73.0/source/boost_1_73_0.tar.bz2
-2. Decompress the library in a temporary folder using: `tar xvjf boost_1_73_0.tar.bz2`
-3. Execute: `mkdir -p $HOME/local/boost/1.73.0`
-4. In the folder where the boost library has been extracted, execute: `./bootstrap.sh --prefix=$HOME/local/boost/1.73.0`
-5. Once finished, execute: `./b2`
-6. Once finished, execute: `./b2 install`
-
-To install KaHyPar through `pip`:
-
-1. Export Boost library: `export BOOST_ROOT=$HOME/local/boost/1.73.0`
-2. Reinstall KaHyPar: `pip install -U git+https://github.com/kahypar/kahypar@1.2.1 --force-reinstall`
-
-Depending on the system, the user may need to install updated versions of
-`cmake` and/or `gcc/g++` to complete the installation of KaHyPar.
+1. Clone KaHyPar: 
+```
+git clone git@github.com:SebastianSchlag/kahypar.git /tmp/kahypar \
+    --depth=1 \
+    --recursive \
+    --branch 1.2.1
+```
+2. Force installation of minimal Boost library:
+* BSD:
+```
+sed -i '' -e "$(echo -e '/option(KAHYPAR_USE_MINIMAL_BOOST/,/)/c\' \
+                "\noption(KAHYPAR_USE_MINIMAL_BOOST \"\" ON)")" \
+          /tmp/kahypar/CMakeLists.txt
+```
+* GNU:
+```
+sed -i '/option(KAHYPAR_USE_MINIMAL_BOOST/,/)/c\option(KAHYPAR_USE_MINIMAL_BOOST \"\" ON)'  \
+          /tmp/kahypar/CMakeLists.txt
+```
+3. Install KaHyPar:
+```
+export CXXFLAGS='-fPIC' && pip install -U /tmp/kahypar/ --force-reinstall
+```
 
 Alternatively, it is possible to use Conda to properly install KaHyPar:
 
