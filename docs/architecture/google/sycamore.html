@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>hybridq.extras.architecture.sycamore API documentation</title>
+<title>hybridq.architecture.google.sycamore API documentation</title>
 <meta name="description" content="Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>hybridq.extras.architecture.sycamore</code></h1>
+<h1 class="title">Module <code>hybridq.architecture.google.sycamore</code></h1>
 </header>
 <section id="section-intro">
 <p>Author: Salvatore Mandra (salvatore.mandra@nasa.gov)</p>
@@ -39,8 +39,16 @@ specific language governing permissions and limitations under the License.</p>
 <p><strong><code>Coupling</code></strong>: <code>tuple[Qubit, Qubit]</code></p>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>gmon54</code></strong> :&ensp;<code>QpuLayout</code></dt>
+<dt><strong><code>drawing</code></strong> :&ensp;<code>str</code></dt>
+<dd>Drawing of the Google Sycamore QPU.</dd>
+<dt><strong><code>layout</code></strong> :&ensp;<code>QpuLayout</code></dt>
 <dd>Qubits available in Google Sycamore QPU.</dd>
+<dt><strong><code>couplings</code></strong> :&ensp;<code>list[Coupling]</code></dt>
+<dd>All couplings available in Google Sycamore QPU.</dd>
+<dt><strong><code>get_layers</code></strong> :&ensp;<code>callable[QpuLayout] -&gt; dict[str, list[Coupling]]</code></dt>
+<dd>Given a <code>QpuLayout</code> returns layers of couplings as defined in
+"Quantum supremacy using a programmable superconducting processor"
+[Nature 574 (7779), 505-510].</dd>
 </dl>
 <details class="source">
 <summary>
@@ -72,13 +80,30 @@ Types
 
 Attributes
 ----------
-gmon54: QpuLayout
+drawing: str
+    Drawing of the Google Sycamore QPU.
+
+layout: QpuLayout
     Qubits available in Google Sycamore QPU.
+
+couplings: list[Coupling]
+    All couplings available in Google Sycamore QPU.
+
+get_layers: callable[QpuLayout] -&gt; dict[str, list[Coupling]]
+    Given a `QpuLayout` returns layers of couplings as defined in
+    &#34;Quantum supremacy using a programmable superconducting processor&#34;
+    [Nature 574 (7779), 505-510].
 &#34;&#34;&#34;
 
 from __future__ import annotations
 from typing import List, Tuple, Callable
+from hybridq.architecture.utils import get_layout_from_drawing as get_layout
 from hybridq.utils import sort, argsort
+
+__all__ = [
+    &#39;drawing&#39;, &#39;layout&#39;, &#39;couplings&#39;, &#39;get_all_couplings&#39;, &#39;get_layer&#39;,
+    &#39;get_layers&#39;
+]
 
 # Define Qubit type
 Qubit = Tuple[int, int]
@@ -89,76 +114,31 @@ Coupling = Tuple[Qubit, Qubit]
 # Define QpuLayout
 QpuLayout = List[Qubit]
 
-# (x,y) layout of Google Sycamore QPU
-gmon54 = [
-    (0, 5), (0, 6), (1, 4), (1, 5), (1, 6), (1, 7), (2, 4), (2, 5), (2, 6),
-    (2, 7), (2, 8), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8),
-    (3, 9), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8),
-    (4, 9), (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7),
-    (5, 8), (6, 1), (6, 2), (6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (7, 2),
-    (7, 3), (7, 4), (7, 5), (7, 6), (8, 3), (8, 4), (8, 5), (9, 4)
-]
+# Drawing
+drawing = r&#34;&#34;&#34;
+      X-X
+      | |
+    X-X-X-X
+    | | | |
+  X-X-X-X-X-X
+  | | | | | |
+X-X-X-X-X-X-X-X
+| | | | | | | |
+X-X-X-X-X-X-X-X-X
+  | | | | | | | |
+  X-X-X-X-X-X-X-X-X
+      | | | | | |
+      X-X-X-X-X-X
+      | | | | |
+      X-X-X-X-X
+        | | |
+        X-X-X
+          |
+          X
+&#34;&#34;&#34;
 
-
-# Map from (x,y) -&gt; idx (qpu_layout order is preserved)
-def xy_to_index(qpu_layout: QpuLayout) -&gt; dict[Qubit, int]:
-    &#34;&#34;&#34;
-    Given `qpu_layout` of `Qubit`s, return a one-to-one between `Qubit`s and
-    indexes.
-
-    Parameters
-    ----------
-    qpu_layout: QpuLayout
-        List of `Qubit`s to use as `QpuLayout`.
-
-    Returns
-    -------
-    dict[Qubit, int]
-        One-to-one map between `Qubit`s and indexes.
-
-    Note
-    ----
-    ```xy_to_index``` and ```index_to_xy``` are by construction one the inverse
-    of the other.
-
-    Example
-    -------
-    &gt;&gt;&gt; sum(q != sycamore.index_to_xy(qpu_layout=sycamore.gmon54)[x]
-    &gt;&gt;&gt;     for q, x in sycamore.xy_to_index(qpu_layout=sycamore.gmon54).items())
-    0
-    &#34;&#34;&#34;
-
-    return {q: index for index, q in enumerate(qpu_layout)}
-
-
-# Map from idx -&gt; (x,y) (qpu_layout order is preserved)
-def index_to_xy(qpu_layout: QpuLayout) -&gt; dict[int, Qubit]:
-    &#34;&#34;&#34;
-    Given `qpu_layout` of `Qubit`s, return a one-to-one between indexes and
-    `Qubit`s.
-
-    Parameters
-    ----------
-    qpu_layout: QpuLayout
-        List of `Qubit`s to use as `QpuLayout`.
-
-    Returns
-    -------
-    dict[int, Qubit]
-        One-to-one map between indexes and `Qubit`s.
-
-    Note
-    ----
-    ```xy_to_index``` and ```index_to_xy``` are by construction one the inverse
-    of the other.
-
-    Example
-    -------
-    &gt;&gt;&gt; sum(q != sycamore.index_to_xy(qpu_layout=sycamore.gmon54)[x]
-    &gt;&gt;&gt;     for q, x in sycamore.xy_to_index(qpu_layout=sycamore.gmon54).items())
-    0
-    &#34;&#34;&#34;
-    return {index: q for q, index in xy_to_index(qpu_layout).items()}
+# Get couplings and layout
+layout, couplings = get_layout(drawing)
 
 
 def get_all_couplings(qpu_layout: QpuLayout) -&gt; list[Coupling]:
@@ -190,44 +170,94 @@ def get_all_couplings(qpu_layout: QpuLayout) -&gt; list[Coupling]:
     })
 
 
-def _in_simplifiable_layout(layout_idx: int) -&gt; Callable[[Coupling], bool]:
+# Check for consistency
+from hybridq.extras.architecture.sycamore.sycamore import gmon54 as __gmon54, \
+        get_all_couplings as __get_all_couplings
+assert (layout == __gmon54)
+assert (couplings == __get_all_couplings(__gmon54))
+assert (couplings == get_all_couplings(layout))
+
+
+def get_layer(layer_idx: str,
+              qpu_layout: list[Qubit] = None) -&gt; dict[str, list[Coupling]]:
     &#34;&#34;&#34;
-    Return if (q1,q2) qubit is in simplifiable layout.
+    Returns layers used in Google Quantum Supremacy Paper [Nature 574 (7779), 505-510].
+
+    Parameters
+    ----------
+    layer_idx: str
+        Layer idx used in [Nature 574 (7779), 505-510]. Valid `layer_idx`
+        values are &#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;, &#39;E&#39;, &#39;F&#39;, &#39;G&#39;, or &#39;H&#39;.
+    qpu_layout: QpuLayout, optional
+        List of `Qubit`s to use as `QpuLayout`. (default: `hybridq.architecture.google.sycamore`)
+
+    Returns
+    -------
+    list[Coupling]
+        `Coupling`s corresponding to `layer_idx`.
     &#34;&#34;&#34;
+    from hybridq.architecture.google.sycamore import layout as _layout
 
-    if layout_idx == 0:
-        return lambda q: (not q[0][1] % 2) and q[0][0] == q[1][0]
-    if layout_idx == 1:
-        return lambda q: (not q[0][0] % 2) and q[0][1] == q[1][1]
-    if layout_idx == 2:
-        return lambda q: (q[0][1] % 2) and q[0][0] == q[1][0]
-    if layout_idx == 3:
-        return lambda q: (q[0][0] % 2) and q[0][1] == q[1][1]
+    # Check if layer_idx is valid
+    if not isinstance(layer_idx,
+                      str) or not layer_idx.upper() in list(&#39;ABCDEFGH&#39;):
+        raise ValueError(&#34;Valid &#39;layer_idx&#39; values are &#39;A&#39;, &#34;
+                         &#34;&#39;B&#39;, &#39;C&#39;, &#39;D&#39;, &#39;E&#39;, &#39;F&#39;, &#39;G&#39; and &#39;H&#39;&#34;)
+
+    # Get qpu_layout
+    qpu_layout = _layout if qpu_layout is None else list(qpu_layout)
+
+    # Get couplings
+    couplings = get_all_couplings(qpu_layout)
+
+    # To upper
+    layer_idx = layer_idx.upper()
+
+    # Filter couplings (supremacy layout)
+    if layer_idx == &#39;A&#39;:
+        return list(
+            filter(
+                lambda q: (not (q[0][0] + q[0][1]) % 2) and q[0][1] == q[1][1],
+                couplings))
+    elif layer_idx == &#39;B&#39;:
+        return list(
+            filter(lambda q: ((q[0][0] + q[0][1]) % 2) and q[0][1] == q[1][1],
+                   couplings))
+    elif layer_idx == &#39;C&#39;:
+        return list(
+            filter(lambda q: ((q[0][0] + q[0][1]) % 2) and q[0][0] == q[1][0],
+                   couplings))
+    elif layer_idx == &#39;D&#39;:
+        return list(
+            filter(
+                lambda q: (not (q[0][0] + q[0][1]) % 2) and q[0][0] == q[1][0],
+                couplings))
+
+    # Filter couplings (simplifiable layout)
+    elif layer_idx == &#39;E&#39;:
+        return list(
+            filter(lambda q: (not q[0][1] % 2) and q[0][0] == q[1][0],
+                   couplings))
+    elif layer_idx == &#39;F&#39;:
+        return list(
+            filter(lambda q: (q[0][1] % 2) and q[0][0] == q[1][0], couplings))
+    elif layer_idx == &#39;G&#39;:
+        return list(
+            filter(lambda q: (not q[0][0] % 2) and q[0][1] == q[1][1],
+                   couplings))
+    elif layer_idx == &#39;H&#39;:
+        return list(
+            filter(lambda q: (q[0][0] % 2) and q[0][1] == q[1][1], couplings))
 
 
-def _in_supremacy_layout(layout_idx: int) -&gt; Callable[[Coupling], bool]:
-    &#34;&#34;&#34;
-    Return if (q1,q2) qubit is in supremacy (non-simplifiable) layout.
-    &#34;&#34;&#34;
-
-    if layout_idx == 0:
-        return lambda q: (not (q[0][0] + q[0][1]) % 2) and q[0][0] == q[1][0]
-    if layout_idx == 1:
-        return lambda q: (not (q[0][0] + q[0][1]) % 2) and q[0][1] == q[1][1]
-    if layout_idx == 2:
-        return lambda q: ((q[0][0] + q[0][1]) % 2) and q[0][1] == q[1][1]
-    if layout_idx == 3:
-        return lambda q: ((q[0][0] + q[0][1]) % 2) and q[0][0] == q[1][0]
-
-
-def get_layers(qpu_layout: list[Qubit]) -&gt; dict[str, list[Coupling]]:
+def get_layers(qpu_layout: list[Qubit] = None) -&gt; dict[str, list[Coupling]]:
     &#34;&#34;&#34;
     Return layers used in Google Quantum Supremacy Paper [Nature 574 (7779), 505-510].
 
     Parameters
     ----------
-    qpu_layout: QpuLayout
-        List of `Qubit`s to use as `QpuLayout`.
+    qpu_layout: QpuLayout, optional
+        List of `Qubit`s to use as `QpuLayout`. (default: `hybridq.architecture.google.sycamore`)
 
     Returns
     -------
@@ -236,6 +266,7 @@ def get_layers(qpu_layout: list[Qubit]) -&gt; dict[str, list[Coupling]]:
 
     Example
     -------
+    &gt;&gt;&gt; from hybridq.architecture.google.sycamore import layout as gmon54, get_layers
     &gt;&gt;&gt; from hybridq.architecture.plot import plot_qubits
     &gt;&gt;&gt; qpu_layout = [(x, y) for x, y in gmon54 if x + y &lt; 10]
     &gt;&gt;&gt; layers = get_layers(qpu_layout=qpu_layout)
@@ -258,34 +289,7 @@ def get_layers(qpu_layout: list[Qubit]) -&gt; dict[str, list[Coupling]]:
 
     .. image:: ../../images/qpu_layout_plot_small.png
     &#34;&#34;&#34;
-
-    layer_A = list(
-        filter(_in_supremacy_layout(1), get_all_couplings(qpu_layout)))
-    layer_B = list(
-        filter(_in_supremacy_layout(2), get_all_couplings(qpu_layout)))
-    layer_C = list(
-        filter(_in_supremacy_layout(3), get_all_couplings(qpu_layout)))
-    layer_D = list(
-        filter(_in_supremacy_layout(0), get_all_couplings(qpu_layout)))
-    layer_E = list(
-        filter(_in_simplifiable_layout(0), get_all_couplings(qpu_layout)))
-    layer_F = list(
-        filter(_in_simplifiable_layout(2), get_all_couplings(qpu_layout)))
-    layer_G = list(
-        filter(_in_simplifiable_layout(1), get_all_couplings(qpu_layout)))
-    layer_H = list(
-        filter(_in_simplifiable_layout(3), get_all_couplings(qpu_layout)))
-
-    return {
-        &#39;A&#39;: layer_A,
-        &#39;B&#39;: layer_B,
-        &#39;C&#39;: layer_C,
-        &#39;D&#39;: layer_D,
-        &#39;E&#39;: layer_E,
-        &#39;F&#39;: layer_F,
-        &#39;G&#39;: layer_G,
-        &#39;H&#39;: layer_H,
-    }</code></pre>
+    return {l: get_layer(l, qpu_layout) for l in &#39;ABCDEFGH&#39;}</code></pre>
 </details>
 </section>
 <section>
@@ -295,7 +299,7 @@ def get_layers(qpu_layout: list[Qubit]) -&gt; dict[str, list[Coupling]]:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="hybridq.extras.architecture.sycamore.get_all_couplings"><code class="name flex">
+<dt id="hybridq.architecture.google.sycamore.get_all_couplings"><code class="name flex">
 <span>def <span class="ident">get_all_couplings</span></span>(<span>qpu_layout: QpuLayout) ‑> list[Coupling]</span>
 </code></dt>
 <dd>
@@ -348,15 +352,109 @@ neighbors.</p>
     })</code></pre>
 </details>
 </dd>
-<dt id="hybridq.extras.architecture.sycamore.get_layers"><code class="name flex">
-<span>def <span class="ident">get_layers</span></span>(<span>qpu_layout: list[Qubit]) ‑> dict[str, list[Coupling]]</span>
+<dt id="hybridq.architecture.google.sycamore.get_layer"><code class="name flex">
+<span>def <span class="ident">get_layer</span></span>(<span>layer_idx: str, qpu_layout: list[Qubit] = None) ‑> dict[str, list[Coupling]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns layers used in Google Quantum Supremacy Paper [Nature 574 (7779), 505-510].</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>layer_idx</code></strong> :&ensp;<code>str</code></dt>
+<dd>Layer idx used in [Nature 574 (7779), 505-510]. Valid <code>layer_idx</code>
+values are 'A', 'B', 'C', 'D', 'E', 'F', 'G', or 'H'.</dd>
+<dt><strong><code>qpu_layout</code></strong> :&ensp;<code>QpuLayout</code>, optional</dt>
+<dd>List of <code>Qubit</code>s to use as <code>QpuLayout</code>. (default: <code><a title="hybridq.architecture.google.sycamore" href="#hybridq.architecture.google.sycamore">hybridq.architecture.google.sycamore</a></code>)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list[Coupling]</code></dt>
+<dd><code>Coupling</code>s corresponding to <code>layer_idx</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_layer(layer_idx: str,
+              qpu_layout: list[Qubit] = None) -&gt; dict[str, list[Coupling]]:
+    &#34;&#34;&#34;
+    Returns layers used in Google Quantum Supremacy Paper [Nature 574 (7779), 505-510].
+
+    Parameters
+    ----------
+    layer_idx: str
+        Layer idx used in [Nature 574 (7779), 505-510]. Valid `layer_idx`
+        values are &#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;, &#39;E&#39;, &#39;F&#39;, &#39;G&#39;, or &#39;H&#39;.
+    qpu_layout: QpuLayout, optional
+        List of `Qubit`s to use as `QpuLayout`. (default: `hybridq.architecture.google.sycamore`)
+
+    Returns
+    -------
+    list[Coupling]
+        `Coupling`s corresponding to `layer_idx`.
+    &#34;&#34;&#34;
+    from hybridq.architecture.google.sycamore import layout as _layout
+
+    # Check if layer_idx is valid
+    if not isinstance(layer_idx,
+                      str) or not layer_idx.upper() in list(&#39;ABCDEFGH&#39;):
+        raise ValueError(&#34;Valid &#39;layer_idx&#39; values are &#39;A&#39;, &#34;
+                         &#34;&#39;B&#39;, &#39;C&#39;, &#39;D&#39;, &#39;E&#39;, &#39;F&#39;, &#39;G&#39; and &#39;H&#39;&#34;)
+
+    # Get qpu_layout
+    qpu_layout = _layout if qpu_layout is None else list(qpu_layout)
+
+    # Get couplings
+    couplings = get_all_couplings(qpu_layout)
+
+    # To upper
+    layer_idx = layer_idx.upper()
+
+    # Filter couplings (supremacy layout)
+    if layer_idx == &#39;A&#39;:
+        return list(
+            filter(
+                lambda q: (not (q[0][0] + q[0][1]) % 2) and q[0][1] == q[1][1],
+                couplings))
+    elif layer_idx == &#39;B&#39;:
+        return list(
+            filter(lambda q: ((q[0][0] + q[0][1]) % 2) and q[0][1] == q[1][1],
+                   couplings))
+    elif layer_idx == &#39;C&#39;:
+        return list(
+            filter(lambda q: ((q[0][0] + q[0][1]) % 2) and q[0][0] == q[1][0],
+                   couplings))
+    elif layer_idx == &#39;D&#39;:
+        return list(
+            filter(
+                lambda q: (not (q[0][0] + q[0][1]) % 2) and q[0][0] == q[1][0],
+                couplings))
+
+    # Filter couplings (simplifiable layout)
+    elif layer_idx == &#39;E&#39;:
+        return list(
+            filter(lambda q: (not q[0][1] % 2) and q[0][0] == q[1][0],
+                   couplings))
+    elif layer_idx == &#39;F&#39;:
+        return list(
+            filter(lambda q: (q[0][1] % 2) and q[0][0] == q[1][0], couplings))
+    elif layer_idx == &#39;G&#39;:
+        return list(
+            filter(lambda q: (not q[0][0] % 2) and q[0][1] == q[1][1],
+                   couplings))
+    elif layer_idx == &#39;H&#39;:
+        return list(
+            filter(lambda q: (q[0][0] % 2) and q[0][1] == q[1][1], couplings))</code></pre>
+</details>
+</dd>
+<dt id="hybridq.architecture.google.sycamore.get_layers"><code class="name flex">
+<span>def <span class="ident">get_layers</span></span>(<span>qpu_layout: list[Qubit] = None) ‑> dict[str, list[Coupling]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return layers used in Google Quantum Supremacy Paper [Nature 574 (7779), 505-510].</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>qpu_layout</code></strong> :&ensp;<code>QpuLayout</code></dt>
-<dd>List of <code>Qubit</code>s to use as <code>QpuLayout</code>.</dd>
+<dt><strong><code>qpu_layout</code></strong> :&ensp;<code>QpuLayout</code>, optional</dt>
+<dd>List of <code>Qubit</code>s to use as <code>QpuLayout</code>. (default: <code><a title="hybridq.architecture.google.sycamore" href="#hybridq.architecture.google.sycamore">hybridq.architecture.google.sycamore</a></code>)</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -364,7 +462,8 @@ neighbors.</p>
 <dd>Map between layer name and the list of corresponding <code>Coupling</code>s.</dd>
 </dl>
 <h2 id="example">Example</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; from hybridq.architecture.plot import plot_qubits
+<pre><code class="language-python-repl">&gt;&gt;&gt; from hybridq.architecture.google.sycamore import layout as gmon54, get_layers
+&gt;&gt;&gt; from hybridq.architecture.plot import plot_qubits
 &gt;&gt;&gt; qpu_layout = [(x, y) for x, y in gmon54 if x + y &lt; 10]
 &gt;&gt;&gt; layers = get_layers(qpu_layout=qpu_layout)
 &gt;&gt;&gt; layers.keys()
@@ -389,14 +488,14 @@ dict_keys(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'])
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_layers(qpu_layout: list[Qubit]) -&gt; dict[str, list[Coupling]]:
+<pre><code class="python">def get_layers(qpu_layout: list[Qubit] = None) -&gt; dict[str, list[Coupling]]:
     &#34;&#34;&#34;
     Return layers used in Google Quantum Supremacy Paper [Nature 574 (7779), 505-510].
 
     Parameters
     ----------
-    qpu_layout: QpuLayout
-        List of `Qubit`s to use as `QpuLayout`.
+    qpu_layout: QpuLayout, optional
+        List of `Qubit`s to use as `QpuLayout`. (default: `hybridq.architecture.google.sycamore`)
 
     Returns
     -------
@@ -405,6 +504,7 @@ dict_keys(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'])
 
     Example
     -------
+    &gt;&gt;&gt; from hybridq.architecture.google.sycamore import layout as gmon54, get_layers
     &gt;&gt;&gt; from hybridq.architecture.plot import plot_qubits
     &gt;&gt;&gt; qpu_layout = [(x, y) for x, y in gmon54 if x + y &lt; 10]
     &gt;&gt;&gt; layers = get_layers(qpu_layout=qpu_layout)
@@ -427,149 +527,7 @@ dict_keys(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'])
 
     .. image:: ../../images/qpu_layout_plot_small.png
     &#34;&#34;&#34;
-
-    layer_A = list(
-        filter(_in_supremacy_layout(1), get_all_couplings(qpu_layout)))
-    layer_B = list(
-        filter(_in_supremacy_layout(2), get_all_couplings(qpu_layout)))
-    layer_C = list(
-        filter(_in_supremacy_layout(3), get_all_couplings(qpu_layout)))
-    layer_D = list(
-        filter(_in_supremacy_layout(0), get_all_couplings(qpu_layout)))
-    layer_E = list(
-        filter(_in_simplifiable_layout(0), get_all_couplings(qpu_layout)))
-    layer_F = list(
-        filter(_in_simplifiable_layout(2), get_all_couplings(qpu_layout)))
-    layer_G = list(
-        filter(_in_simplifiable_layout(1), get_all_couplings(qpu_layout)))
-    layer_H = list(
-        filter(_in_simplifiable_layout(3), get_all_couplings(qpu_layout)))
-
-    return {
-        &#39;A&#39;: layer_A,
-        &#39;B&#39;: layer_B,
-        &#39;C&#39;: layer_C,
-        &#39;D&#39;: layer_D,
-        &#39;E&#39;: layer_E,
-        &#39;F&#39;: layer_F,
-        &#39;G&#39;: layer_G,
-        &#39;H&#39;: layer_H,
-    }</code></pre>
-</details>
-</dd>
-<dt id="hybridq.extras.architecture.sycamore.index_to_xy"><code class="name flex">
-<span>def <span class="ident">index_to_xy</span></span>(<span>qpu_layout: QpuLayout) ‑> dict[int, Qubit]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Given <code>qpu_layout</code> of <code>Qubit</code>s, return a one-to-one between indexes and
-<code>Qubit</code>s.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>qpu_layout</code></strong> :&ensp;<code>QpuLayout</code></dt>
-<dd>List of <code>Qubit</code>s to use as <code>QpuLayout</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>dict[int, Qubit]</code></dt>
-<dd>One-to-one map between indexes and <code>Qubit</code>s.</dd>
-</dl>
-<h2 id="note">Note</h2>
-<p><code>xy_to_index</code> and <code>index_to_xy</code> are by construction one the inverse
-of the other.</p>
-<h2 id="example">Example</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; sum(q != sycamore.index_to_xy(qpu_layout=sycamore.gmon54)[x]
-&gt;&gt;&gt;     for q, x in sycamore.xy_to_index(qpu_layout=sycamore.gmon54).items())
-0
-</code></pre></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def index_to_xy(qpu_layout: QpuLayout) -&gt; dict[int, Qubit]:
-    &#34;&#34;&#34;
-    Given `qpu_layout` of `Qubit`s, return a one-to-one between indexes and
-    `Qubit`s.
-
-    Parameters
-    ----------
-    qpu_layout: QpuLayout
-        List of `Qubit`s to use as `QpuLayout`.
-
-    Returns
-    -------
-    dict[int, Qubit]
-        One-to-one map between indexes and `Qubit`s.
-
-    Note
-    ----
-    ```xy_to_index``` and ```index_to_xy``` are by construction one the inverse
-    of the other.
-
-    Example
-    -------
-    &gt;&gt;&gt; sum(q != sycamore.index_to_xy(qpu_layout=sycamore.gmon54)[x]
-    &gt;&gt;&gt;     for q, x in sycamore.xy_to_index(qpu_layout=sycamore.gmon54).items())
-    0
-    &#34;&#34;&#34;
-    return {index: q for q, index in xy_to_index(qpu_layout).items()}</code></pre>
-</details>
-</dd>
-<dt id="hybridq.extras.architecture.sycamore.xy_to_index"><code class="name flex">
-<span>def <span class="ident">xy_to_index</span></span>(<span>qpu_layout: QpuLayout) ‑> dict[Qubit, int]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Given <code>qpu_layout</code> of <code>Qubit</code>s, return a one-to-one between <code>Qubit</code>s and
-indexes.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>qpu_layout</code></strong> :&ensp;<code>QpuLayout</code></dt>
-<dd>List of <code>Qubit</code>s to use as <code>QpuLayout</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>dict[Qubit, int]</code></dt>
-<dd>One-to-one map between <code>Qubit</code>s and indexes.</dd>
-</dl>
-<h2 id="note">Note</h2>
-<p><code>xy_to_index</code> and <code>index_to_xy</code> are by construction one the inverse
-of the other.</p>
-<h2 id="example">Example</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; sum(q != sycamore.index_to_xy(qpu_layout=sycamore.gmon54)[x]
-&gt;&gt;&gt;     for q, x in sycamore.xy_to_index(qpu_layout=sycamore.gmon54).items())
-0
-</code></pre></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def xy_to_index(qpu_layout: QpuLayout) -&gt; dict[Qubit, int]:
-    &#34;&#34;&#34;
-    Given `qpu_layout` of `Qubit`s, return a one-to-one between `Qubit`s and
-    indexes.
-
-    Parameters
-    ----------
-    qpu_layout: QpuLayout
-        List of `Qubit`s to use as `QpuLayout`.
-
-    Returns
-    -------
-    dict[Qubit, int]
-        One-to-one map between `Qubit`s and indexes.
-
-    Note
-    ----
-    ```xy_to_index``` and ```index_to_xy``` are by construction one the inverse
-    of the other.
-
-    Example
-    -------
-    &gt;&gt;&gt; sum(q != sycamore.index_to_xy(qpu_layout=sycamore.gmon54)[x]
-    &gt;&gt;&gt;     for q, x in sycamore.xy_to_index(qpu_layout=sycamore.gmon54).items())
-    0
-    &#34;&#34;&#34;
-
-    return {q: index for index, q in enumerate(qpu_layout)}</code></pre>
+    return {l: get_layer(l, qpu_layout) for l in &#39;ABCDEFGH&#39;}</code></pre>
 </details>
 </dd>
 </dl>
@@ -588,15 +546,14 @@ of the other.</p>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="hybridq.extras.architecture" href="index.html">hybridq.extras.architecture</a></code></li>
+<li><code><a title="hybridq.architecture.google" href="index.html">hybridq.architecture.google</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="hybridq.extras.architecture.sycamore.get_all_couplings" href="#hybridq.extras.architecture.sycamore.get_all_couplings">get_all_couplings</a></code></li>
-<li><code><a title="hybridq.extras.architecture.sycamore.get_layers" href="#hybridq.extras.architecture.sycamore.get_layers">get_layers</a></code></li>
-<li><code><a title="hybridq.extras.architecture.sycamore.index_to_xy" href="#hybridq.extras.architecture.sycamore.index_to_xy">index_to_xy</a></code></li>
-<li><code><a title="hybridq.extras.architecture.sycamore.xy_to_index" href="#hybridq.extras.architecture.sycamore.xy_to_index">xy_to_index</a></code></li>
+<li><code><a title="hybridq.architecture.google.sycamore.get_all_couplings" href="#hybridq.architecture.google.sycamore.get_all_couplings">get_all_couplings</a></code></li>
+<li><code><a title="hybridq.architecture.google.sycamore.get_layer" href="#hybridq.architecture.google.sycamore.get_layer">get_layer</a></code></li>
+<li><code><a title="hybridq.architecture.google.sycamore.get_layers" href="#hybridq.architecture.google.sycamore.get_layers">get_layers</a></code></li>
 </ul>
 </li>
 </ul>
