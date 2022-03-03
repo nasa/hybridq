@@ -254,11 +254,6 @@ def simulate(circuit: {Circuit, TensorNetwork},
         `cotengra` for more information).
     methods: list[str] (default: [&#39;kahypar&#39;, &#39;greedy&#39;])
         Heuristics used by `cotengra` to find optimal contraction.
-    optlib: str (default: &#39;baytune&#39;)
-        Library used by `cotengra` to tune hyper-parameters while looking for
-        the best contraction.
-    sampler: str (default: &#39;GP&#39;)
-        Sampler used by `cotengra` while looking for the contraction.
     cotengra: dict[any, any] (default: {})
         Extra parameters to pass to `cotengra`.
     &#34;&#34;&#34;
@@ -386,8 +381,6 @@ def simulate(circuit: {Circuit, TensorNetwork},
         kwargs.setdefault(&#39;max_time&#39;, 120)
         kwargs.setdefault(&#39;max_repeats&#39;, 16)
         kwargs.setdefault(&#39;minimize&#39;, &#39;combo&#39;)
-        kwargs.setdefault(&#39;optlib&#39;, &#39;baytune&#39;)
-        kwargs.setdefault(&#39;sampler&#39;, &#39;GP&#39;)
         kwargs.setdefault(&#39;target_largest_intermediate&#39;, 0)
         kwargs.setdefault(&#39;max_largest_intermediate&#39;, 2**26)
         kwargs.setdefault(&#39;temperatures&#39;, [1.0, 0.1, 0.01])
@@ -985,8 +978,6 @@ def _simulate_tn(circuit: any, initial_state: any, final_state: any,
                 max_time=kwargs[&#39;max_time&#39;],
                 max_repeats=kwargs[&#39;max_repeats&#39;],
                 minimize=kwargs[&#39;minimize&#39;],
-                optlib=kwargs[&#39;optlib&#39;],
-                sampler=kwargs[&#39;sampler&#39;],
                 progbar=verbose,
                 parallel=kwargs[&#39;parallel&#39;],
                 **kwargs[&#39;cotengra&#39;])
@@ -1563,11 +1554,6 @@ slices to fit the tensor contraction in memory is larger than
 <code>cotengra</code> for more information).</dd>
 <dt><strong><code>methods</code></strong> :&ensp;<code>list[str] (default: ['kahypar', 'greedy'])</code></dt>
 <dd>Heuristics used by <code>cotengra</code> to find optimal contraction.</dd>
-<dt><strong><code>optlib</code></strong> :&ensp;<code>str (default: 'baytune')</code></dt>
-<dd>Library used by <code>cotengra</code> to tune hyper-parameters while looking for
-the best contraction.</dd>
-<dt><strong><code>sampler</code></strong> :&ensp;<code>str (default: 'GP')</code></dt>
-<dd>Sampler used by <code>cotengra</code> while looking for the contraction.</dd>
 <dt><strong><code>cotengra</code></strong> :&ensp;<code>dict[any, any] (default: {})</code></dt>
 <dd>Extra parameters to pass to <code>cotengra</code>.</dd>
 </dl></div>
@@ -1730,11 +1716,6 @@ the best contraction.</dd>
         `cotengra` for more information).
     methods: list[str] (default: [&#39;kahypar&#39;, &#39;greedy&#39;])
         Heuristics used by `cotengra` to find optimal contraction.
-    optlib: str (default: &#39;baytune&#39;)
-        Library used by `cotengra` to tune hyper-parameters while looking for
-        the best contraction.
-    sampler: str (default: &#39;GP&#39;)
-        Sampler used by `cotengra` while looking for the contraction.
     cotengra: dict[any, any] (default: {})
         Extra parameters to pass to `cotengra`.
     &#34;&#34;&#34;
@@ -1862,8 +1843,6 @@ the best contraction.</dd>
         kwargs.setdefault(&#39;max_time&#39;, 120)
         kwargs.setdefault(&#39;max_repeats&#39;, 16)
         kwargs.setdefault(&#39;minimize&#39;, &#39;combo&#39;)
-        kwargs.setdefault(&#39;optlib&#39;, &#39;baytune&#39;)
-        kwargs.setdefault(&#39;sampler&#39;, &#39;GP&#39;)
         kwargs.setdefault(&#39;target_largest_intermediate&#39;, 0)
         kwargs.setdefault(&#39;max_largest_intermediate&#39;, 2**26)
         kwargs.setdefault(&#39;temperatures&#39;, [1.0, 0.1, 0.01])
