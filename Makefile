@@ -39,16 +39,78 @@ CXXFLAGS := $(CXXFLAGS) \
 # Add extra CXXFLAGS
 CXXFLAGS += $(CXXFLAGS_EXTRA)
 
+# Define OMP_FLAGS
+OMP_FLAGS := -fopenmp
+
+USE_MINIMAL_OMP ?= false
+ifneq ($(USE_MINIMAL_OMP), false)
+	ifeq ($(shell uname), Darwin)
+		ifneq ($(shell $(CXX) --version | grep clang | wc -l), 0)
+			# Get clang version
+			CLANG_VERSION := $(shell $(CXX) --version | cut -d ' ' -f 4 | cut -d . -f 1)
+	
+			# Create temporary folder
+			TMPDIR := $(shell mktemp -d)
+	
+			# Get right URL
+			ifeq ($(CLANG_VERSION), 13)
+				OMP_URL := https://mac.r-project.org/openmp/openmp-13.0.0-darwin21-Release.tar.gz
+				OMP_SHA1 := 47af4cb0d1f3554969f2ec9dee450d728ea30024
+			endif
+			ifeq ($(CLANG_VERSION), 12)
+				OMP_URL := https://mac.r-project.org/openmp/openmp-12.0.1-darwin20-Release.tar.gz
+				OMP_SHA1 := 4fab53ccc420ab882119256470af15c210d19e5e
+			endif
+			ifeq ($(CLANG_VERSION), 11)
+				OMP_URL := https://mac.r-project.org/openmp/openmp-11.0.1-darwin20-Release.tar.gz
+				OMP_SHA1 := 0dcd19042f01c4f552914e2cf7a53186de397aa1
+			endif
+			ifeq ($(CLANG_VERSION), 10)
+				OMP_URL := https://mac.r-project.org/openmp/openmp-10.0.0-darwin17-Release.tar.gz
+				OMP_SHA1 := 9bf16a64ab747528c5de7005a1ea1a9e318b3cf0
+			endif
+			ifeq ($(CLANG_VERSION), 9)
+				OMP_URL := https://mac.r-project.org/openmp/openmp-9.0.1-darwin17-Release.tar.gz
+				OMP_SHA1 := e5bd8501a3f957b4babe27b0a266d4fa15dbc23f
+			endif
+			ifeq ($(CLANG_VERSION), 8)
+				OMP_URL := https://mac.r-project.org/openmp/openmp-8.0.1-darwin17-Release.tar.gz
+				OMP_SHA1 := e4612bfcb1bf520bf22844f7db764cadb7577c28
+			endif
+			ifeq ($(CLANG_VERSION), 7)
+				OMP_URL := https://mac.r-project.org/openmp/openmp-7.1.0-darwin17-Release.tar.gz
+				OMP_SHA1 := 6891ff6f83f2ed83eeed42160de819b50cf643cd
+			endif
+	
+			# Download
+			PHONY := $(shell curl -o $(TMPDIR)/openmp.tar.gz $(OMP_URL) --verbose)
+	
+			# Check
+			ifneq ($(shell sha1sum $(TMPDIR)/openmp.tar.gz | cut -d ' ' -f 1), $(OMP_SHA1))
+				$(error)
+			endif
+	
+			# Extract
+			PHONY := $(shell tar xvzf $(TMPDIR)/openmp.tar.gz -C $(TMPDIR) --strip-components=3 usr/local/lib/libomp.dylib)
+	
+			# Update flags
+			OMP_FLAGS := -Xclang $(OMP_FLAGS)
+			LDFLAGS += -L$(TMPDIR) -lomp
+	
+		endif
+	endif
+endif
+
 # Check support for openMP
 is_openmp_supported := $(shell echo | \
                        $(CXX) $(CPPFLAGS) $(LDFLAGS) $(CXXFLAGS) \
-                          -fopenmp -x c++ -c - -o /dev/null 2>/dev/null && \
+                          $(OMP_FLAGS) -x c++ -c - -o /dev/null 2>/dev/null && \
                        echo yes || \
                        echo no)
 
 # Update CXXFLAGS is OpenMP is supported
 ifeq ($(is_openmp_supported), yes)
-  CXXFLAGS += -fopenmp
+  CXXFLAGS += $(OMP_FLAGS)
 endif
 
 # Define command for compilation
