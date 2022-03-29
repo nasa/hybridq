@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>hybridq API documentation</title>
+<title>hybridq.architecture.ibm.eagle API documentation</title>
 <meta name="description" content="Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Package <code>hybridq</code></h1>
+<h1 class="title">Module <code>hybridq.architecture.ibm.eagle</code></h1>
 </header>
 <section id="section-intro">
 <p>Author: Salvatore Mandra (salvatore.mandra@nasa.gov)</p>
@@ -33,6 +33,19 @@ except in compliance with the License. You may obtain a copy of the License at
 under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.</p>
+<h2 id="types">Types</h2>
+<p><strong><code>Qubit</code></strong>: <code>tuple[int, int]</code></p>
+<p><strong><code>QpuLayout</code></strong>: <code>list[Qubit]</code></p>
+<p><strong><code>Coupling</code></strong>: <code>tuple[Qubit, Qubit]</code></p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>drawing</code></strong> :&ensp;<code>str</code></dt>
+<dd>Drawing of the IBM Eagle QPU.</dd>
+<dt><strong><code>layout</code></strong> :&ensp;<code>QpuLayout</code></dt>
+<dd>Qubits available in IBM Eagle QPU.</dd>
+<dt><strong><code>couplings</code></strong> :&ensp;<code>list[Coupling]</code></dt>
+<dd>All couplings available in IBM Eagle QPU.</dd>
+</dl>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -52,53 +65,77 @@ Unless required by applicable law or agreed to in writing, software distributed
 under the License is distributed on an &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
+
+Types
+-----
+**`Qubit`**: `tuple[int, int]`
+
+**`QpuLayout`**: `list[Qubit]`
+
+**`Coupling`**: `tuple[Qubit, Qubit]`
+
+Attributes
+----------
+drawing: str
+    Drawing of the IBM Eagle QPU.
+
+layout: QpuLayout
+    Qubits available in IBM Eagle QPU.
+
+couplings: list[Coupling]
+    All couplings available in IBM Eagle QPU.
 &#34;&#34;&#34;
 
-from os import environ
-from psutil import cpu_count
+from __future__ import annotations
+from typing import List, Tuple, Callable
+from hybridq.architecture.utils import get_layout_from_drawing as get_layout
+from hybridq.utils import sort, argsort
 
-environ[&#39;_QUIMB_MPI_LAUNCHED&#39;] = &#39;MANUAL&#39;
-if &#39;NUMBA_NUM_THREADS&#39; not in environ:
-    environ[&#39;NUMBA_NUM_THREADS&#39;] = environ.get(&#39;OMP_NUM_THREADS&#39;,
-                                               str(cpu_count(logical=False)))</code></pre>
+__all__ = [&#39;drawing&#39;, &#39;layout&#39;, &#39;couplings&#39;]
+
+# Define Qubit type
+Qubit = Tuple[int, int]
+
+# Define Coupling
+Coupling = Tuple[Qubit, Qubit]
+
+# Define QpuLayout
+QpuLayout = List[Qubit]
+
+# Drawing of the QPU
+drawing = r&#34;&#34;&#34;
+X-X-X-X-X-X-X-X-X-X-X-X-X-X
+|       |       |       |
+X       X       X       X
+|       |       |       |
+X-X-X-X-X-X-X-X-X-X-X-X-X-X-X
+    |       |       |       |
+    X       X       X       X
+    |       |       |       |
+X-X-X-X-X-X-X-X-X-X-X-X-X-X-X
+|       |       |       |
+X       X       X       X
+|       |       |       |
+X-X-X-X-X-X-X-X-X-X-X-X-X-X-X
+    |       |       |       |
+    X       X       X       X
+    |       |       |       |
+X-X-X-X-X-X-X-X-X-X-X-X-X-X-X
+|       |       |       |
+X       X       X       X
+|       |       |       |
+X-X-X-X-X-X-X-X-X-X-X-X-X-X-X
+    |       |       |       |
+    X       X       X       X
+    |       |       |       |
+  X-X-X-X-X-X-X-X-X-X-X-X-X-X
+&#34;&#34;&#34;
+
+# Get couplings and layout
+layout, couplings = get_layout(drawing)</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="hybridq.architecture" href="architecture/index.html">hybridq.architecture</a></code></dt>
-<dd>
-<div class="desc"><p>Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …</p></div>
-</dd>
-<dt><code class="name"><a title="hybridq.base" href="base/index.html">hybridq.base</a></code></dt>
-<dd>
-<div class="desc"><p>Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …</p></div>
-</dd>
-<dt><code class="name"><a title="hybridq.circuit" href="circuit/index.html">hybridq.circuit</a></code></dt>
-<dd>
-<div class="desc"><p>Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …</p></div>
-</dd>
-<dt><code class="name"><a title="hybridq.dm" href="dm/index.html">hybridq.dm</a></code></dt>
-<dd>
-<div class="desc"><p>Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …</p></div>
-</dd>
-<dt><code class="name"><a title="hybridq.extras" href="extras/index.html">hybridq.extras</a></code></dt>
-<dd>
-<div class="desc"><p>Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …</p></div>
-</dd>
-<dt><code class="name"><a title="hybridq.gate" href="gate/index.html">hybridq.gate</a></code></dt>
-<dd>
-<div class="desc"><p>Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …</p></div>
-</dd>
-<dt><code class="name"><a title="hybridq.noise" href="noise/index.html">hybridq.noise</a></code></dt>
-<dd>
-<div class="desc"><p>Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …</p></div>
-</dd>
-<dt><code class="name"><a title="hybridq.utils" href="utils/index.html">hybridq.utils</a></code></dt>
-<dd>
-<div class="desc"><p>Author: Salvatore Mandra (salvatore.mandra@nasa.gov) …</p></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -110,19 +147,15 @@ if &#39;NUMBA_NUM_THREADS&#39; not in environ:
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul></ul>
+<ul>
+<li><a href="#types">Types</a></li>
+<li><a href="#attributes">Attributes</a></li>
+</ul>
 </div>
 <ul id="index">
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3>Super-module</h3>
 <ul>
-<li><code><a title="hybridq.architecture" href="architecture/index.html">hybridq.architecture</a></code></li>
-<li><code><a title="hybridq.base" href="base/index.html">hybridq.base</a></code></li>
-<li><code><a title="hybridq.circuit" href="circuit/index.html">hybridq.circuit</a></code></li>
-<li><code><a title="hybridq.dm" href="dm/index.html">hybridq.dm</a></code></li>
-<li><code><a title="hybridq.extras" href="extras/index.html">hybridq.extras</a></code></li>
-<li><code><a title="hybridq.gate" href="gate/index.html">hybridq.gate</a></code></li>
-<li><code><a title="hybridq.noise" href="noise/index.html">hybridq.noise</a></code></li>
-<li><code><a title="hybridq.utils" href="utils/index.html">hybridq.utils</a></code></li>
+<li><code><a title="hybridq.architecture.ibm" href="index.html">hybridq.architecture.ibm</a></code></li>
 </ul>
 </li>
 </ul>
