@@ -21,6 +21,6 @@ jobs:
         run: |
           docker run --rm --user root hybridq bash -c '\
             export PATH=/opt/python/$PYTHON_VERSION/bin/:$PATH && \
-            pip install yapf==0.31.0 clang-format==13.0.0 && \
+            pip install yapf==0.32.0 clang-format==13.0.0 && \
             cd /opt/hybridq && \
             bash scripts/check_format.sh'
