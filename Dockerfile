@@ -13,9 +13,6 @@ ARG HYBRIDQ_DISABLE_CPP_CORE
 # Copy HybridQ
 COPY ./ /opt/hybridq
 
-# Install PaperMill (to be fixed and merged to Docker_baseline)
-RUN $PYTHON -m pip install --no-cache papermill
-
 # Install HybridQ
 RUN cd /opt/hybridq && \
     source /opt/rh/devtoolset-10/enable && \

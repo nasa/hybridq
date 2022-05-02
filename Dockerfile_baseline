@@ -46,6 +46,9 @@ RUN $PYTHON -m pip install --no-cache mpi4py
 # Install JupyterLab
 RUN $PYTHON -m pip install --no-cache jupyter notebook
 
+# Install PaperMill
+RUN $PYTHON -m pip install --no-cache papermill
+
 # Copy requirements
 COPY requirements.txt /tmp/
 
