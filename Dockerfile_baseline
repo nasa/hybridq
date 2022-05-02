@@ -24,8 +24,6 @@ RUN yum -y update && \
 ARG PYTHON_VERSION
 
 # Set default if needed. Available versions
-# cp36-cp36m
-# pp37-pypy37_pp73
 # cp37-cp37m
 # cp38-cp38
 # cp39-cp39
