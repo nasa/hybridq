@@ -1,31 +1,16 @@
 # Get baseline
 FROM quay.io/pypa/manylinux2014_x86_64
 
-# Add Oracle repo
-RUN echo -e "\
-[ol7_software_collections]\n\
-name=Software Collection packages for Oracle Linux 7 (\$basearch)\n\
-baseurl=http://yum.oracle.com/repo/OracleLinux/OL7/SoftwareCollections/\$basearch/\n\
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle\n\
-gpgcheck=1\n\
-enabled=1" > /etc/yum.repos.d/OracleLinux7.repo
-
-# Update Key
-RUN curl https://yum.oracle.com/RPM-GPG-KEY-oracle-ol7 --output /etc/pki/rpm-gpg/RPM-GPG-KEY-oracle && \
-    gpg --quiet --with-fingerprint /etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
-
 # Update baseline
 RUN yum -y update && \
     yum -y upgrade && \
-    yum install -y openmpi-devel devtoolset-10-gcc-c++.x86_64 && \
+    yum install -y openmpi-devel devtoolset-11-gcc-c++.x86_64 && \
     yum clean all -y
 
 # Get Python version
 ARG PYTHON_VERSION
 
 # Set default if needed. Available versions
-# cp36-cp36m
-# pp37-pypy37_pp73
 # cp37-cp37m
 # cp38-cp38
 # cp39-cp39
@@ -47,6 +32,9 @@ RUN $PYTHON -m pip install --no-cache mpi4py
 
 # Install JupyterLab
 RUN $PYTHON -m pip install --no-cache jupyter notebook
+
+# Install PaperMill
+RUN $PYTHON -m pip install --no-cache papermill
 
 # Copy requirements
 COPY requirements.txt /tmp/
