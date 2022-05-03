@@ -43,12 +43,4 @@ for VERSION in $PYTHON_VERSIONS; do
   $DOCKER rmi hybridq-baseline:latest
   $DOCKER rmi hybridq:latest
 
-  # Tags for docker.io
-  $DOCKER tag hybridq-baseline:$VERSION docker.io/smandra/hybridq-baseline:$VERSION
-  $DOCKER tag hybridq:${HVERSION}-${VERSION} docker.io/smandra/hybridq:${HVERSION}-${VERSION}
-
-  # Push
-  $DOCKER push docker.io/smandra/hybridq-baseline:$VERSION
-  $DOCKER push docker.io/smandra/hybridq:${HVERSION}-${VERSION}
-
 done
