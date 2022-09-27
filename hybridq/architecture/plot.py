@@ -92,10 +92,12 @@ def plot_qubits(qpu_layout: QpuLayout,
                               scale * _ratio) if figsize is None else figsize)
 
     # Plot couplings in layout
-    for (x1, y1), (x2, y2) in layout:
-        c = 'tab:red' if ((x1, y1) in subset) ^ (
-            (x2, y2) in subset) else 'tab:green'
-        plt.plot([x1, x2], [y1, y2], lw=5, c=c)
+    for c in layout:
+        from itertools import combinations
+        for (x1, y1), (x2, y2) in combinations(c, 2):
+            c = 'tab:red' if ((x1, y1) in subset) ^ (
+                (x2, y2) in subset) else 'tab:green'
+            plt.plot([x1, x2], [y1, y2], lw=5, c=c)
 
     # Plot qubits
     for x, y in qpu_layout:

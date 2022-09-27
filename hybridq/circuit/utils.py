@@ -323,6 +323,7 @@ def to_nx(circuit: iter[BaseGate],
 
 def to_tn(circuit: iter[BaseGate],
           complex_type: any = 'complex64',
+          qubits_map: map[Qubit, any] = None,
           return_qubits_map: bool = False,
           leaves_prefix: str = 'q_') -> quimb.tensor.TensorNetwork:
     """
@@ -336,6 +337,9 @@ def to_tn(circuit: iter[BaseGate],
     complex_type: any, optional
         Complex type to use while getting the `quimb.tensor.TensorNetwork`
         representation.
+    qubits_map: map[Qubit, any], optional
+        Map used to assign tensor indexes to qubits. If not provided, a new
+        `qubits_map` is created.
     return_qubits_map: bool, optional
         Return map associated to the Circuit qubits.
     leaves_prefix: str, optional
@@ -366,8 +370,16 @@ def to_tn(circuit: iter[BaseGate],
     # Get all qubits
     all_qubits = circuit.all_qubits()
 
-    # Get qubits map
-    qubits_map = {q: i for i, q in enumerate(all_qubits)}
+    # Check provided qubits_map
+    if qubits_map is not None:
+        # Check qubits
+        if set(all_qubits).difference(qubits_map):
+            raise ValueError(
+                "Qubits in 'circuit' are not mapped in 'qubits_map'")
+
+    # Create new map
+    else:
+        qubits_map = {q: i for i, q in enumerate(all_qubits)}
 
     # Get last_tag
     last_tag = {q: 'i' for q in all_qubits}
