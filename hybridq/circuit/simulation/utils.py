@@ -39,7 +39,8 @@ def _parity(v):
 
 def prepare_state(state: str,
                   d: {int, iter[int]} = 2,
-                  complex_type: any = 'complex64'):
+                  complex_type: any = 'complex64',
+                  reshape: bool = True):
     """
     Prepare initial state accordingly to `state`.
 
@@ -96,15 +97,33 @@ def prepare_state(state: str,
     if len(d) != len(state):
         raise ValueError("Number of qubits and dimensions are not consistent.")
 
-    # Simple cases
-    if not set(state).difference(['0', '1']):
-        # Initialize in the computational basis
-        q_state = np.zeros(d, dtype=complex_type)
-        q_state[tuple(int(b) for b in state)] = 1
+    # Get dimensions
+    d_a0 = tuple(d for d, b in zip(d, state) if b in '0')
+    d_a1 = tuple(d for d, b in zip(d, state) if b in '1')
+    d_p = tuple(d for d, b in zip(d, state) if b == '+')
+    d_n = tuple(d for d, b in zip(d, state) if b == '-')
 
-    elif set(state) == {'+'}:
+    # Get size
+    p_a0 = np.prod(d_a0).astype(int)
+    p_a1 = np.prod(d_a1).astype(int)
+    p_p = np.prod(d_p).astype(int)
+    p_n = np.prod(d_n).astype(int)
+
+    # Get number of dimensions
+    n_a0 = len(d_a0)
+    n_a1 = len(d_a1)
+    n_p = len(d_p)
+    n_n = len(d_n)
+
+    # Simple cases
+    if n_p == n_n == 0:
+        # Initialize in the computational basis
+        q_state = np.zeros(p_a0 * p_a1, dtype=complex_type)
+        q_state[int(state, 2)] = 1
+
+    elif n_a0 == n_a1 == n_n:
         # Initialize to superposition
-        q_state = np.ones(d, dtype=complex_type) / np.sqrt(np.prod(d))
+        q_state = np.ones(p_p, dtype=complex_type) / np.sqrt(p_p)
 
     else:
         # Get order
@@ -117,40 +136,20 @@ def prepare_state(state: str,
                         }[x])
         order = [order.index(i) for i in range(len(order))]
 
-        # Get dimensions
-        d_a0 = tuple(d for d, b in zip(d, state) if b in '0')
-        d_a1 = tuple(d for d, b in zip(d, state) if b in '1')
-        d_b = tuple(d for d, b in zip(d, state) if b == '+')
-        d_c = tuple(d for d, b in zip(d, state) if b == '-')
-
-        # Get size
-        p_a0 = np.prod(d_a0).astype(int)
-        p_a1 = np.prod(d_a1).astype(int)
-        p_b = np.prod(d_b).astype(int)
-        p_c = np.prod(d_c).astype(int)
-
-        # Get number of dimensions
-        n_a0 = len(d_a0)
-        n_a1 = len(d_a1)
-        n_b = len(d_b)
-        n_c = len(d_c)
-
         # Check
-        assert (n_a0 + n_a1 + n_b + n_c == len(state))
+        assert (n_a0 + n_a1 + n_p + n_n == len(state))
 
         # Initialize state
-        q_state = np.zeros((p_a0 * p_a1, p_b, p_c), dtype=complex_type)
+        q_state = np.zeros((p_a0 * p_a1, p_p, p_n), dtype=complex_type)
 
         # Assign state
         q_state[p_a1 - 1] = np.reshape(
-            np.kron(np.ones(p_b), _parity(np.arange(p_c))) / np.sqrt(p_b * p_c),
-            (p_b, p_c))
+            np.kron(np.ones(p_p), _parity(np.arange(p_n))) / np.sqrt(p_p * p_n),
+            (p_p, p_n))
 
-        # Reshape and transpose
-        q_state = np.reshape(
-            np.reshape(
-                np.transpose(np.reshape(q_state, d_a0 + d_a1 + d_b + d_c),
-                             order), (p_a0 * p_a1 * p_b * p_c,)), d)
+        # Transpose
+        q_state = np.transpose(np.reshape(q_state, d_a0 + d_a1 + d_p + d_n),
+                               order).ravel()
 
     # Return state
-    return q_state
+    return np.reshape(q_state, d) if reshape else q_state
