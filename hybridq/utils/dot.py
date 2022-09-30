@@ -139,6 +139,7 @@ def to_complex_array(a: array_like):
 def dot(a: np.ndarray,
         b: np.ndarray,
         axes_b: iter[int] = None,
+        b_dims: list[int] = None,
         b_as_complex_array: bool = False,
         inplace: bool = False,
         backend: any = 'numpy',
@@ -182,12 +183,30 @@ def dot(a: np.ndarray,
 
     # Get number of axes
     a_ndim = a.ndim
-    b_ndim = b.ndim - (1 if b_as_complex_array else 0)
 
     # Get shapes
     a_shape = np.asarray(a.shape)
-    b_shape = np.asarray(b.shape[:len(b.shape) -
-                                 (1 if b_as_complex_array else 0)])
+
+    # If b_dims is provided, ravel b
+    if b_dims is not None:
+        if b_as_complex_array:
+            b = np.reshape(b, [b.shape[0]] + [np.prod(b.shape[1:])])
+        else:
+            b = b.ravel()
+
+        # Get number of axes
+        b_ndim = len(b_dims)
+
+        # Get shape
+        b_shape = np.asarray(b_dims)
+
+    else:
+        # Get number of axes
+        b_ndim = b.ndim - (1 if b_as_complex_array else 0)
+
+        # Get shape
+        b_shape = np.asarray(b.shape[:len(b.shape) -
+                                     (1 if b_as_complex_array else 0)])
 
     # Get axes
     axes_b = np.asarray(axes_b)
