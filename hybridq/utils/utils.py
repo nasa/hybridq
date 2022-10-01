@@ -532,22 +532,38 @@ class Warning(Warning):
 
 # Load library
 def load_library(libname: str,
-                 prefix: list[str, ...] = (None, 'lib', 'local/lib', 'usr/lib',
+                 prefix: list[str, ...] = ('', 'lib', 'local/lib', 'usr/lib',
                                            'usr/local/lib')):
-    from sys import base_prefix
+    """
+    Load library `libname`.
+
+    Parameters
+    ----------
+    libname: str
+        Library name to load
+
+    prefix: list[str, ...]
+        A list of paths.
+
+    Returns
+    -------
+    CDLL | None:
+        Return `CDLL` if the library can be loaded and `None` othewise.
+    """
+    from sys import base_prefix, exec_prefix
     from os import path
     import ctypes
 
-    # Define how to load library
-    def _load(p: str = None):
-        # Get library name
-        _lib = libname if p is None else path.join(base_prefix, p, libname)
-
-        # Try to load. If fails, return None
+    def _load(path):
         try:
-            return ctypes.cdll.LoadLibrary(_lib)
-        except OSError:
+            return ctypes.cdll.LoadLibrary(path)
+        except:
             return None
 
-    # Load library
-    return next((lib for lib in map(_load, prefix) if lib is not None), None)
+    # Look for the library
+    return next((lib for lib in map(
+        _load,
+        map(lambda x: path.join(*x, libname), (
+            (base, path)
+            for base in (base_prefix, exec_prefix)
+            for path in prefix))) if lib is not None), None)
