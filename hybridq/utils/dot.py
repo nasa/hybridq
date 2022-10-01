@@ -160,7 +160,7 @@ def dot(a: np.ndarray,
     kwargs.setdefault('force_numpy', False)
     kwargs.setdefault('raise_if_hcore_fails', False)
     kwargs.setdefault('swap_back', True)
-    kwargs.setdefault('alignment', 32)
+    kwargs.setdefault('alignment', 64)
 
     # If axes are not provided, fall back to numpy.dot
     if axes_b is None:
