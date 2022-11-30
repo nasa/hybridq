@@ -1,3 +1,4 @@
+Pipfile
 .eggs/
 .ipynb_checkpoints/
 .*.swp
@@ -10,4 +11,4 @@ __*__.ipynb
 dask-worker-space/
 build/
 dist/
-hybridq.egg-info/
+*.egg-info/
