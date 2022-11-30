@@ -32,11 +32,13 @@ _DEFAULTS = {
     'order':
         environ.get('HYBRIDQ_ARRAY_ORDER', 'C'),
     'force_compilation':
-        bool(environ.get('HYBRIDQ_ARRAY_FORCE_COMPILATION', 1)),
+        int(environ.get('HYBRIDQ_ARRAY_FORCE_COMPILATION', 1)),
+    'use_global_cache':
+        int(environ.get('HYBRIDQ_ARRAY_USE_GLOBAL_CACHE', 1)),
     'backend':
         environ.get('HYBRIDQ_ARRAY_BACKEND', 'numpy'),
     'raise_if_hcore_fails':
-        bool(environ.get('HYBRIDQ_ARRAY_RAISE_IF_HCORE_FAILS', False))
+        int(environ.get('HYBRIDQ_ARRAY_RAISE_IF_HCORE_FAILS', 0))
 }
 
 # Register functions for autoray

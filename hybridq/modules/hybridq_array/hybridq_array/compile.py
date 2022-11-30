@@ -42,7 +42,10 @@ def compile():
         _root = os.path.join(get_python_lib(), 'hybridq_array/lib')
 
         # Get cache folder
-        _cache = os.path.join(os.getcwd(), '.hybridq_array')
+        _cache = os.path.join(
+            os.path.expanduser('~'), '.cache/hybridq_array'
+        ) if _DEFAULTS['use_global_cache'] else os.path.join(
+            os.getcwd(), '.hybridq_array')
 
         # Check if writable
         if not os.access(os.path.dirname(_cache), os.W_OK):
@@ -59,7 +62,7 @@ def compile():
         assert (os.access(_cache, os.W_OK))
 
         # Try to compile
-        _LOGGER.info('Try to compile C++ core.')
+        _LOGGER.info("Try to compile C++ core to '%s'", _cache)
         try:
             Popen('make -C {} -j {} -e OUTPUT_PATH={}'.format(
                 _root, os.cpu_count(), _cache).split(),

@@ -86,7 +86,11 @@ def load_library(libname: str,
 
     # If libpath is None, set to current folder
     if libpath is None:
-        libpath = [path.join(getcwd(), '.hybridq_array')]
+        libpath = [
+            path.join(path.expanduser('~'), '.cache/hybridq_array')
+            if _DEFAULTS['use_global_cache'] else path.join(
+                getcwd(), '.hybrudq_array')
+        ]
 
     # Otherwise, use provided
     else:
