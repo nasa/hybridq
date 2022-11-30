@@ -24,10 +24,7 @@ __all__ = []
 # Define default parameters
 _DEFAULTS = {
     'libpath':
-        environ.get('HYBRIDQ_ARRAY_LIBPATH', [
-            path.join(get_python_lib(), 'hybridq_array/lib'),
-            path.join(path.expanduser('~'), '.cache/hybridq_array/lib')
-        ]),
+        environ.get('HYBRIDQ_ARRAY_LIBPATH', None),
     'alignment':
         int(environ.get('HYBRIDQ_ARRAY_ALIGNMENT', 32)),
     'dtype':

@@ -17,8 +17,18 @@ specific language governing permissions and limitations under the License.
 
 from __future__ import annotations
 from .defaults import _DEFAULTS
+import logging
 
 __all__ = ['isintegral', 'load_library', 'get_ctype', 'define_lib_fn']
+
+# Create logger
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.INFO)
+_LOGGER_CH = logging.StreamHandler()
+_LOGGER_CH.setLevel(logging.DEBUG)
+_LOGGER_CH.setFormatter(
+    logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s'))
+_LOGGER.addHandler(_LOGGER_CH)
 
 
 def isintegral(x: any) -> bool:
@@ -46,9 +56,11 @@ def load_library(libname: str,
     ----------
     libname: str
         Library name to load
-
     prefix: list[str, ...]
         A list of paths.
+    libpath: str | iter[str, ...]
+        Path(s) to look for the core library. If `None`, use the current
+        folder + `/.hybridq_array/`.
 
     Returns
     -------
@@ -56,18 +68,30 @@ def load_library(libname: str,
         Return `CDLL` if the library can be loaded and `None` othewise.
     """
     from sys import base_prefix, exec_prefix
-    from os import path
+    from os import path, getcwd
     import ctypes
 
     def _load(path):
         try:
-            return ctypes.cdll.LoadLibrary(path)
+            # Load library
+            _lib = ctypes.cdll.LoadLibrary(path)
+
+            # Log
+            _LOGGER.info("Loaded '%s' located in '%s'", libname, path)
+
+            # Return library
+            return _lib
         except:
             return None
 
-    # Get default libpath
-    libpath = [libpath] if isinstance(libpath, str) else tuple(map(
-        str, libpath))
+    # If libpath is None, set to current folder
+    if libpath is None:
+        libpath = [path.join(getcwd(), '.hybridq_array')]
+
+    # Otherwise, use provided
+    else:
+        libpath = [libpath] if isinstance(libpath, str) else tuple(
+            map(str, libpath))
 
     # Get prefix
     prefix = [prefix] if isinstance(prefix, str) else tuple(map(str, prefix))

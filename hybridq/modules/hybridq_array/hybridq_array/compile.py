@@ -29,49 +29,46 @@ _LOGGER.addHandler(_LOGGER_CH)
 
 
 def compile():
+    from .defaults import _DEFAULTS
     from .utils import load_library
 
     # If library cannot be loaded, try to compile
-    if load_library('hybridq.so') is None or load_library(
-            'hybridq_swap.so') is None:
+    if _DEFAULTS['libpath'] is None:
         from distutils.sysconfig import get_python_lib
-        from os import cpu_count, makedirs
         from subprocess import Popen, PIPE
-        from .defaults import _DEFAULTS
-        from os import path
+        import os
+
+        # Get root of the package
+        _root = os.path.join(get_python_lib(), 'hybridq_array/lib')
 
         # Get cache folder
-        _cache = path.join(path.expanduser('~'), '.cache/hybridq_array/lib')
+        _cache = os.path.join(os.getcwd(), '.hybridq_array')
 
-        # Get libpath
-        _libpath = _DEFAULTS.get('libpath', '')
-
-        # Check
-        if (isinstance(_libpath, str) and
-                _libpath != _cache) or (_cache not in list(_libpath)):
-            _LOGGER.warning(
-                "Cannot use auto-compilation if HYBRIDQ_ARRAY_LIBPATH "
-                "has been provided.")
+        # Check if writable
+        if not os.access(os.path.dirname(_cache), os.W_OK):
+            _LOGGER.warning("Cannot create cache folder.")
             _LOGGER.warning("Cannot use C++ core.")
 
-        else:
-            # Get root of the package
-            _root = path.join(get_python_lib(), 'hybridq_array/lib')
+            # Return
+            return
 
-            # Create folder
-            makedirs(_cache, exist_ok=True)
+        # Create folder
+        os.makedirs(_cache, exist_ok=True)
 
-            # Try to compile
-            _LOGGER.info('Try to compile C++ core.')
-            try:
-                Popen('make -C {} -j {} -e OUTPUT_PATH={}'.format(
-                    _root, cpu_count(), _cache).split(),
-                      stderr=PIPE,
-                      stdout=PIPE).communicate()
-            except FileNotFoundError as e:
-                _LOGGER.warning(e)
+        # Check
+        assert (os.access(_cache, os.W_OK))
 
-            # Try to load again
-            if load_library('hybridq.so') is None or load_library(
-                    'hybridq_swap.so') is None:
-                _LOGGER.warning("Cannot use C++ core.")
+        # Try to compile
+        _LOGGER.info('Try to compile C++ core.')
+        try:
+            Popen('make -C {} -j {} -e OUTPUT_PATH={}'.format(
+                _root, os.cpu_count(), _cache).split(),
+                  stderr=PIPE,
+                  stdout=PIPE).communicate()
+        except FileNotFoundError as e:
+            _LOGGER.warning(e)
+
+        # Try to load again
+        if load_library('hybridq.so') is None or load_library(
+                'hybridq_swap.so') is None:
+            _LOGGER.warning("Cannot use C++ core.")
