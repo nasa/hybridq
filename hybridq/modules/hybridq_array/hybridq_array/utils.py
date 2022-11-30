@@ -89,7 +89,7 @@ def load_library(libname: str,
         libpath = [
             path.join(path.expanduser('~'), '.cache/hybridq_array')
             if _DEFAULTS['use_global_cache'] else path.join(
-                getcwd(), '.hybrudq_array')
+                getcwd(), '.hybridq_array')
         ]
 
     # Otherwise, use provided
