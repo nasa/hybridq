@@ -1,0 +1,3 @@
+autoray
+numpy
+opt_einsum
