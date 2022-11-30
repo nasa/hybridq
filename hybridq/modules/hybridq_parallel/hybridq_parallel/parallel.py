@@ -116,7 +116,7 @@ class Executor:
         # Shutdown if active
         if self.executor is not None:
             # Log
-            _LOGGER.warning('Shutting down executor')
+            _LOGGER.info('Shutting down executor')
 
             # Shutdown
             self.executor.shutdown(wait=wait, cancel_futures=cancel_futures)
@@ -193,7 +193,7 @@ class Executor:
             from concurrent.futures import ProcessPoolExecutor
 
             # Log
-            _LOGGER.warning('Starting executor with %s workers', max_workers)
+            _LOGGER.info('Starting executor with %s workers', max_workers)
 
             # Set number of workers
             self._n_workers = max_workers
