@@ -16,7 +16,9 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 
-__all__ = ['Function', 'map', 'starmap', 'init', 'shutdown', 'restart']
+__all__ = [
+    'Function', 'map', 'starmap', 'get_n_workers', 'init', 'shutdown', 'restart'
+]
 
 # create logger
 _LOGGER = logging.getLogger(__name__)
@@ -41,12 +43,14 @@ class Function:
     """
     __slots__ = ('_fn', '_pickler')
 
-    def __init__(self, fn: callable, /, *, pickler: str = 'dill'):
+    def __init__(self, fn: callable, /, *, pickler: str = None):
+        from os import environ
+
         # Store function
         self._fn = fn
 
         # Store module
-        self._pickler = pickler
+        self._pickler = environ.get('HYBRIDQ_PARALLEL_PICKLER', 'dill')
 
     def __str__(self):
         return str(self._fn)
@@ -81,11 +85,14 @@ class Function:
 
 
 class Executor:
-    __slots__ = ('_executor',)
+    __slots__ = ('_executor', '_n_workers')
 
     def __init__(self):
         # Initialize _executor to None
         self._executor = None
+
+        # Initialie _n_workers to zero
+        self._n_workers = 0
 
     def __del__(self):
         # Shutdown
@@ -94,6 +101,10 @@ class Executor:
     @property
     def executor(self):
         return self._executor
+
+    @property
+    def n_workers(self):
+        return self._n_workers
 
     def shutdown(self, wait=True, *, cancel_futures=False):
         """
@@ -112,6 +123,9 @@ class Executor:
 
             # Set to None
             self._executor = None
+
+            # Set to zero
+            self._n_workers = 0
 
     def map(self, fn, /, *iterables, timeout=None, chunksize=1):
         """
@@ -181,6 +195,9 @@ class Executor:
             # Log
             _LOGGER.warning('Starting executor with %s workers', max_workers)
 
+            # Set number of workers
+            self._n_workers = max_workers
+
             # Start executor
             self._executor = ProcessPoolExecutor(max_workers=max_workers,
                                                  **kwargs)
@@ -191,6 +208,10 @@ class Executor:
 
 # Initialize executor
 _EXECUTOR = Executor()
+
+
+def get_n_workers():
+    return _EXECUTOR.n_workers
 
 
 def init(max_workers: int = None, *, ignore_init_error: bool = False, **kwargs):
@@ -273,33 +294,50 @@ def restart(max_workers: int = None,
                    **kwargs)
 
 
-def _len(x):
-    try:
-        return len(x)
-    except:
-        return 0
-
-
-def _map(fn, /, *iterables, verbose: bool = False, **kwargs):
+def _map(fn: callable,
+         /,
+         *iterables,
+         verbose: bool = False,
+         pickler: str = None,
+         **kwargs):
     from tqdm.auto import tqdm
 
     # Initialize
     try:
         verbose = dict(verbose)
+        if not 'disable' in verbose:
+            verbose['disable'] = False
     except:
         verbose = dict(disable=not verbose)
 
     # Get total
-    if 'total' not in verbose and (_total := min(
-            filter(lambda x: x > 0, (_len(x) for x in iterables)))) > 0:
-        verbose['total'] = _total
+    if not verbose['disable']:
+
+        def _len(x):
+            try:
+                return len(x)
+            except:
+                return None
+
+        try:
+            verbose['total'] = min(
+                *filter(lambda x: x is not None, map(_len, iterables)))
+        except:
+            pass
 
     # Run map
-    for x in tqdm(_EXECUTOR.map(fn, *iterables, **kwargs), **verbose):
+    for x in tqdm(
+            _EXECUTOR.map(Function(fn, pickler=pickler), *iterables, **kwargs),
+            **verbose):
         yield x
 
 
-def map(fn, /, *iterables, verbose: bool = False, **kwargs):
+def map(fn: callable,
+        /,
+        *iterables,
+        verbose: bool = False,
+        pickler: str = None,
+        **kwargs):
     """
     Returns an iterator equivalent to `map(fn, iter)`.
 
@@ -315,6 +353,10 @@ def map(fn, /, *iterables, verbose: bool = False, **kwargs):
         If greater than one, the iterables will be chopped into chunks of size
         chunksize and submitted to the process pool.  If set to one, the items
         in the list will be sent one at a time.
+    pickler: str, optional
+        Use `pickler` as module to pickle functions.
+    verbose: bool, optional
+        Show progressbar.
 
     Returns
     -------
@@ -330,7 +372,7 @@ def map(fn, /, *iterables, verbose: bool = False, **kwargs):
     Exception:
         If fn(*args) raises for any values.
     """
-    return _map(fn, *iterables, **kwargs)
+    return _map(fn, *iterables, verbose=verbose, pickler=pickler, **kwargs)
 
 
 def starmap(fn, *iterables, **kwargs):
@@ -342,6 +384,6 @@ def starmap(fn, *iterables, **kwargs):
 
     See Also
     --------
-    map
+    hybridq_parallel.map
     """
     return _map(lambda x: fn(*x), *iterables, **kwargs)
