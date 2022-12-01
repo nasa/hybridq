@@ -294,41 +294,10 @@ def restart(max_workers: int = None,
                    **kwargs)
 
 
-def _map(fn: callable,
-         /,
-         *iterables,
-         verbose: bool = False,
-         pickler: str = None,
-         **kwargs):
-    from tqdm.auto import tqdm
-
-    # Initialize
-    try:
-        verbose = dict(verbose)
-        if not 'disable' in verbose:
-            verbose['disable'] = False
-    except:
-        verbose = dict(disable=not verbose)
-
-    # Get total
-    if not verbose['disable']:
-
-        def _len(x):
-            try:
-                return len(x)
-            except:
-                return None
-
-        try:
-            verbose['total'] = min(
-                *filter(lambda x: x is not None, map(_len, iterables)))
-        except:
-            pass
+def _map(fn: callable, /, *iterables, pickler: str = None, **kwargs):
 
     # Run map
-    for x in tqdm(
-            _EXECUTOR.map(Function(fn, pickler=pickler), *iterables, **kwargs),
-            **verbose):
+    for x in _EXECUTOR.map(Function(fn, pickler=pickler), *iterables, **kwargs):
         yield x
 
 
@@ -355,8 +324,6 @@ def map(fn: callable,
         in the list will be sent one at a time.
     pickler: str, optional
         Use `pickler` as module to pickle functions.
-    verbose: bool, optional
-        Show progressbar.
 
     Returns
     -------
@@ -372,7 +339,7 @@ def map(fn: callable,
     Exception:
         If fn(*args) raises for any values.
     """
-    return _map(fn, *iterables, verbose=verbose, pickler=pickler, **kwargs)
+    return _map(fn, *iterables, pickler=pickler, **kwargs)
 
 
 def starmap(fn, *iterables, **kwargs):
