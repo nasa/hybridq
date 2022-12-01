@@ -72,21 +72,12 @@ from hybridq_parallel import map as pmap
 list(pmap(lambda x: x**2, range(10), pickler='cloudpickle'))
 > [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
 ```
-Finally, **HybridQ-Parallel** uses `tqdm` to provide a progressbar:
+If needed, a progressbar can be added using packages like `tqdm`:
 ```
 from hybridq_parallel import map as pmap
+from tqdm.auto import tqdm
 
-list(pmap(lambda x, y: y * x**2, range(10), range(10), verbose=True))
-> [0, 1, 8, 27, 64, 125, 216, 343, 512, 729]
-```
-Extra parameters can be passed to `tqdm` through `verbose`:
-```
-from hybridq_parallel import starmap
-
-list(
-    starmap(lambda x, y: x * y**2,
-            zip(range(10), range(10)),
-            verbose=dict(total=10)))
+list(tqdm(pmap(lambda x, y: y * x**2, range(10), range(10)), total=10))
 ```
 
 ## How To Cite
