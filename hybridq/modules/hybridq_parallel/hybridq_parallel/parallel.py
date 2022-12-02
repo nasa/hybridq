@@ -171,7 +171,7 @@ class Executor:
         max_workers: int, optional
             Set the maximum number of tasks that can be running in parallel in
             worker processes. The default number of workers can be changed
-            using the env variable `HYBRIDQ_PARALLEL_MAX_WORKERS` (usually
+            using the env variable `HYBRIDQ_PARALLEL_NUM_THREADS` (usually
             set to the number of available cpus).
         ignore_init_error: bool, optional
             If `False`, raise an error if executor is already initialized.
@@ -186,7 +186,7 @@ class Executor:
         # Set mar_workers
         max_workers = int(
             environ.get(
-                'HYBRIDQ_PARALLEL_MAX_WORKERS',
+                'HYBRIDQ_PARALLEL_NUM_THREADS',
                 cpu_count())) if max_workers is None else int(max_workers)
 
         if self.executor is None:

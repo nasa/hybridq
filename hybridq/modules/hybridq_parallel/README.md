@@ -27,7 +27,7 @@ list(pmap(lambda x: x**2, range(10)))
 The pool executor is automatically started when requires and its number of
 workers is initialized by default to the number of available cores. The default
 behavior can be changed by setting the environment variable
-`HYBRIDQ_PARALLEL_MAX_WORKERS` to the desired number before starting the pool
+`HYBRIDQ_PARALLEL_NUM_THREADS` to the desired number before starting the pool
 executor. Otherwise, the pool executor can be manually started with the desired
 number of workers:
 ```
