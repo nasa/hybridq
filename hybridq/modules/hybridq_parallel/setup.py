@@ -35,7 +35,8 @@ with open(path.join(here, 'requirements.txt'), encoding='utf-8') as f:
 setup(
     name='hybridq-parallel',
     version=version,
-    description='HybridQ-Parallel is light-weight library to parallelize processes based on concurrent.futures.ProcessPoolExecutor',
+    description='HybridQ-Parallel is light-weight library to parallelize '
+                'processes based on concurrent.futures.ProcessPoolExecutor',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/nasa/hybridq/modules/hybridq_parallel',
