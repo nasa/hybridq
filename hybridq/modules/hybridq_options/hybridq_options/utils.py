@@ -35,80 +35,171 @@ class DefaultType:
 Default = DefaultType()
 
 
-def parse_default(opts):
+class DefaultException(Exception):
+
+    def __init__(self, module, param):
+        self._message = f"No default value for param '{param}' " \
+                        f"in module '{module}'"
+        super().__init__(self._message)
+
+
+class _Function:
+    __slots__ = ('_f', '_opts', '_module', '_pickler', '_args', '_kwargs')
+
+    def __init__(self,
+                 f: callable,
+                 /,
+                 opts: Options,
+                 *,
+                 module: str = None,
+                 pickler: str = 'dill'):
+        from inspect import stack, getmodule, signature, _ParameterKind
+        from .options import Options
+
+        # Set function
+        self._f = f
+
+        # Set options
+        self._opts = Options(opts)
+
+        # Check that keypath separator is '.'
+        if self._opts._keypath_separator != '.':
+            raise ValueError("Keypath separator for 'Option' must be '.'")
+
+        # Set module
+        self._module = getattr(getmodule(stack()[0][0]), '__name__',
+                               '') if module is None else str(module)
+
+        # Set pickle
+        self._pickler = str(pickler)
+
+        # Get parameters
+        _params = signature(f).parameters.values()
+
+        # Get positional parameters
+        self._args = tuple(
+            filter(lambda x: x.kind != _ParameterKind.KEYWORD_ONLY, _params))
+
+        # Get kw parameters onlyt
+        self._kwargs = tuple(
+            filter(lambda x: x.kind == _ParameterKind.KEYWORD_ONLY, _params))
+
+    def __getstate__(self):
+        from importlib import import_module
+
+        # Load pickler
+        pickler = import_module(self._pickler)
+
+        # Dump state
+        return pickler.dumps(tuple(getattr(self, x) for x in self.__slots__))
+
+    def __setstate__(self, state):
+        from importlib import import_module
+
+        # Load pickler
+        pickler = import_module(self._pickler)
+
+        # Load state
+        for _name, _val in zip(self.__slots__, pickler.loads(state)):
+            setattr(self, _name, _val)
+
+    def _get_default(self, name):
+        try:
+            return self._opts.match(self._module +
+                                    self._opts._keypath_separator + name)
+        except KeyError:
+            raise DefaultException(module=self._module, param=name)
+
+    def __call__(self, *args, **kwargs):
+
+        # Fill positional arguments
+        args = tuple(
+            kwargs.pop(_par.name,
+                       args[_pos] if _pos < len(args) else _par.default)
+            for _pos, _par in enumerate(self._args))
+
+        # Substitute default values
+        args = tuple(
+            self._get_default(_par.name) if _v == Default else _v
+            for _v, _par in zip(args, self._args))
+
+        # Fill kw arguments only
+        kwargs = {
+            _par.name: kwargs.get(_par.name, _par.default)
+            for _par in self._kwargs
+        }
+
+        # Substitute default values
+        kwargs = {
+            k: self._get_default(k) if v == Default else v
+            for k, v in kwargs.items()
+        }
+
+        # Call function
+        return self._f(*args, **kwargs)
+
+
+def parse_default(opts: Options,
+                  /,
+                  *,
+                  module: str = None,
+                  pickler: str = 'dill'):
     """
-    Decorate `fn` to parse `Default` values.
-    """
-    from . import Options
-
-    # Check
-    if not isinstance(opts, Options):
-        raise AttributeError("'opts' must be an instance "
-                             f"of '{Options.__name__}'")
-
-    def _parse_default(fn: callable):
-        from inspect import signature
-        from functools import wraps
-
-        # Get default parameters
-        _default = frozenset(k for k, v in signature(fn).parameters.items()
-                             if v.default == Default)
-
-        @wraps(fn)
-        def _fn(*args, **kwargs):
-            from inspect import stack, getmodule
-            # Get module name
-            _module = getattr(getmodule(stack()[0][0]), '__name__', '')
-
-            # Get default values
-            _values = get_defaults(
-                opts,
-                **{k: kwargs.get(k, Default) for k in _default},
-                module=_module)
-
-            # Update
-            kwargs.update(zip(_default, _values))
-
-            # Return result
-            return fn(*args, **kwargs)
-
-        return _fn
-
-    # Return wrap
-    return _parse_default
-
-
-# Get default value
-def get_defaults(opts: Options, module: str, **kw) -> iter[any, ...]:
-    """
-    Return default values for HybridQ. Default values are stored in
-    `hybridq.opts`.
+    Decorate function to automatically substitute `Default` values with values
+    provided in `opts`.
 
     Parameters
     ----------
     opts: Options
-        `Options` to use to get default values.
-    module: str
-        Module to use as part of the key.
+        Values to use as default arguments.
+    module: str, optional
+        Prefix to use to match variable in `opts`. If not provided, the name of
+        the calling module is used.
+    pickler: str, optional
+        Module to use to pickle the decorated function.
 
-    Returns
+    Example
     -------
-    iter[any, ...]
-        A `tuple` of values. If the value of a given key is `Default`, then
-        `hybridq.opts[key]` is returned. Otherwise, the provided value is
-        returned.
+
+    opts = Options()
+    opts['key1', 'v'] = 1
+    opts['key1.key2', 'v'] = 'hello!'
+
+    @parse_default(opts, module='key1')
+    def f(v = Default):
+        return v
+
+    # The closest match is 'key1.v'
+    f()
+    > 1
+
+    @parse_default(opts, module='key1.key2')
+    def f(v = Default):
+        return v
+
+    # The closest match is 'key1.key2.v'
+    f()
+    > 'hello!'
+
+    @parse_default(opts, module='key1.key3')
+    def f(v = Default):
+        return v
+
+    # The closest match is 'key1.v'
+    f()
+    > 1
+
+    # Options can be updated on-the-fly
+    opts['key1.v'] = 42
+
+    # The closest match is 'key1.v'
+    f()
+    > 42
     """
 
-    def _get(key, value: any = Default):
-        # If value is Default, look for default value ...
-        if isinstance(value, DefaultType):
+    # Define the actual decorator
+    def _parse_default(f: callable):
+        return _Function(f, opts, module=module, pickler=pickler)
 
-            # Return default value
-            return opts.match(module + '.' + key)
-
-        # Otherwise, just return value
-        else:
-            return value
-
-    # Return values
-    return map(lambda x: _get(*x), kw.items())
+    # Return decorator
+    return _parse_default
