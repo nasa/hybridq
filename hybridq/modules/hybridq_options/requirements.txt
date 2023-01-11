@@ -1,1 +1,1 @@
-benedict
+python-benedict
