@@ -164,7 +164,7 @@ class Executor:
              ignore_init_error: bool = False,
              **kwargs):
         """
-        Initialize loky executor.
+        Initialize parallel executor.
 
         Parameters
         ----------
