@@ -36,14 +36,14 @@ setup(
     name='hybridq-options',
     version=version,
     description='HybridQ-Options is a function decorator library to '
-                'automatically retrieve default values. Default values can '
-                'be updated on-the-fly without changing the function '
-                'signature.',
+    'automatically retrieve default values. Default values can '
+    'be updated on-the-fly without changing the function '
+    'signature.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/nasa/hybridq/modules/hybridq_options',
     author='Salvatore Mandrà',
-    author_email = 'salvatore.mandra@nasa.gov',
+    author_email='salvatore.mandra@nasa.gov',
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: Apache Software License',
@@ -53,15 +53,19 @@ setup(
         'Topic :: Scientific/Engineering :: Mathematics',
         'Topic :: Scientific/Engineering :: Physics',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.8',
-        'Operating System :: Unix',
+        'Programming Language :: Python :: 3.8', 'Operating System :: Unix',
         'Operating System :: MacOS'
     ],
     python_requires='>=3.8',
     keywords=['options'],
     packages=find_packages(exclude=['docs', 'tests', 'tutorials']),
     install_requires=install_requires,
-    project_urls={  # Optional
+    extras_require={
+        'dill': ['dill'],
+        'cloudpickle': ['cloudpickle'],
+        'all': ['dill', 'cloudpickle']
+    },
+    project_urls={
         'Bug Reports': 'https://github.com/nasa/hybridq/issues',
         'Source': 'https://github.com/nasa/hybridq/modules/hybridq_options',
     },
