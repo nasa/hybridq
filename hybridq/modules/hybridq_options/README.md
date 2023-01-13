@@ -19,10 +19,10 @@ Tutorials on how to use **HybridQ-Options** can be found in
 ## How to Use
 
 
-**HybridQ-Options** is a library to easily manage default options for
-functions.  Each option has the format `key1.key2.[...].opt_name` with `key1`,
-`key2`, ..., `opt_name` being valid strings. Options can be set and retrieved
-using the square brackets:
+**HybridQ-Options** is a library to easily manage default options for functions.
+Each option has the format `key1.key2.[...].opt_name` with
+`key1`, `key2`, ..., `opt_name` being valid strings. Options can be set and
+retrieved using the square brackets:
 
 ```
 from hybridq_options import Options, parse_default, Default
@@ -51,9 +51,9 @@ Options can also be retrieved by using the `.` notation:
 opts.key1.key2
 > {'opt1': 1, 'opt2': 2, 'key3': {'opt1': 3}}
 ```
-The class `Options` provides the method `match` to find the closest match for a
-given option. This is useful to provide a common default value for all subpaths
-that share a common path:
+The class `Options` provides the method `match` to find the closest match
+for a given option. This is useful to provide a common default value for
+all subpaths that share a common path:
 ```
 # The closest option is 'key1.key2.opt1'
 print('key1.key2.opt1 =', opts.match('key1.key2.opt1'))
@@ -124,6 +124,16 @@ print(f'{f() = }')
 > f() = 2
 > f() = 1
 ```
+`parse_default` preserves both the signature and docstring of `f`.
+Default values are added at the end of the docstring:
+```
+help(f)
+> Help on function f in module __main__:
+>
+> f(v=Default)
+>     Default values:
+>             v = 1
+```
 Options can be changed on-the-fly:
 ```
 opts['v'] = 'hello!'
@@ -132,6 +142,16 @@ opts['v'] = 'hello!'
 print(f'{f() = }')
 > f() = 'hello!'
 ```
+Default values are automatically updated in the docstring:
+```
+help(f)
+> Help on function f in module __main__:
+>
+> f(v=Default)
+>     Default values:
+>             v = hello!
+```
+
 `parse_default` can parse default values for all kind of parameters:
 ```
 # Reset options
@@ -158,31 +178,27 @@ def f(A=1,
       c=Default,
       E=5,
       d=Default):
+    """
+    Docstring for function `f`.
+    """
+
     return A, a, B, b, C, D, c, E, d
 
 # Check
 assert (f() == (1, opts['key0.a'], 2, opts['key0.b'], 3, 4, opts['key0.c'], 5,
                 opts['key0.d']))
-```
-Functions decorated using `parse_default` can be pickled as usual:
-```
-import pickle
 
-# Dump binary
-pickle.dumps(f)
-> b"\x80..."
-```
-By default, the module `dill` is used to pickle the decorated function.
-Alternative modules compatible with `pickle` can be also used:
-```
-import cloudpickle
-
-@parse_default(opts, pickler='cloudpickle')
-def f():
-    ...
-
-# Dump binary
-pickle.dumps(f)
+help(f)
+> Help on function f in module __main__:
+>
+> f(A=1, a=Default, /, B=2, b=Default, C=3, *, D=4, c=Default, E=5, d=Default)
+>         Docstring for function `f`.
+>
+>     Default values:
+>             a = wDcQdccUesNFRKiYzbNF
+>             b = EzfcymRoHOxalvbxUXBy
+>             c = mpYEYWUqpLsLvfndxIXF
+>             d = HGikXVBASaGCSlGYvaxQ
 ```
 
 ## How To Cite
