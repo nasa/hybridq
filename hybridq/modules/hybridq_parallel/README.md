@@ -22,7 +22,7 @@ Tutorials on how to use **HybridQ-Parallel** can be found in
 from hybridq_parallel import map as pmap
 
 list(pmap(lambda x: x**2, range(10)))
-> [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+# > [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
 ```
 The pool executor is automatically started when requires and its number of
 workers is initialized by default to the number of available cores. The default
@@ -36,14 +36,14 @@ from hybridq_parallel import restart, get_n_workers
 
 restart(max_workers=2)
 get_n_workers()
-> 2
+# > 2
 ```
 **HybridQ-Parallel** also provide the equivalent of `multiprocessing.starmap`:
 ```
 from hybridq_parallel import starmap
 
 list(starmap(lambda x, y: x * y**2, zip(range(10), range(10))))
-> [0, 1, 8, 27, 64, 125, 216, 343, 512, 729]
+# > [0, 1, 8, 27, 64, 125, 216, 343, 512, 729]
 ```
 **HybridQ-Parallel** can pickle any callable by wrapping it using
 `hybridq_parallel.Function`:
@@ -59,8 +59,8 @@ except pickle.PickleError as e:
     print(e)
 
 pickle.dumps(Function(fn))
-> Can't pickle <function <lambda> at 0x7f34d0e1a170>: attribute lookup <lambda> on __main__ failed
-> b'\x80...'
+# > Can't pickle <function <lambda> at 0x7f34d0e1a170>: attribute lookup <lambda> on __main__ failed
+# > b'\x80...'
 ```
 By default **HybridQ-Parallel** uses `dill` as pickler. The default behavior
 can be changed by setting the environment variable `HYBRIDQ_PARALLEL_PICKLER`
@@ -70,7 +70,7 @@ provided while calling `map` and `starmap`:
 from hybridq_parallel import map as pmap
 
 list(pmap(lambda x: x**2, range(10), pickler='cloudpickle'))
-> [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+# > [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
 ```
 If needed, a progressbar can be added using packages like `tqdm`:
 ```
