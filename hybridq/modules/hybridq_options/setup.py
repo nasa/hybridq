@@ -60,11 +60,6 @@ setup(
     keywords=['options'],
     packages=find_packages(exclude=['docs', 'tests', 'tutorials']),
     install_requires=install_requires,
-    extras_require={
-        'dill': ['dill'],
-        'cloudpickle': ['cloudpickle'],
-        'all': ['dill', 'cloudpickle']
-    },
     project_urls={
         'Bug Reports': 'https://github.com/nasa/hybridq/issues',
         'Source': 'https://github.com/nasa/hybridq/modules/hybridq_options',
