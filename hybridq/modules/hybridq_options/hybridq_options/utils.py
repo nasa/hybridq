@@ -43,107 +43,22 @@ class DefaultException(Exception):
         super().__init__(self._message)
 
 
-class _Function:
-    __slots__ = ('_f', '_opts', '_module', '_pickler', '_args', '_kwargs')
+class _DynamicDoc(str):
 
-    def __init__(self,
-                 f: callable,
-                 /,
-                 opts: Options,
-                 *,
-                 module: str = None,
-                 pickler: str = 'dill'):
-        from inspect import stack, getmodule, signature, _ParameterKind
-        from .options import Options
+    def expandtabs(self, *args, **kwargs):
+        # Get original docstring
+        _str = str(self)
 
-        # Set function
-        self._f = f
+        # Add default values
+        _str += '\nDefault values:'
+        for _p in self._defaults:
+            _str += f'\n\t{_p} = {self._opts.match(self._module, _p)}'
 
-        # Set options
-        self._opts = Options(opts)
-
-        # Check that keypath separator is '.'
-        if self._opts._keypath_separator != '.':
-            raise ValueError("Keypath separator for 'Option' must be '.'")
-
-        # Set module
-        self._module = getattr(getmodule(stack()[0][0]), '__name__',
-                               '') if module is None else str(module)
-
-        # Set pickle
-        self._pickler = str(pickler)
-
-        # Get parameters
-        _params = signature(f).parameters.values()
-
-        # Get positional parameters
-        self._args = tuple(
-            filter(lambda x: x.kind != _ParameterKind.KEYWORD_ONLY, _params))
-
-        # Get kw parameters onlyt
-        self._kwargs = tuple(
-            filter(lambda x: x.kind == _ParameterKind.KEYWORD_ONLY, _params))
-
-    def __getstate__(self):
-        from importlib import import_module
-
-        # Load pickler
-        pickler = import_module(self._pickler)
-
-        # Dump state
-        return pickler.dumps(tuple(getattr(self, x) for x in self.__slots__))
-
-    def __setstate__(self, state):
-        from importlib import import_module
-
-        # Load pickler
-        pickler = import_module(self._pickler)
-
-        # Load state
-        for _name, _val in zip(self.__slots__, pickler.loads(state)):
-            setattr(self, _name, _val)
-
-    def _get_default(self, name):
-        try:
-            return self._opts.match(self._module +
-                                    self._opts._keypath_separator + name)
-        except KeyError:
-            raise DefaultException(module=self._module, param=name)
-
-    def __call__(self, *args, **kwargs):
-
-        # Fill positional arguments
-        args = tuple(
-            kwargs.pop(_par.name,
-                       args[_pos] if _pos < len(args) else _par.default)
-            for _pos, _par in enumerate(self._args))
-
-        # Substitute default values
-        args = tuple(
-            self._get_default(_par.name) if _v == Default else _v
-            for _v, _par in zip(args, self._args))
-
-        # Fill kw arguments only
-        kwargs = {
-            _par.name: kwargs.get(_par.name, _par.default)
-            for _par in self._kwargs
-        }
-
-        # Substitute default values
-        kwargs = {
-            k: self._get_default(k) if v == Default else v
-            for k, v in kwargs.items()
-        }
-
-        # Call function
-        return self._f(*args, **kwargs)
+        # Expand tabs
+        return _str.expandtabs(*args, **kwargs)
 
 
-def parse_default(opts: Options,
-                  /,
-                  *,
-                  module: str = None,
-                  pickler: str = 'dill'):
+def parse_default(opts: Options, /, *, module: str = None):
     """
     Decorate function to automatically substitute `Default` values with values
     provided in `opts`.
@@ -155,8 +70,6 @@ def parse_default(opts: Options,
     module: str, optional
         Prefix to use to match variable in `opts`. If not provided, the name of
         the calling module is used.
-    pickler: str, optional
-        Module to use to pickle the decorated function.
 
     Example
     -------
@@ -196,10 +109,83 @@ def parse_default(opts: Options,
     f()
     > 42
     """
+    from inspect import stack, getmodule
+    from .options import Options
+
+    # Check if opts is an instance of 'Options'
+    if not isinstance(opts, Options):
+        raise ValueError("'opts' must be a valid instance of 'Options'")
+
+    # Check that keypath separator is '.'
+    if opts._keypath_separator != '.':
+        raise ValueError("Keypath separator for 'Option' must be '.'")
+
+    # Get module name
+    _module = getattr(getmodule(stack()[0][0]), '__name__',
+                      '') if module is None else str(module)
+
+    # Define how to get default values
+    def _get_default(name):
+        try:
+            return opts.match(_module + opts._keypath_separator + name)
+        except KeyError:
+            raise DefaultException(module=_module, param=name)
 
     # Define the actual decorator
     def _parse_default(f: callable):
-        return _Function(f, opts, module=module, pickler=pickler)
+        from inspect import signature, _ParameterKind
+        from functools import partial, wraps
+
+        # Get parameters
+        _params = signature(f).parameters.values()
+
+        # Get positional parameters
+        _args = tuple(
+            filter(lambda x: x.kind != _ParameterKind.KEYWORD_ONLY, _params))
+
+        # Get kw only parameters
+        _kwargs = tuple(
+            filter(lambda x: x.kind == _ParameterKind.KEYWORD_ONLY, _params))
+
+        # Get default parameters
+        _defaults = tuple(
+            x.name for x in filter(lambda x: x.default == Default, _params))
+
+        @wraps(f)
+        def _f(*args, **kwargs):
+            # Fill positional arguments
+            args = tuple(
+                kwargs.pop(_par.name,
+                           args[_pos] if _pos < len(args) else _par.default)
+                for _pos, _par in enumerate(_args))
+
+            # Substitute default values
+            args = tuple(
+                _get_default(_par.name) if _v == Default else _v
+                for _v, _par in zip(args, _args))
+
+            # Fill kw arguments only
+            kwargs = {
+                _par.name: kwargs.get(_par.name, _par.default)
+                for _par in _kwargs
+            }
+
+            # Substitute default values
+            kwargs = {
+                k: _get_default(k) if v == Default else v
+                for k, v in kwargs.items()
+            }
+
+            # Call function
+            return f(*args, **kwargs)
+
+        _f.__doc__ = _DynamicDoc('' if _f.__doc__ is None else _f.__doc__)
+        _f.__doc__._opts = opts
+        _f.__doc__._module = _module
+        _f.__doc__._defaults = _defaults
+
+        # Return wrapper function
+        return _f
 
     # Return decorator
     return _parse_default
