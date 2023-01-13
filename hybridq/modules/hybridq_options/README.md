@@ -32,14 +32,14 @@ opts['key1.key2', 'opt1'] = 1
 opts['key1.key2', 'opt2'] = 2
 opts['key1.key2.key3', 'opt1'] = 3
 
-opts['key1']
-> {'key2': {'opt1': 1, 'opt2': 2, 'key3': {'opt1': 3}}}
+print(opts['key1'])
+# > {'key2': {'opt1': 1, 'opt2': 2, 'key3': {'opt1': 3}}}
 
-opts['key1.key2']
-> {'opt1': 1, 'opt2': 2, 'key3': {'opt1': 3}}
+print(opts['key1.key2'])
+# > {'opt1': 1, 'opt2': 2, 'key3': {'opt1': 3}}
 
-opts['key1.key2.opt1']
-> 1
+print(opts['key1.key2.opt1'])
+# > 1
 ```
 Keys can be split at the keypath separator `.` while using square brackets
 ```
@@ -49,7 +49,7 @@ assert (opts['key1.key2.opt1'] == opts['key1.key2', 'opt1'])
 Options can also be retrieved by using the `.` notation:
 ```
 opts.key1.key2
-> {'opt1': 1, 'opt2': 2, 'key3': {'opt1': 3}}
+# > {'opt1': 1, 'opt2': 2, 'key3': {'opt1': 3}}
 ```
 The class `Options` provides the method `match` to find the closest match
 for a given option. This is useful to provide a common default value for
@@ -57,19 +57,19 @@ all subpaths that share a common path:
 ```
 # The closest option is 'key1.key2.opt1'
 print('key1.key2.opt1 =', opts.match('key1.key2.opt1'))
+# > key1.key2.opt1 = 1
 
 # The closest option is 'key1.key2.opt2'
 print('key1.key2.opt2 =', opts.match('key1.key2.opt2'))
+# > key1.key2.opt2 = 2
 
 # The closest option is 'key1.key2.opt1'
 print('key1.key2.key4.opt1 =', opts.match('key1.key2.key4.opt1'))
+# > key1.key2.key4.opt1 = 1
 
 # The closest option is 'key1.key2.key3.opt1'
 print('key1.key2.key3.opt1 =', opts.match('key1.key2.key3.opt1'))
-> key1.key2.opt1 = 1
-> key1.key2.opt2 = 2
-> key1.key2.key4.opt1 = 1
-> key1.key2.key3.opt1 = 3
+# > key1.key2.key3.opt1 = 3
 ```
 A `KeyError` is raised if no matches are found
 ```
@@ -77,17 +77,17 @@ try:
     opts.match('key1.key3', 'opt1')
 except KeyError as e:
     print(e)
-> "Not match for keys: '['key1', 'key3']' and option name 'opt1'"
+# > "Not match for keys: '['key1', 'key3']' and option name 'opt1'"
 ```
 The class `Options` is based on `python-benedict`:
 ```
 print(type(opts).mro()[1].__name__)
+# > benedict
 
 # See 'python-benedict' for any further use of the class 'Options'
 help(type(opts).mro()[1])
-> benedict
-> Help on class benedict in module benedict.dicts:
-> [...]
+# > Help on class benedict in module benedict.dicts:
+# > [...]
 ```
 The library **HybridQ-Options** also provides `parse_default` to automatically
 parse default values for any function:
@@ -104,6 +104,7 @@ def f(v=Default):
 
 # The closest match is 'v'
 print(f'{f() = }')
+# > f() = 1
 
 # If specified, 'parse_default' will use the provided module name:
 @parse_default(opts, module='key1')
@@ -112,6 +113,7 @@ def f(v=Default):
 
 # The closest match is 'key1.v'
 print(f'{f() = }')
+# > f() = 2
 
 # If specified, 'parse_default' will use the provided module name:
 @parse_default(opts, module='key2')
@@ -120,19 +122,17 @@ def f(v=Default):
 
 # The closest match is 'v'
 print(f'{f() = }')
-> f() = 1
-> f() = 2
-> f() = 1
+# > f() = 1
 ```
 `parse_default` preserves both the signature and docstring of `f`.
 Default values are added at the end of the docstring:
 ```
 help(f)
-> Help on function f in module __main__:
->
-> f(v=Default)
->     Default values:
->             v = 1
+# > Help on function f in module __main__:
+# >
+# > f(v=Default)
+# >     Default values:
+# >             v = 1
 ```
 Options can be changed on-the-fly:
 ```
@@ -140,16 +140,16 @@ opts['v'] = 'hello!'
 
 # The closest match is 'v'
 print(f'{f() = }')
-> f() = 'hello!'
+# > f() = 'hello!'
 ```
 Default values are automatically updated in the docstring:
 ```
 help(f)
-> Help on function f in module __main__:
->
-> f(v=Default)
->     Default values:
->             v = hello!
+# > Help on function f in module __main__:
+# >
+# > f(v=Default)
+# >     Default values:
+# >             v = hello!
 ```
 
 `parse_default` can parse default values for all kind of parameters:
@@ -189,16 +189,16 @@ assert (f() == (1, opts['key0.a'], 2, opts['key0.b'], 3, 4, opts['key0.c'], 5,
                 opts['key0.d']))
 
 help(f)
-> Help on function f in module __main__:
->
-> f(A=1, a=Default, /, B=2, b=Default, C=3, *, D=4, c=Default, E=5, d=Default)
->         Docstring for function `f`.
->
->     Default values:
->             a = wDcQdccUesNFRKiYzbNF
->             b = EzfcymRoHOxalvbxUXBy
->             c = mpYEYWUqpLsLvfndxIXF
->             d = HGikXVBASaGCSlGYvaxQ
+# > Help on function f in module __main__:
+# >
+# > f(A=1, a=Default, /, B=2, b=Default, C=3, *, D=4, c=Default, E=5, d=Default)
+# >         Docstring for function `f`.
+# >
+# >     Default values:
+# >             a = wDcQdccUesNFRKiYzbNF
+# >             b = EzfcymRoHOxalvbxUXBy
+# >             c = mpYEYWUqpLsLvfndxIXF
+# >             d = HGikXVBASaGCSlGYvaxQ
 ```
 
 ## How To Cite
