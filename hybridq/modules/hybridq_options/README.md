@@ -200,6 +200,24 @@ help(f)
 # >             c = mpYEYWUqpLsLvfndxIXF
 # >             d = HGikXVBASaGCSlGYvaxQ
 ```
+Default values can also be overridden using environment variables:
+```
+from os import environ
+
+opts = Options(x=1)
+
+
+@parse_default(opts, env_prefix='PREFIX')
+def a(x=Default):
+    return x
+
+
+environ.pop('PREFIX_X', None)
+assert (a() == 1)
+
+%env PREFIX_X 42
+assert (a() == '42')
+```
 
 ## How To Cite
 
