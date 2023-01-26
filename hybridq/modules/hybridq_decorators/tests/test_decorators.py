@@ -118,10 +118,6 @@ def test__classproperty():
 def test__staticvars(pickler_name):
     import pickle
 
-    # Cloudpickle is known to have problems
-    if pickler_name == 'cloudpickle':
-        pytest.skip("'cloudpickle' has issues with 'classproperty'")
-
     # Define a new class with different static variables
     @staticvars('a', transform=dict(a=float), mutable=True)
     @staticvars(b=42, c='hello!', check=dict(c=lambda c: isinstance(c, str)))
@@ -235,10 +231,6 @@ def test__staticvars(pickler_name):
 def test__requires(pickler_name):
     import importlib
     import pickle
-
-    # Cloudpickle is known to have problems
-    if pickler_name == 'cloudpickle':
-        pytest.skip("'cloudpickle' has issues with 'classproperty'")
 
     # Import alternative pickler
     _pickler = importlib.import_module(pickler_name)
@@ -370,10 +362,6 @@ def test__requires(pickler_name):
 @pytest.mark.parametrize('pickler_name', ['dill', 'cloudpickle'])
 def test__pickler(pickler_name):
     import pickle
-
-    # Cloudpickle is known to have problems
-    if pickler_name == 'cloudpickle':
-        pytest.skip("'cloudpickle' has issues with 'classproperty'")
 
     # Let's define a new class
     @attributes('a,b', c=1)
