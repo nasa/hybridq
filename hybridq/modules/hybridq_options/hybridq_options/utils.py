@@ -58,7 +58,11 @@ class _DynamicDoc(str):
         return _str.expandtabs(*args, **kwargs)
 
 
-def parse_default(opts: Options, /, *, module: str = None):
+def parse_default(opts: Options,
+                  /,
+                  *,
+                  module: str = None,
+                  env_prefix: str = None):
     """
     Decorate function to automatically substitute `Default` values with values
     provided in `opts`.
@@ -70,6 +74,10 @@ def parse_default(opts: Options, /, *, module: str = None):
     module: str, optional
         Prefix to use to match variable in `opts`. If not provided, the name of
         the calling module is used.
+    env_prefix: str, optional
+        If provided, `parse_default` looks for an environment variables named
+        `[env_prefix]_OPTIONNAME` (all uppercase) to override the default
+        values in `opts`.
 
     Example
     -------
@@ -124,12 +132,24 @@ def parse_default(opts: Options, /, *, module: str = None):
     _module = getattr(getmodule(stack()[0][0]), '__name__',
                       '') if module is None else str(module)
 
+    # Convert prefix
+    _env_prefix = None if env_prefix is None else str(env_prefix).upper()
+
     # Define how to get default values
     def _get_default(name):
-        try:
-            return opts.match(_module + opts._keypath_separator + name)
-        except KeyError:
-            raise DefaultException(module=_module, param=name)
+        from os import environ
+
+        # Check if an env variable is present
+        if _env_prefix is not None and _env_prefix + '_' + name.upper(
+        ) in environ:
+            return environ[_env_prefix + '_' + name.upper()]
+
+        # Otherwise, check for default values
+        else:
+            try:
+                return opts.match(_module + opts._keypath_separator + name)
+            except KeyError:
+                raise DefaultException(module=_module, param=name)
 
     # Define the actual decorator
     def _parse_default(f: callable):
@@ -148,8 +168,8 @@ def parse_default(opts: Options, /, *, module: str = None):
             filter(lambda x: x.kind == _ParameterKind.KEYWORD_ONLY, _params))
 
         # Get default parameters
-        _defaults = tuple(
-            x.name for x in filter(lambda x: x.default == Default, _params))
+        _defaults = tuple(x.name for x in filter(
+            lambda x: isinstance(x.default, DefaultType), _params))
 
         @wraps(f)
         def _f(*args, **kwargs):
@@ -161,7 +181,7 @@ def parse_default(opts: Options, /, *, module: str = None):
 
             # Substitute default values
             args = tuple(
-                _get_default(_par.name) if _v == Default else _v
+                _get_default(_par.name) if isinstance(_v, DefaultType) else _v
                 for _v, _par in zip(args, _args))
 
             # Fill kw arguments only
@@ -172,7 +192,7 @@ def parse_default(opts: Options, /, *, module: str = None):
 
             # Substitute default values
             kwargs = {
-                k: _get_default(k) if v == Default else v
+                k: _get_default(k) if isinstance(v, DefaultType) else v
                 for k, v in kwargs.items()
             }
 
