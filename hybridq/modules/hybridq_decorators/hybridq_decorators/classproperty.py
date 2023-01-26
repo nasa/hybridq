@@ -47,12 +47,26 @@ class classproperty(property):
     > 0
     """
 
-    def __init__(self, fget=None, fset=None, fdel=None, fmut=None, doc=None):
+    def __init__(self,
+                 fget=None,
+                 fset=None,
+                 fdel=None,
+                 fmut=None,
+                 doc=None,
+                 *,
+                 _id=None):
+        from string import ascii_letters
+        from random import choices
+
         # Call __init__ from 'property' ...
         super().__init__(fget=fget, fset=fset, fdel=fdel, doc=doc)
 
         # ... set 'fmut'
         self.fmut = fmut
+
+        # ... add unique id
+        self._id = ''.join(choices(ascii_letters,
+                                   k=64)) if _id is None else str(_id)
 
     @staticmethod
     def __generate__(state):
@@ -65,7 +79,8 @@ class classproperty(property):
                      fset=self.fset,
                      fdel=self.fdel,
                      fmut=self.fmut,
-                     doc=self.__doc__)
+                     doc=self.__doc__,
+                     _id=self._id)
 
         # Return reduction
         return (self.__generate__, (state,))
@@ -291,8 +306,13 @@ class MetaClassProperty(type):
             # Check if _v is a classproperty
             if isinstance(_v, classproperty):
 
+                # If 'v' is a classproperty and 'v' and '_v' share the same id,
+                # we can skip the error
+                if isinstance(v, classproperty) and v._id == _v._id:
+                    pass
+
                 # If it cannot be set, raise
-                if _v.fset is None:
+                elif _v.fset is None:
                     raise AttributeError(f"can't set attribute '{key}'")
 
                 # Otherwise, set.
