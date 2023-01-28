@@ -35,6 +35,42 @@ def __eq_compare__(self, other, __eq__=None, compare=None):
 
 
 def compare(keys='', **compare):
+    """
+    Allow to compare two objects.
+
+    Parameters
+    ----------
+    keys: str
+        A string containing valid keys (separated by a comma). All members of
+        objects in `keys` will be checked for equality.
+
+    compare: dict[str, callable[any, any]], optional
+        If provided, the corresponding method will be tested using
+        `callable[x, y]`.
+
+    Example
+    -------
+
+    @compare('a', b=lambda x, y: abs(x) == abs(y))
+    class A:
+        def __init__(self, a, b):
+            self.a = a
+            self.b = b
+
+    assert(A(a=1, b=2) == A(a=1, b=-2))
+    assert(A(a=1, b=2) == A(a=1, b=2))
+    assert(A(a=1, b=2) != A(a=-1, b=-2))
+
+    # Keys cannot be specified in both `keys` and `compare`
+    try:
+        @compare('a,b', b=lambda x, y: abs(x) == abs(y))
+        class A:
+    except TypeError as e:
+        print(e)
+
+    > compare() got multiple values for argument(s) 'b'
+    """
+
     from .utils import split_keys
 
     # Get keys

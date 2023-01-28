@@ -41,6 +41,17 @@ def __get_provides__(cls):
 
 
 def requires(keys):
+    """
+    Add required variables to a class.
+
+    Parameters
+    ----------
+    keys: str
+        A string containing valid keys (separated by a comma). Keys provided in
+        this way will raise an `AttributeError` if the class not implements
+        methods with such names.
+    """
+
     from .utils import split_keys
     keys = frozenset(split_keys(keys))
 
@@ -57,6 +68,17 @@ def requires(keys):
 
 
 def provides(keys):
+    """
+    Add a list of variables provided by the class.
+
+    Parameters
+    ----------
+    keys: str
+        A string containing valid keys (separated by a comma). Keys provided in
+        this way and that also appear in `requires` will not trigger an
+        `AttributeError`.
+    """
+
     from .utils import split_keys
     keys = frozenset(split_keys(keys))
 

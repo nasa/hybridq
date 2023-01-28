@@ -19,7 +19,16 @@ from __future__ import annotations
 __all__ = ['split_keys']
 
 
-def split_keys(keys: str | iter[str, ...]):
+def split_keys(keys: str | iter[str, ...]) -> tuple[str, ...]:
+    """
+    Return a tuple of keys.
+
+    Parameters
+    ----------
+    keys: str
+        A string of keys separated by `,`.
+    """
+
     from re import sub
 
     # Remove spaces
