@@ -5,8 +5,6 @@
 [![Python 3.7+](https://img.shields.io/badge/Python-3.7%2B-success)]()
 [![PyTest](https://github.com/nasa/hybridq/actions/workflows/python-pytest.yml/badge.svg)](https://github.com/nasa/hybridq/actions/workflows/python-pytest.yml)
 [![Tutorials](https://github.com/nasa/hybridq/actions/workflows/python-tutorials.yml/badge.svg)](https://github.com/nasa/hybridq/tree/main/tutorials)<br>
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/nasa/hybridq.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/nasa/hybridq/context:python)
-[![Language grade: C++](https://img.shields.io/lgtm/grade/cpp/g/nasa/hybridq.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/nasa/hybridq/context:cpp)<br>
 [![PyPI](https://img.shields.io/pypi/v/hybridq.svg)](https://pypi.org/project/hybridq/#description)
 [![Downloads](https://static.pepy.tech/personalized-badge/hybridq?period=total&units=international_system&left_color=gray&right_color=orange&left_text=downloads)](https://pepy.tech/project/hybridq)
 [![Downloads-week](https://static.pepy.tech/personalized-badge/hybridq?period=week&units=international_system&left_color=grey&right_color=orange&left_text=downloads/week)](https://pepy.tech/project/hybridq)<br>
