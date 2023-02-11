@@ -15,8 +15,12 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 import logging
+import loky
 
-__all__ = ['map', 'starmap', 'get_n_workers', 'init', 'shutdown', 'restart']
+__all__ = [
+    'parallel_map', 'parallel_starmap', 'get_n_workers', 'init', 'shutdown',
+    'restart'
+]
 
 # create logger
 _LOGGER = logging.getLogger(__name__)
@@ -31,8 +35,17 @@ _LOGGER.addHandler(_LOGGER_CH)
 _HYBRIDQ_PARALLEL_EXECUTOR = None
 
 
-def get_n_workers():
-    global _HYBRIDQ_PARALLEL_EXECUTOR
+def get_n_workers() -> int:
+    """
+    Return the number of workers used by Executor.
+
+    Returns
+    -------
+    int:
+        The number of workers.
+    """
+
+    # pylint: disable=protected-access
     return _HYBRIDQ_PARALLEL_EXECUTOR._max_workers
 
 
@@ -54,7 +67,7 @@ def init(max_workers: int = None, *, ignore_init_error: bool = False, **kwargs):
     --------
     loky.get_reusable_executor
     """
-    from loky import get_reusable_executor
+    # pylint: disable=global-statement
     global _HYBRIDQ_PARALLEL_EXECUTOR
 
     # If _HYBRIDQ_PARALLEL_EXECUTOR already initialize, raise
@@ -67,12 +80,11 @@ def init(max_workers: int = None, *, ignore_init_error: bool = False, **kwargs):
     # Initialize
     else:
         # Initialize executor
-        _HYBRIDQ_PARALLEL_EXECUTOR = get_reusable_executor(
+        _HYBRIDQ_PARALLEL_EXECUTOR = loky.get_reusable_executor(
             max_workers=max_workers, **kwargs)
 
         # Log
-        _LOGGER.info(f"Started 'Executor' with "
-                     f"{_HYBRIDQ_PARALLEL_EXECUTOR._max_workers} workers")
+        _LOGGER.info("Started 'Executor' with %d workers", get_n_workers())
 
 
 def shutdown(**kwargs):
@@ -83,6 +95,7 @@ def shutdown(**kwargs):
     --------
     loky.reusable_executor._ReusablePoolExecutor.shutdown
     """
+    # pylint: disable=global-statement
     global _HYBRIDQ_PARALLEL_EXECUTOR
 
     # Shutdown executor
@@ -91,10 +104,10 @@ def shutdown(**kwargs):
         _HYBRIDQ_PARALLEL_EXECUTOR = None
 
         # Log
-        _LOGGER.info(f"Shut down 'Executor'")
+        _LOGGER.info("Shut down 'Executor'")
     else:
         # Log
-        _LOGGER.warning(f"No 'Executor' to shut down")
+        _LOGGER.warning("No 'Executor' to shut down")
 
 
 def restart(max_workers: int = None,
@@ -133,7 +146,6 @@ def restart(max_workers: int = None,
     loky.reusable_executor._ReusablePoolExecutor.init
     loky.reusable_executor._ReusablePoolExecutor.shutdown
     """
-    global _HYBRIDQ_PARALLEL_EXECUTOR
 
     # Shutdown executor
     shutdown(wait=wait, kill_workers=kill_workers)
@@ -142,8 +154,7 @@ def restart(max_workers: int = None,
     init(max_workers=max_workers, ignore_init_error=ignore_init_error, **kwargs)
 
 
-def _map(fn: callable, /, *iterables, **kwargs):
-    global _HYBRIDQ_PARALLEL_EXECUTOR
+def _parallel_map(func: callable, /, *iterables, **kwargs):
 
     # Autostart
     if _HYBRIDQ_PARALLEL_EXECUTOR is None:
@@ -153,17 +164,21 @@ def _map(fn: callable, /, *iterables, **kwargs):
             raise RuntimeError("'Executor' not starter")
 
     # Run map
-    for x in _HYBRIDQ_PARALLEL_EXECUTOR.map(fn, *iterables, **kwargs):
-        yield x
+    for res in _HYBRIDQ_PARALLEL_EXECUTOR.map(func, *iterables, **kwargs):
+        yield res
 
 
-def map(fn: callable, /, *iterables, autostart: bool = True, **kwargs):
+def parallel_map(func: callable,
+                 /,
+                 *iterables,
+                 autostart: bool = True,
+                 **kwargs):
     """
-    Returns an iterator equivalent to `map(fn, iter)`.
+    Returns an iterator equivalent to `map(func, iter)`.
 
     Parameters
     ----------
-    fn: callable,
+    func: callable,
         A callable that will take as many arguments as there are passed
         iterables.
     autostart: bool, optional
@@ -188,16 +203,16 @@ def map(fn: callable, /, *iterables, autostart: bool = True, **kwargs):
         If the entire result iterator could not be generated before the given
         timeout.
     Exception:
-        If fn(*args) raises for any values.
+        If func(*args) raises for any values.
 
     See Also
     --------
     map
     """
-    return _map(fn, *iterables, autostart=autostart, **kwargs)
+    return _parallel_map(func, *iterables, autostart=autostart, **kwargs)
 
 
-def starmap(fn, *iterables, **kwargs):
+def parallel_starmap(func, *iterables, **kwargs):
     """
     Like `map()` except that the elements of the iterable are expected to be
     iterables that are unpacked as arguments.
@@ -208,4 +223,4 @@ def starmap(fn, *iterables, **kwargs):
     --------
     hybridq_parallel.map
     """
-    return _map(lambda x: fn(*x), *iterables, **kwargs)
+    return _parallel_map(lambda args: func(*args), *iterables, **kwargs)
