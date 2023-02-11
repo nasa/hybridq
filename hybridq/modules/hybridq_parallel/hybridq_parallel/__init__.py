@@ -19,3 +19,6 @@ from .parallel import *
 # Redefine map
 # pylint: disable=redefined-builtin
 map = parallel_map
+
+# Redefine starmap
+starmap = parallel_starmap
