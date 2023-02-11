@@ -71,6 +71,11 @@ print('key1.key2.key4.opt1 =', opts.match('key1.key2.key4.opt1'))
 print('key1.key2.key3.opt1 =', opts.match('key1.key2.key3.opt1'))
 # > key1.key2.key3.opt1 = 3
 ```
+Multiple keys are joint together using the keypath separator `.`:
+```
+assert (opts.match('key1.key2.opt1') == opts.match('key1.key2', 'opt1') ==
+        opts.match('key1', 'key2', 'opt1'))
+```
 A `KeyError` is raised if no matches are found
 ```
 try:
