@@ -15,14 +15,14 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 
-from setuptools import setup, find_packages
 from os import path
+from setuptools import setup, find_packages
 
 # Locate right path
 here = path.abspath(path.dirname(__file__))
 
 # Version
-version = '0.1.0'
+VERSION = '0.1.0'
 
 # Get the long description from the README file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
@@ -34,7 +34,7 @@ with open(path.join(here, 'requirements.txt'), encoding='utf-8') as f:
 
 setup(
     name='hybridq-options',
-    version=version,
+    version=VERSION,
     description='HybridQ-Options is a function decorator library to '
     'automatically retrieve default values. Default values can '
     'be updated on-the-fly without changing the function '
