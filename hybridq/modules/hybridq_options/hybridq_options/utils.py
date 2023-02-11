@@ -160,6 +160,7 @@ def parse_default(opts: Options,
         try:
             return opts.match(_module + opts.keypath_separator + name)
         except KeyError:
+            # pylint: disable=raise-missing-from
             raise DefaultException(module=_module, param=name)
 
     # Define the actual decorator
@@ -209,8 +210,14 @@ def parse_default(opts: Options,
             return func(*args, **kwargs)
 
         _f.__doc__ = _DynamicDoc('' if _f.__doc__ is None else _f.__doc__)
+
+        # pylint: disable=protected-access
         _f.__doc__._opts = opts
+
+        # pylint: disable=protected-access
         _f.__doc__._module = _module
+
+        # pylint: disable=protected-access
         _f.__doc__._defaults = _defaults
 
         # Return wrapper function

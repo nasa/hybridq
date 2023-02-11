@@ -51,6 +51,7 @@ def set_seed():
 
 
 @pytest.mark.parametrize('dummy', range(10))
+# pylint: disable=unused-argument
 def test_options(dummy):
     """
     Test the class `hybridq_options.Options`.
@@ -108,6 +109,7 @@ def test_options(dummy):
 
 
 @pytest.mark.parametrize('dummy', range(10))
+# pylint: disable=unused-argument
 def test_parse_default(dummy):
     """
     Test the utility `hybridq_options.parse_default`.
@@ -151,17 +153,21 @@ def test_parse_default(dummy):
     opts['key0', 'd'] = ''.join(random.choices(ascii_letters, k=20))
 
     @parse_default(opts, module='key0')
-    def func(A=1,
-             a=Default,
-             /,
-             B=2,
-             b=Default,
-             C=3,
-             *,
-             D=4,
-             c=Default,
-             E=5,
-             d=Default):
+    def func(
+            A=1,
+            a=Default,
+            /,
+            # pylint: disable=invalid-name
+            B=2,
+            # pylint: disable=invalid-name
+            b=Default,
+            # pylint: disable=invalid-name
+            C=3,
+            *,
+            D=4,
+            c=Default,
+            E=5,
+            d=Default):
         return A, a, B, b, C, D, c, E, d
 
     # Check
