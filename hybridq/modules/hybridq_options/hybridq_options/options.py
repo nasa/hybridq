@@ -74,9 +74,38 @@ class Options(benedict):
     python-benedict
     """
 
+    def to_xls(self, *args, **kwargs) -> str:
+        """
+        Encode the current dict instance in XML format. Encoder specific
+        options can be passed using kwargs: https://github.com/martinblech/xmltodict
+
+        Returns
+        -------
+        str:
+            Return the encoded string and optionally save it at `filepath`. A
+            `ValueError` is raised in case of failure.
+
+        See Also
+        --------
+        benedict.benedict.to_xls
+        """
+        return super().to_xls(*args, **kwargs)
+
     def match(self, *keys: tuple[str, ...]) -> any:
         """
         Find the closest match. If there are no matches, raises a `KeyError`.
+
+        Parameters
+        ----------
+        *keys: tuple[str, ...]
+            Keys to use to find the closest match. If multiple keys are
+            provided, such keys are joint together using the keypath separator
+            `,`.
+
+        Returns
+        -------
+        any:
+            The closest match.
 
         Example
         -------
@@ -102,6 +131,10 @@ class Options(benedict):
         opts.match('key1.key2.key3', 'opt1')
         > 3
 
+        # Multiple keys are joint together using the keypath separator '.'
+        assert (opts.match('key1.key2.opt1') == opts.match('key1.key2', 'opt1') ==
+                opts.match('key1', 'key2', 'opt1'))
+
         # No matches exist
         opts.match('key1.key3', 'opt1')
         > KeyError: "Not match for keys: '['key1', 'key3']' and
@@ -109,7 +142,7 @@ class Options(benedict):
         """
 
         # Split keys
-        keys = [y for x in keys for y in x.split(self._keypath_separator)]
+        keys = [y for x in keys for y in x.split(self.keypath_separator)]
 
         # Get option name
         _name = keys[-1]
@@ -142,8 +175,7 @@ class Options(benedict):
                            f"and option name '{_name}'")
 
         # Otherwise, return value
-        else:
-            return _value
+        return _value
 
     # Overload __setitem__ to accept only strings
     def __setitem__(self, keys: tuple[str, ...], value: any) -> None:
@@ -158,6 +190,6 @@ class Options(benedict):
         if key in self:
             return self[key]
 
-        else:
-            raise AttributeError(f"'{type(self).__name__}' object has "
-                                 f"no attribute '{key}'")
+        # Otherwise, raise
+        raise AttributeError(f"'{type(self).__name__}' object has "
+                             f"no attribute '{key}'")
