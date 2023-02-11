@@ -15,14 +15,20 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 
+from string import ascii_letters
+from sys import stderr
+from os import environ
+import random
 import pytest
+
+from hybridq_options import Options, parse_default, Default
 
 
 @pytest.fixture(autouse=True)
 def set_seed():
-    from os import environ
-    from sys import stderr
-    import random
+    """
+    Set seed for pytest.
+    """
 
     # Get random seed
     seed = random.randint(0, 2**32 - 1)
@@ -44,17 +50,17 @@ def set_seed():
     random.setstate(state)
 
 
-@pytest.mark.parametrize('dummy', [_ for _ in range(10)])
-def test__Options(dummy):
-    from hybridq_options import Options
+@pytest.mark.parametrize('dummy', range(10))
+def test_options(dummy):
+    """
+    Test the class `hybridq_options.Options`.
+    """
 
     # Define how to get a random string
-    def _random_str(n=20):
-        from string import ascii_letters
-        from random import randint
-        return ''.join(ascii_letters[randint(0,
-                                             len(ascii_letters) - 1)]
-                       for _ in range(n))
+    def _random_str(num=20):
+        return ''.join(ascii_letters[random.randint(0,
+                                                    len(ascii_letters) - 1)]
+                       for _ in range(num))
 
     # Define how to join keys
     def _join(*args):
@@ -84,28 +90,28 @@ def test__Options(dummy):
     opts[_join(_k2, _k4)] = _v5
 
     # Check a few keys
-    assert (opts.match(_join(_k1, _k2, _k3, _k2, _k2, _k4)) == _v1)
-    assert (opts.match(_join(_k1, _k2, _k4, _k2, _k2, _k4)) == _v2)
-    assert (opts.match(_join(_k1, _k3, _k2, _k4)) == _v3)
-    assert (opts.match(_join(_k3, _k4)) == _v4)
-    assert (opts.match(_join(_k4, _k4)) == _v4)
-    assert (opts.match(_join(_k3, _k2, _k2, _k4)) == _v4)
-    assert (opts.match(_join(_k2, _k2, _k2, _k4)) == _v5)
-    assert (opts.match(_join(_k2, _k1, _k4)) == _v5)
+    assert opts.match(_join(_k1, _k2, _k3, _k2, _k2, _k4)) == _v1
+    assert opts.match(_join(_k1, _k2, _k4, _k2, _k2, _k4)) == _v2
+    assert opts.match(_join(_k1, _k3, _k2, _k4)) == _v3
+    assert opts.match(_join(_k3, _k4)) == _v4
+    assert opts.match(_join(_k4, _k4)) == _v4
+    assert opts.match(_join(_k3, _k2, _k2, _k4)) == _v4
+    assert opts.match(_join(_k2, _k2, _k2, _k4)) == _v5
+    assert opts.match(_join(_k2, _k1, _k4)) == _v5
 
     # Add keys
     opts['a.b.e', 'f'] = 1
 
     # Check
-    assert (opts.a.b.e['f'] == 1)
-    assert (opts.match('a.b.e.r.f.g.t.h.u.f') == 1)
+    assert opts.a.b.e['f'] == 1
+    assert opts.match('a.b.e.r.f.g.t.h.u.f') == 1
 
 
-@pytest.mark.parametrize('dummy', [_ for _ in range(10)])
-def test(dummy):
-    from hybridq_options import Options, parse_default, Default
-    from string import ascii_letters
-    from random import choices
+@pytest.mark.parametrize('dummy', range(10))
+def test_parse_default(dummy):
+    """
+    Test the utility `hybridq_options.parse_default`.
+    """
 
     # Initialize options
     opts = Options()
@@ -116,48 +122,48 @@ def test(dummy):
     opts['key0.key2', 'v'] = 2
 
     # The closest match should be key0.v
-    assert (parse_default(opts, module='key0')(lambda v=Default: v)() == 0)
+    assert parse_default(opts, module='key0')(lambda v=Default: v)() == 0
 
     # The closest match should be key0.key1.v
-    assert (parse_default(opts, module='key0.key1')(lambda v=Default: v)() == 1)
+    assert parse_default(opts, module='key0.key1')(lambda v=Default: v)() == 1
 
     # The closest match should be key0.key2.v
-    assert (parse_default(opts, module='key0.key2')(lambda v=Default: v)() == 2)
+    assert parse_default(opts, module='key0.key2')(lambda v=Default: v)() == 2
 
     # The closest match should be key0.v
-    assert (parse_default(opts, module='key0.key3')(lambda v=Default: v)() == 0)
+    assert parse_default(opts, module='key0.key3')(lambda v=Default: v)() == 0
 
     # The closest match should be key0.key1.v
-    assert (parse_default(opts,
-                          module='key0.key1.key3')(lambda v=Default: v)() == 1)
+    assert parse_default(opts,
+                         module='key0.key1.key3')(lambda v=Default: v)() == 1
 
     # The closest match should be key0.key2.v
-    assert (parse_default(opts,
-                          module='key0.key2.key3')(lambda v=Default: v)() == 2)
+    assert parse_default(opts,
+                         module='key0.key2.key3')(lambda v=Default: v)() == 2
 
     # Reset options
     opts.clear()
 
     # Set options
-    opts['key0', 'a'] = ''.join(choices(ascii_letters, k=20))
-    opts['key0', 'b'] = ''.join(choices(ascii_letters, k=20))
-    opts['key0', 'c'] = ''.join(choices(ascii_letters, k=20))
-    opts['key0', 'd'] = ''.join(choices(ascii_letters, k=20))
+    opts['key0', 'a'] = ''.join(random.choices(ascii_letters, k=20))
+    opts['key0', 'b'] = ''.join(random.choices(ascii_letters, k=20))
+    opts['key0', 'c'] = ''.join(random.choices(ascii_letters, k=20))
+    opts['key0', 'd'] = ''.join(random.choices(ascii_letters, k=20))
 
     @parse_default(opts, module='key0')
-    def f(A=1,
-          a=Default,
-          /,
-          B=2,
-          b=Default,
-          C=3,
-          *,
-          D=4,
-          c=Default,
-          E=5,
-          d=Default):
+    def func(A=1,
+             a=Default,
+             /,
+             B=2,
+             b=Default,
+             C=3,
+             *,
+             D=4,
+             c=Default,
+             E=5,
+             d=Default):
         return A, a, B, b, C, D, c, E, d
 
     # Check
-    assert (f() == (1, opts['key0.a'], 2, opts['key0.b'], 3, 4, opts['key0.c'],
-                    5, opts['key0.d']))
+    assert func() == (1, opts['key0.a'], 2, opts['key0.b'], 3, 4,
+                      opts['key0.c'], 5, opts['key0.d'])

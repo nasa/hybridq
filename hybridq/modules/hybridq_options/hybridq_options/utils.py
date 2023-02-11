@@ -16,12 +16,21 @@ specific language governing permissions and limitations under the License.
 """
 
 from __future__ import annotations
+from inspect import stack, getmodule, signature, _ParameterKind
+from functools import wraps
+from os import environ
+
+from .options import Options
 
 __all__ = ['Default', 'parse_default']
 
 
 # Define class for default values
 class DefaultType:
+    """
+    Default type for default values.
+    """
+
     __slots__ = ()
 
     def __str__(self):
@@ -36,6 +45,9 @@ Default = DefaultType()
 
 
 class DefaultException(Exception):
+    """
+    Exception to raise if no default values are found for a given parameter.
+    """
 
     def __init__(self, module, param):
         self._message = f"No default value for param '{param}' " \
@@ -44,6 +56,9 @@ class DefaultException(Exception):
 
 
 class _DynamicDoc(str):
+    _opts = None
+    _module = None
+    _defaults = None
 
     def expandtabs(self, *args, **kwargs):
         # Get original docstring
@@ -117,15 +132,13 @@ def parse_default(opts: Options,
     f()
     > 42
     """
-    from inspect import stack, getmodule
-    from .options import Options
 
     # Check if opts is an instance of 'Options'
     if not isinstance(opts, Options):
         raise ValueError("'opts' must be a valid instance of 'Options'")
 
     # Check that keypath separator is '.'
-    if opts._keypath_separator != '.':
+    if opts.keypath_separator != '.':
         raise ValueError("Keypath separator for 'Option' must be '.'")
 
     # Get module name
@@ -137,7 +150,6 @@ def parse_default(opts: Options,
 
     # Define how to get default values
     def _get_default(name):
-        from os import environ
 
         # Check if an env variable is present
         if _env_prefix is not None and _env_prefix + '_' + name.upper(
@@ -145,19 +157,16 @@ def parse_default(opts: Options,
             return environ[_env_prefix + '_' + name.upper()]
 
         # Otherwise, check for default values
-        else:
-            try:
-                return opts.match(_module + opts._keypath_separator + name)
-            except KeyError:
-                raise DefaultException(module=_module, param=name)
+        try:
+            return opts.match(_module + opts.keypath_separator + name)
+        except KeyError:
+            raise DefaultException(module=_module, param=name)
 
     # Define the actual decorator
-    def _parse_default(f: callable):
-        from inspect import signature, _ParameterKind
-        from functools import partial, wraps
+    def _parse_default(func: callable):
 
         # Get parameters
-        _params = signature(f).parameters.values()
+        _params = signature(func).parameters.values()
 
         # Get positional parameters
         _args = tuple(
@@ -171,7 +180,7 @@ def parse_default(opts: Options,
         _defaults = tuple(x.name for x in filter(
             lambda x: isinstance(x.default, DefaultType), _params))
 
-        @wraps(f)
+        @wraps(func)
         def _f(*args, **kwargs):
             # Fill positional arguments
             args = tuple(
@@ -197,7 +206,7 @@ def parse_default(opts: Options,
             }
 
             # Call function
-            return f(*args, **kwargs)
+            return func(*args, **kwargs)
 
         _f.__doc__ = _DynamicDoc('' if _f.__doc__ is None else _f.__doc__)
         _f.__doc__._opts = opts
