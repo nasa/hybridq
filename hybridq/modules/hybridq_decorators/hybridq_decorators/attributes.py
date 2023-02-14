@@ -14,18 +14,22 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from functools import partialmethod
+from .utils import split_keys
 
 __all__ = ['attributes']
 
 
-def __init_attributes__(self,
-                        *args,
-                        __init__=None,
-                        _pname=None,
-                        attributes=None,
-                        transform=None,
-                        check=None,
-                        **kwargs):
+def __init_attributes__(
+        self,
+        *args,
+        __init__=None,
+        _pname=None,
+        attributes=None,
+        # pylint: disable=redefined-outer-name
+        transform=None,
+        check=None,
+        **kwargs):
     # Initialize
     transform = {} if transform is None else transform
     check = {} if check is None else check
@@ -65,6 +69,7 @@ def __init_attributes__(self,
     __init__(self, *args, **kwargs)
 
 
+# pylint: disable=redefined-outer-name
 def attributes(keys='',
                *,
                transform=None,
@@ -113,8 +118,6 @@ def attributes(keys='',
         The private name used to store the actual value of the attribute.
     """
 
-    from .utils import split_keys
-
     # Get keys
     keys = split_keys(keys)
 
@@ -129,7 +132,6 @@ def attributes(keys='',
     attributes.update({k: NotImplemented for k in keys})
 
     def _attributes(cls):
-        from functools import partialmethod
 
         # Check keys are not already in use
         if _k := next((x for x in attributes if hasattr(cls, x)), None):
@@ -148,7 +150,9 @@ def attributes(keys='',
         for key in attributes:
             _pkey = _pname.format(key=key)
             setattr(
-                cls, key,
+                cls,
+                key,
+                # pylint: disable=unnecessary-direct-lambda-call
                 (lambda key: property(lambda self: getattr(self, key)))(_pkey))
 
         # Return type

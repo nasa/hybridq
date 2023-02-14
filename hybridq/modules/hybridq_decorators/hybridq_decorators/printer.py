@@ -25,7 +25,7 @@ class PrintObject:
 
     Parameters
     ----------
-    fn: callable | str
+    func: callable | str
         Function used to format `self`. If `callable`, it must accept a single
         argument, `self`, and return an object convertible to `str`. String
         will instead be evaluated using `str.format(self)`.
@@ -41,10 +41,10 @@ class PrintObject:
     order: int, optional
         Arguments are ordered accordingly to `order`.
     """
-    __slots__ = ('_fn', '_pos', '_sep', '_order')
+    __slots__ = ('_func', '_pos', '_sep', '_order')
 
     def __init__(self,
-                 fn: callable | str,
+                 func: callable | str,
                  pos: 'pre' | 'name' | 'bulk' | 'post' = 'bulk',
                  sep: str = ', ',
                  order: int = 100):
@@ -54,31 +54,35 @@ class PrintObject:
         order = int(order)
 
         # Checks
-        if not (isinstance(fn, str) or callable(fn)):
-            raise ValueError("'fn' must be a string or a callable")
+        if not (isinstance(func, str) or callable(func)):
+            raise ValueError("'func' must be a string or a callable")
         if pos not in ['pre', 'name', 'bulk', 'post']:
             raise ValueError("'pos' must be either 'pre', "
                              "'name', 'bulk' or 'post'")
 
         # Assign
-        self._fn = fn
+        self._func = func
         self._pos = pos
         self._sep = sep
         self._order = order
 
     @property
-    def fn(self):
-        return self._fn
+    # pylint: disable=missing-function-docstring
+    def func(self):
+        return self._func
 
     @property
+    # pylint: disable=missing-function-docstring
     def pos(self):
         return self._pos
 
     @property
+    # pylint: disable=missing-function-docstring
     def sep(self):
         return self._sep
 
     @property
+    # pylint: disable=missing-function-docstring
     def order(self):
         return self._order
 
@@ -141,7 +145,15 @@ def printer(**args) -> type:
     return _printer
 
 
-class Printer:
+class Printer:  # pylint: disable=too-few-public-methods
+    """
+    Enable `printer` for object.
+
+    See Also
+    --------
+    printer, PrintObject
+    """
+
     __slots__ = ()
     __printer__ = {}
 
@@ -159,10 +171,10 @@ class Printer:
             args = sorted(args, key=lambda x: x.order)
 
             # Initialize string
-            return ''.join((arg.fn.format(
-                self=self) if isinstance(arg.fn, str) else str(arg.fn(self))) +
-                           (arg.sep if i < len(args) - 1 else '')
-                           for i, arg in enumerate(args))
+            return ''.join(
+                (arg.func.format(self=self) if isinstance(arg.func, str) else
+                 str(arg.func(self))) + (arg.sep if i < len(args) - 1 else '')
+                for i, arg in enumerate(args))
 
         # Initialize output
         _pre = _join(filter(lambda x: x.pos == 'pre', dct.values()))
@@ -176,5 +188,5 @@ class Printer:
         # Return
         return _pre + _name + '(' + _bulk + ')' + _post
 
-    def _repr_pretty_(self, p, cycle):
-        p.text(str(self) if not cycle else '...')
+    def _repr_pretty_(self, arg, cycle):
+        arg.text(str(self) if not cycle else '...')

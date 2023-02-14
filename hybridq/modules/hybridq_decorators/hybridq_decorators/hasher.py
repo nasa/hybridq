@@ -14,15 +14,20 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from functools import partialmethod
+from .utils import split_keys
 
 __all__ = ['hasher']
 
 
 def __hash__(self, keys=()):
+    # pylint: disable=import-outside-toplevel
     from builtins import hash
+    # pylint: disable=import-outside-toplevel
     from pickle import dumps
 
     # Return hash value of the pickled object
+    # pylint: disable=no-else-return
     if keys:
         return hash(tuple(map(__hash__, map(lambda x: getattr(self, x), keys))))
     else:
@@ -79,8 +84,6 @@ def hasher(_cls=None, *, keys='', method=None):
 
     # If method is not defined, use default
     if method is None:
-        from functools import partialmethod
-        from .utils import split_keys
 
         # Initialize method
         method = partialmethod(__hash__, keys=frozenset(split_keys(keys)))

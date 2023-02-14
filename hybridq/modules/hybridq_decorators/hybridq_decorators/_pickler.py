@@ -14,10 +14,10 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from importlib import import_module
 
 
 def _generate(cls, pickler):
-    from importlib import import_module
 
     # Import pickler
     pickler = import_module(pickler)

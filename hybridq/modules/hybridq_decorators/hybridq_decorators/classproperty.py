@@ -14,11 +14,15 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from string import ascii_letters
+from functools import partial
+from random import choices
+from .utils import split_keys
 
 __all__ = ['classproperty', 'ClassProperty', 'staticvars']
 
 
-class classproperty(property):
+class classproperty(property):  # pylint: disable=invalid-name
     """
     Property attribute for classes.
 
@@ -47,16 +51,18 @@ class classproperty(property):
     > 0
     """
 
-    def __init__(self,
-                 fget=None,
-                 fset=None,
-                 fdel=None,
-                 fmut=None,
-                 doc=None,
-                 *,
-                 _id=None):
-        from string import ascii_letters
-        from random import choices
+    # pylint: disable=too-many-arguments
+    def __init__(
+            self,
+            # pylint: disable=redefined-outer-name
+            fget=None,
+            fset=None,
+            fdel=None,
+            # pylint: disable=redefined-outer-name
+            fmut=None,
+            doc=None,
+            *,
+            _id=None):
 
         # Call __init__ from 'property' ...
         super().__init__(fget=fget, fset=fset, fdel=fdel, doc=doc)
@@ -75,12 +81,14 @@ class classproperty(property):
 
     def __reduce__(self):
         # Dump state
-        state = dict(fget=self.fget,
-                     fset=self.fset,
-                     fdel=self.fdel,
-                     fmut=self.fmut,
-                     doc=self.__doc__,
-                     _id=self._id)
+        state = {
+            'fget': self.fget,
+            'fset': self.fset,
+            'fdel': self.fdel,
+            'fmut': self.fmut,
+            'doc': self.__doc__,
+            '_id': self._id
+        }
 
         # Return reduction
         return (self.__generate__, (state,))
@@ -93,20 +101,20 @@ def fget(cls, _pkey):
     return getattr(cls, _pkey)
 
 
-def fmut(cls, v, _pkey, transform=None, check=None, check_msg='Check failed'):
+def fmut(cls, arg, _pkey, transform=None, check=None, check_msg='Check failed'):
     """
     Prototype of `fmut`.
     """
     # Transform if required
     if transform is not None:
-        v = transform(v)
+        arg = transform(arg)
 
     # Check if required
-    if check is not None and not check(v):
+    if check is not None and not check(arg):
         raise ValueError(check_msg)
 
     # Set
-    return setattr(cls, _pkey, v)
+    return setattr(cls, _pkey, arg)
 
 
 def staticvars(keys='',
@@ -165,8 +173,6 @@ def staticvars(keys='',
         Attributes/values to add to the type object.
     """
 
-    from .utils import split_keys
-
     # Initialize
     transform = {} if transform is None else transform
     check = {} if check is None else check
@@ -184,7 +190,6 @@ def staticvars(keys='',
 
     # Return decorator
     def _staticvars(cls):
-        from functools import partial
 
         # Check cls is inheriting from ClassProperty
         if not issubclass(cls, ClassProperty):
@@ -197,7 +202,7 @@ def staticvars(keys='',
                                  f"an attribute '{_k}'")
 
         # For each key and value ...
-        for key, v in svars.items():
+        for key, arg in svars.items():
             # Get transform
             _transform = transform.get(key)
 
@@ -205,14 +210,14 @@ def staticvars(keys='',
             _check = check.get(key)
             _check_msg = f"Check failed for variable '{key}'"
 
-            # If v has been provided ...
-            if v is not NotImplemented:
+            # If arg has been provided ...
+            if arg is not NotImplemented:
                 # Transform if needed
                 if _transform is not None:
-                    v = _transform(v)
+                    arg = _transform(arg)
 
                 # Check if needed
-                if _check is not None and not _check(v):
+                if _check is not None and not _check(arg):
                     raise ValueError(_check_msg)
 
             # Get private key
@@ -229,7 +234,7 @@ def staticvars(keys='',
                             check_msg=_check_msg) if mutable else None
 
             # Set value to private key
-            setattr(cls, _pkey, v)
+            setattr(cls, _pkey, arg)
 
             # Set classproperty to key
             setattr(cls, key, classproperty(_fget, fmut=_fmut))
@@ -242,26 +247,35 @@ def staticvars(keys='',
 
 
 class MetaClassProperty(type):
+    """
+    Enable `classproperty`.
 
-    def __new__(metacls, name, bases, ns, static_vars=None):
+    See Also
+    --------
+    classproperty
+    """
+
+    def __new__(mcs, name, bases, ns, static_vars=None):
         # Get new type
-        cls = type.__new__(metacls, name, bases, ns)
+        cls = type.__new__(mcs, name, bases, ns)
 
         # If some static vars are provided ...
         if static_vars is not None:
 
             # For each key and value ...
-            for key, v in static_vars.items():
+            for key, arg in static_vars.items():
 
                 # Check if the key is a classproperty
-                if isinstance(_v := super(type(cls), cls).__getattribute__(key),
-                              classproperty):
+                # pylint: disable=bad-super-call
+                if isinstance(
+                        _arg := super(type(cls), cls).__getattribute__(key),
+                        classproperty):
 
                     # If the classproperty is mutable
-                    if _v.fmut:
+                    if _arg.fmut:
 
                         # Assign
-                        _v.fmut(cls, v)
+                        _arg.fmut(cls, arg)
 
                     # Otherwise raise
                     else:
@@ -276,92 +290,96 @@ class MetaClassProperty(type):
 
     def __getattribute__(cls, key):
         # If key is a classproperty
-        if isinstance(v := super().__getattribute__(key), classproperty):
+        if isinstance(arg := super().__getattribute__(key), classproperty):
 
-            # If v is NotImplemented, raise
-            if (v := v.fget(cls)) is NotImplemented:
+            # If arg is NotImplemented, raise
+            if (arg := arg.fget(cls)) is NotImplemented:
                 raise AttributeError(
                     f"type object '{cls.__name__}' has no attribute '{key}'")
 
             # Otherwise, return value
-            else:
-                return v
+            return arg
 
         # Otherwise, return value
-        else:
-            return v
+        return arg
 
-    def __setattr__(cls, key, v):
+    def __setattr__(cls, key, arg):
         # Try to get value ...
         try:
-            _v = super().__getattribute__(key)
+            _arg = super().__getattribute__(key)
 
         # ... if it fails, set to None.
-        except:
-            _v = None
+        except:  # pylint: disable=bare-except
+            _arg = None
 
-        # Once _v is obtained, ...
+        # Once _arg is obtained, ...
         finally:
 
-            # Check if _v is a classproperty
-            if isinstance(_v, classproperty):
+            # Check if _arg is a classproperty
+            if isinstance(_arg, classproperty):  # pylint: disable=used-before-assignment
 
-                # If 'v' is a classproperty and 'v' and '_v' share the same id,
+                # If 'arg' is a classproperty and 'arg' and '_arg' share the same id,
                 # we can skip the error
-                if isinstance(v, classproperty) and v._id == _v._id:
+                if isinstance(arg, classproperty) and arg._id == _arg._id:
                     pass
 
                 # If it cannot be set, raise
-                elif _v.fset is None:
+                elif _arg.fset is None:
                     raise AttributeError(f"can't set attribute '{key}'")
 
                 # Otherwise, set.
                 else:
-                    _v.fset(cls, v)
+                    _arg.fset(cls, arg)
 
             # If regular key, use __setattr__
             else:
-                super().__setattr__(key, v)
+                super().__setattr__(key, arg)
 
     def __delattr__(cls, key):
         # Try to get value ...
         try:
-            _v = super().__getattribute__(key)
+            _arg = super().__getattribute__(key)
 
         # ... if it fails, set to None.
-        except:
-            _v = None
+        except:  # pylint: disable=bare-except
+            _arg = None
 
-        # Once _v is obtained, ...
+        # Once _arg is obtained, ...
         finally:
 
-            # Check if _v is a classproperty
-            if isinstance(_v, classproperty):
+            # Check if _arg is a classproperty
+            if isinstance(_arg, classproperty):  # pylint: disable=used-before-assignment
 
                 # If it cannot be deleted, raise
-                if _v.fdel is None:
+                if _arg.fdel is None:
                     raise AttributeError(f"can't delete attribute '{key}'")
 
                 # Otherwise, delete.
-                else:
-                    _v.fdel(cls)
+                _arg.fdel(cls)
 
             # If regular key, use __delattr__
             else:
                 super().__delattr__(key)
 
 
-class ClassProperty(metaclass=MetaClassProperty):
+class ClassProperty(metaclass=MetaClassProperty):  # pylint: disable=too-few-public-methods
+    """
+    Enable `classproperty`.
+
+    See Also
+    --------
+    classproperty
+    """
+
     __slots__ = ()
 
     def __getattribute__(self, key):
         # If 'key' is NotImplemented, raise
-        if (v := super().__getattribute__(key)) is NotImplemented:
+        if (arg := super().__getattribute__(key)) is NotImplemented:
             # TODO: FIX error message when key is a classproperty and its value
             # is set to NotImplemented
             raise AttributeError(
                 f"type object '{type(self).__name__}' has no attribute '{key}'")
 
         # Otherwise, return value
-        else:
-            return v
+        return arg

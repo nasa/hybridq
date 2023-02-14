@@ -14,6 +14,8 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from functools import partialmethod
+from .utils import split_keys
 
 __all__ = ['requires', 'provides']
 
@@ -52,11 +54,9 @@ def requires(keys):
         methods with such names.
     """
 
-    from .utils import split_keys
     keys = frozenset(split_keys(keys))
 
     def _requires(cls):
-        from functools import partialmethod
         cls.__requires__ = getattr(cls, '__requires__', frozenset()).union(keys)
         cls.__provides__ = getattr(cls, '__provides__', frozenset())
         cls.__get_requires__ = classmethod(__get_requires__)
@@ -79,7 +79,6 @@ def provides(keys):
         `AttributeError`.
     """
 
-    from .utils import split_keys
     keys = frozenset(split_keys(keys))
 
     def _provides(cls):

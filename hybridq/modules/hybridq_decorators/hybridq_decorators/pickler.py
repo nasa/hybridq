@@ -14,11 +14,12 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from importlib import import_module
 
 __all__ = ['Pickler', 'pickler']
 
 
-def pickler(pickler: str):
+def pickler(module: str):
     """
     SWitch pickler.
 
@@ -36,7 +37,7 @@ def pickler(pickler: str):
                             "'Pickler'")
 
         # Update pickler
-        cls.__pickler__ = str(pickler)
+        cls.__pickler__ = str(module)
 
         # Return type
         return cls
@@ -46,14 +47,17 @@ def pickler(pickler: str):
 
 
 class Pickler:
+    """
+    Enable `pickle` for arbitrary classes.
+    """
+
     __slots__ = ()
 
     def __getstate__(self):
-        from importlib import import_module
 
         # Import pickler
-        __pickler__ = getattr(self, '__pickler__', 'pickle')
-        pickler = import_module(__pickler__)
+        _module = getattr(self, '__pickler__', 'pickle')
+        _pickler = import_module(_module)
 
         # Get dict
         _dict = getattr(self, '__dict__', {})
@@ -62,34 +66,32 @@ class Pickler:
         _slots = {k: getattr(self, k) for k in getattr(self, '__slots__', ())}
 
         # Dump
-        return pickler.dumps((_dict, _slots)), __pickler__
+        return _pickler.dumps((_dict, _slots)), _module
 
     def __setstate__(self, obj):
-        from importlib import import_module
 
         # Import pickler
-        pickler = import_module(obj[1])
+        _pickler = import_module(obj[1])
 
         # Get dict and slots
-        _dict, _slots = pickler.loads(obj[0])
+        _dict, _slots = _pickler.loads(obj[0])
 
         # If dict is present, assign it
         if _dict:
             self.__dict__ = _dict
 
         # If slots is present, assign it
-        for k, v in _slots.items():
-            setattr(self, k, v)
+        for key, val in _slots.items():
+            setattr(self, key, val)
 
     @staticmethod
-    def __generate__(cls, pickler):
-        from importlib import import_module
+    def __generate__(obj, module):
 
         # Import pickler
-        pickler = import_module(pickler)
+        _pickler = import_module(module)
 
         # Get type
-        cls = pickler.loads(cls)
+        cls = _pickler.loads(obj)
 
         # Get new type
         cls = cls.__new__(cls)
@@ -98,13 +100,13 @@ class Pickler:
         return cls
 
     def __reduce__(self):
-        from importlib import import_module
+        # pylint: disable=import-outside-toplevel
         from ._pickler import _generate
 
         # Get pickler
-        __pickler__ = getattr(self, '__pickler__', 'pickle')
-        pickler = import_module(__pickler__)
+        _module = getattr(self, '__pickler__', 'pickle')
+        _pickler = import_module(_module)
 
         # Dump
-        return (_generate, (pickler.dumps(type(self)), __pickler__),
+        return (_generate, (_pickler.dumps(type(self)), _module),
                 self.__getstate__())

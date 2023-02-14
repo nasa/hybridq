@@ -14,10 +14,13 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from functools import partialmethod
+from .utils import split_keys
 
 __all__ = ['compare']
 
 
+# pylint: disable=redefined-outer-name
 def __eq_compare__(self, other, __eq__=None, compare=None):
     # Return false if original __eq__ return False
     if __eq__ is not None and not __eq__(self, other):
@@ -71,8 +74,6 @@ def compare(keys='', **compare):
     > compare() got multiple values for argument(s) 'b'
     """
 
-    from .utils import split_keys
-
     # Get keys
     keys = frozenset(split_keys(keys))
 
@@ -84,7 +85,6 @@ def compare(keys='', **compare):
     compare.update({k: lambda x, y: x == y for k in keys})
 
     def _compare(cls):
-        from functools import partialmethod
 
         # Overload __eq__
         cls.__eq__ = partialmethod(

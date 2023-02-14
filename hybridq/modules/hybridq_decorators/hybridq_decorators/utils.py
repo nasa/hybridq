@@ -15,10 +15,12 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 from __future__ import annotations
+import re
 
 __all__ = ['split_keys']
 
 
+# pylint: disable=unsubscriptable-object
 def split_keys(keys: str | iter[str, ...]) -> tuple[str, ...]:
     """
     Return a tuple of keys.
@@ -29,10 +31,8 @@ def split_keys(keys: str | iter[str, ...]) -> tuple[str, ...]:
         A string of keys separated by `,`.
     """
 
-    from re import sub
-
     # Remove spaces
-    keys = sub(r"\s+", "", keys)
+    keys = re.sub(r"\s+", "", keys)
 
     # If keys is empty, return empty tuple
     if not keys:
