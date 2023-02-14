@@ -27,19 +27,23 @@ def test__classproperty():
             return 1
 
     # Check value
-    assert (A.x == 1 and A().x == 1)
+    assert A.x == 1 and A().x == 1
 
     # 'x' should be read-only for 'A'
     try:
         A.x = 1
     except AttributeError as e:
-        assert ("can't set attribute" in str(e))
+        assert "can't set attribute" in str(e)
 
     # 'x' should be read-only for instantiations of 'A'
     try:
         A().x = 1
     except AttributeError as e:
-        assert ("can't set attribute" in str(e))
+        from sys import version_info
+        if version_info[1] <= 10:
+            assert "can't set attribute" in str(e)
+        else:
+            assert "object has no setter" in str(e)
 
     class B(A):
         __y = None
@@ -60,43 +64,43 @@ def test__classproperty():
             del cls.__y
 
     # Check values
-    assert (B.x == 1 and B().x == 1)
+    assert B.x == 1 and B().x == 1
 
     # 'x' must be still read-only in 'B'
     try:
         B.x = 123
     except AttributeError as e:
-        assert ("can't set attribute" in str(e))
+        assert "can't set attribute" in str(e)
 
     # Check default value
-    assert (B.y is None and B().y is None)
+    assert B.y is None and B().y is None
 
     # Since 'setter' is set, it's now possible to assign values for 'y'
     B.y = 123
 
     # Check new value
-    assert (B.y == 123 and B().y == 123)
+    assert B.y == 123 and B().y == 123
 
     # Get a new object
     b = B()
 
     # The new value is propagated to new instances
-    assert (b.y == 123)
+    assert b.y == 123
 
     # It is possible to change the value for 'y' of instances
     b.y = 456
 
     # Check value
-    assert (b.y == 456)
+    assert b.y == 456
 
     # Howerver, the value for the original type is preserved
-    assert (B.y == 123 and type(b).y == 123)
+    assert B.y == 123 and type(b).y == 123
 
     # Since 'deleter' is provided, it can be used
     del b.y
 
     # Deleting 'y' for the instance will reset its value to the type value
-    assert (b.y == 123)
+    assert b.y == 123
 
     # Since 'deleter' is provided, it can be used
     del B.y
@@ -105,13 +109,13 @@ def test__classproperty():
     try:
         B.y
     except AttributeError as e:
-        assert (str(e) == "type object 'B' has no attribute '_B__y'")
+        assert str(e) == "type object 'B' has no attribute '_B__y'"
 
     # Accessing 'y' will now trigger an error
     try:
         B().y
     except AttributeError as e:
-        assert (str(e) == "'B' object has no attribute '_B__y'")
+        assert str(e) == "'B' object has no attribute '_B__y'"
 
 
 @pytest.mark.parametrize('pickler_name', ['dill', 'cloudpickle'])
@@ -128,27 +132,27 @@ def test__staticvars(pickler_name):
     try:
         A.a
     except AttributeError as e:
-        assert (str(e) == "type object 'A' has no attribute 'a'")
-    assert (A.b == 42)
-    assert (A.c == 'hello!')
+        assert str(e) == "type object 'A' has no attribute 'a'"
+    assert A.b == 42
+    assert A.c == 'hello!'
 
     # 'a' is mutable but 'b' and 'c' are not
     type('A', (A,), {}, static_vars=dict(a=1.32))
     try:
         type('A', (A,), {}, static_vars=dict(b=1))
     except AttributeError as e:
-        assert (str(e) == "can't set attribute 'b'")
+        assert str(e) == "can't set attribute 'b'"
 
     try:
         type('A', (A,), {}, static_vars=dict(c=1))
     except AttributeError as e:
-        assert (str(e) == "can't set attribute 'c'")
+        assert str(e) == "can't set attribute 'c'"
 
     # 'a' must be convertible to 'float'
     try:
         B = type('B', (A,), {}, static_vars=dict(a='hello!', b=1, c='hi!'))
     except ValueError as e:
-        assert (str(e) == "could not convert string to float: 'hello!'")
+        assert str(e) == "could not convert string to float: 'hello!'"
 
     # Define a new class with different static variables
     @staticvars('a', transform=dict(a=float), mutable=True)
@@ -163,7 +167,7 @@ def test__staticvars(pickler_name):
     try:
         B = type(A)('B', (A,), {}, static_vars=dict(a=1.23, b=1, c=1))
     except ValueError as e:
-        assert (str(e) == "Check failed for variable 'c'")
+        assert str(e) == "Check failed for variable 'c'"
 
     # Get new type 'B' with different values for 'a', 'b' and 'c'
     B = type(A)('B', (A,), {}, static_vars=dict(b=1, c='hi!'))
@@ -172,13 +176,13 @@ def test__staticvars(pickler_name):
     try:
         B.a
     except AttributeError as e:
-        assert (str(e) == "type object 'B' has no attribute 'a'")
+        assert str(e) == "type object 'B' has no attribute 'a'"
     try:
         B().a
     except AttributeError as e:
-        assert (str(e) == "type object 'B' has no attribute '__A_static_a'")
-    assert (B.b == 1 and B().b == 1)
-    assert (B.c == 'hi!' and B().c == 'hi!')
+        assert str(e) == "type object 'B' has no attribute '__A_static_a'"
+    assert B.b == 1 and B().b == 1
+    assert B.c == 'hi!' and B().c == 'hi!'
 
     # Get new type 'B' with different values for 'a', 'b' and 'c',
     # which is also pickeable
@@ -194,37 +198,45 @@ def test__staticvars(pickler_name):
     _b = pickle.loads(pickle.dumps(b))
 
     # Check values
-    assert (B.a == 1.23 and B().a == 1.23)
-    assert (B.b == 'hello!' and B().b == 'hello!')
-    assert (B.c == 'hi!' and B().c == 'hi!')
-    assert (type(b).a == B.a)
-    assert (type(b).b == B.b)
-    assert (type(b).c == B.c)
-    assert (type(_b).a == B.a)
-    assert (type(_b).b == B.b)
-    assert (type(_b).c == B.c)
+    assert B.a == 1.23 and B().a == 1.23
+    assert B.b == 'hello!' and B().b == 'hello!'
+    assert B.c == 'hi!' and B().c == 'hi!'
+    assert type(b).a == B.a
+    assert type(b).b == B.b
+    assert type(b).c == B.c
+    assert type(_b).a == B.a
+    assert type(_b).b == B.b
+    assert type(_b).c == B.c
 
     # All static variables must be read-only
     for k in 'abc':
         try:
             setattr(B, k, None)
         except AttributeError as e:
-            assert ("can't set attribute" in str(e))
+            assert "can't set attribute" in str(e)
 
         try:
             setattr(type(_b), k, None)
         except AttributeError as e:
-            assert ("can't set attribute" in str(e))
+            assert "can't set attribute" in str(e)
 
         try:
             setattr(_b, k, None)
         except AttributeError as e:
-            assert ("can't set attribute" in str(e))
+            from sys import version_info
+            if version_info[1] <= 10:
+                assert "can't set attribute" in str(e)
+            else:
+                assert "object has no setter" in str(e)
 
         try:
             setattr(b, k, None)
         except AttributeError as e:
-            assert ("can't set attribute" in str(e))
+            from sys import version_info
+            if version_info[1] <= 10:
+                assert "can't set attribute" in str(e)
+            else:
+                assert "object has no setter" in str(e)
 
 
 @pytest.mark.parametrize('pickler_name', ['dill', 'cloudpickle'])
@@ -278,72 +290,74 @@ def test__requires(pickler_name):
     try:
         A(z=1)
     except AttributeError as e:
-        assert ("type object 'A' requires" in str(e))
+        assert "type object 'A' requires" in str(e)
 
     # 'A' requires 'b'
     try:
         provides('a')(_copy(A))(z=1)
     except AttributeError as e:
-        assert ("type object 'A' requires 'b'" == str(e))
+        assert "type object 'A' requires 'b'" == str(e)
 
     # 'A' requires 'a'
     try:
         provides('b')(_copy(A))(z=1)
     except AttributeError as e:
-        assert ("type object 'A' requires 'a'" == str(e))
+        assert "type object 'A' requires 'a'" == str(e)
 
     try:
         attributes('a')(_copy(A))(a=1, z=1)
     except AttributeError as e:
-        assert ("type object 'A' requires 'b'" == str(e))
+        assert "type object 'A' requires 'b'" == str(e)
 
     try:
         attributes(b=2)(_copy(A))(z=1)
     except AttributeError as e:
-        assert ("type object 'A' requires 'a'" == str(e))
+        assert "type object 'A' requires 'a'" == str(e)
 
     # Ok
-    assert (provides('a')(provides('b')(_copy(A)))(z=-1).z == -1)
+    assert provides('a')(provides('b')(_copy(A)))(z=-1).z == -1
 
     # Ok
-    assert (provides('a,b')(_copy(A))(z=-1).z == -1)
+    assert provides('a,b')(_copy(A))(z=-1).z == -1
 
     # Ok
-    assert (attributes(a=1, b=2)(_copy(A))(z=1).z == 1)
+    assert attributes(a=1, b=2)(_copy(A))(z=1).z == 1
 
     # Ok
-    assert (attributes('a,b')(_copy(A))(a=1, b=2, z=3).a == 1)
-    assert (attributes('a,b')(_copy(A))(a=1, b=2, z=3).b == 2)
-    assert (attributes('a,b')(_copy(A))(a=1, b=2, z=3).z == 3)
+    assert attributes('a,b')(_copy(A))(a=1, b=2, z=3).a == 1
+    assert attributes('a,b')(_copy(A))(a=1, b=2, z=3).b == 2
+    assert attributes('a,b')(_copy(A))(a=1, b=2, z=3).z == 3
 
     # Ok
-    assert (provides('b,c,d,e')(_copy(B))(z=1).z == 1)
+    assert provides('b,c,d,e')(_copy(B))(z=1).z == 1
 
     # Ok
-    assert (provides('c,d,e')(_copy(C))(z=1).z == 1)
+    assert provides('c,d,e')(_copy(C))(z=1).z == 1
 
     # Ok
-    assert (provides('e')(_copy(D))(c='a', z=1).c == 'a')
+    assert provides('e')(_copy(D))(c='a', z=1).c == 'a'
 
     # Ok
-    assert (E(c=1, z=10).z == 10)
+    assert E(c=1, z=10).z == 10
 
     # Class 'E' requires 'c'
     try:
         E(z=1)
     except TypeError as e:
-        assert (str(e) == "test__requires.<locals>.E.__init__() missing "
-                "required keyword-only argument: 'c'")
+        assert str(
+            e
+        ) == "test__requires.<locals>.E.__init__() missing required keyword-only argument: 'c'"
 
     # Class '_E' requires 'c'
     try:
         _E(z=1)
     except TypeError as e:
-        assert (str(e) == "test__requires.<locals>.E.__init__() missing "
-                "required keyword-only argument: 'c'")
+        assert str(
+            e
+        ) == "test__requires.<locals>.E.__init__() missing required keyword-only argument: 'c'"
 
     # Check values
-    assert (E.e == 42 and E.e == _E.e)
+    assert E.e == 42 and E.e == _E.e
 
     # Get objects
     _e1 = E(c='hello!', z=1)
@@ -351,12 +365,12 @@ def test__requires(pickler_name):
     _e3 = _E(c='hi!', z=1)
 
     # Check values
-    assert (_e1.a == 1 and _e1.a == _e2.a == _e3.a)
-    assert (_e1.b == 1 and _e1.b == _e2.b == _e3.b)
-    assert (_e1.c == 'hello!' and _e3.c == 'hi!' and _e1.c == _e2.c != _e3.c)
-    assert (_e1.d == 2 and _e1.d == _e2.d == _e3.d)
-    assert (_e1.e == 42 and _e1.e == _e2.e == _e3.e)
-    assert (type(_e1).e == 42 and type(_e1).e == type(_e2).e == type(_e3).e)
+    assert _e1.a == 1 and _e1.a == _e2.a == _e3.a
+    assert _e1.b == 1 and _e1.b == _e2.b == _e3.b
+    assert _e1.c == 'hello!' and _e3.c == 'hi!' and _e1.c == _e2.c != _e3.c
+    assert _e1.d == 2 and _e1.d == _e2.d == _e3.d
+    assert _e1.e == 42 and _e1.e == _e2.e == _e3.e
+    assert type(_e1).e == 42 and type(_e1).e == type(_e2).e == type(_e3).e
 
 
 @pytest.mark.parametrize('pickler_name', ['dill', 'cloudpickle'])
@@ -390,21 +404,21 @@ def test__pickler(pickler_name):
     _b = pickle.loads(pickle.dumps(pickle.loads(pickle.dumps(b))))
 
     # Checks
-    assert (b.__dict__ == _b.__dict__)
-    assert (b.a == 1 and b.a == _b.a)
-    assert (b.b == 2 and b.b == _b.b)
-    assert (b.c == 1 and b.c == _b.c)
+    assert b.__dict__ == _b.__dict__
+    assert b.a == 1 and b.a == _b.a
+    assert b.b == 2 and b.b == _b.b
+    assert b.c == 1 and b.c == _b.c
     try:
         b.d
     except AttributeError as e:
-        assert (str(e) == "type object 'B' has no attribute '__A_static_d'")
+        assert str(e) == "type object 'B' has no attribute '__A_static_d'"
     try:
         _b.d
     except AttributeError as e:
-        assert (str(e) == "type object 'B' has no attribute '__A_static_d'")
-    assert (b.e == '-1' and b.e == _b.e)
-    assert (b.x == b.y**2 and b.x == _b.x)
-    assert (b.y == 4 and b.y == _b.y)
+        assert str(e) == "type object 'B' has no attribute '__A_static_d'"
+    assert b.e == '-1' and b.e == _b.e
+    assert b.x == b.y**2 and b.x == _b.x
+    assert b.y == 4 and b.y == _b.y
 
 
 @pytest.mark.parametrize('pickler_name', ['dill', 'cloudpickle'])
@@ -415,7 +429,7 @@ def test__hash(pickler_name):
     try:
         hash(list([1, 2, 3]))
     except TypeError as e:
-        assert (str(e) == "unhashable type: 'list'")
+        assert str(e) == "unhashable type: 'list'"
 
     # Howerver, decorama.hash allows makes every type hashable.
     # In this case, the hash value is defined as the sum of all
@@ -425,7 +439,7 @@ def test__hash(pickler_name):
         pass
 
     # Check
-    assert (hash(A([1, '2', 3.33])) == hash(1) + hash('2') + hash(3.33))
+    assert hash(A([1, '2', 3.33])) == hash(1) + hash('2') + hash(3.33)
 
     # By default, decorama.hash uses 'lambda x: hash(pickle.dumps(x))'
     # to get the hash of an arbitrary object
@@ -437,7 +451,7 @@ def test__hash(pickler_name):
     try:
         hash(A([1, 2, 3]))
     except AttributeError as e:
-        assert (str(e) == f"Can't pickle local object '{A.__qualname__}'")
+        assert str(e) == f"Can't pickle local object '{A.__qualname__}'"
 
     # This problem can be overcome by using decorama.pickled
     @pickler(pickler_name)
@@ -446,7 +460,7 @@ def test__hash(pickler_name):
         pass
 
     # Check
-    assert (hash(A([1, 2, 3])) == hash(pickle.dumps(A([1, 2, 3]))))
+    assert hash(A([1, 2, 3])) == hash(pickle.dumps(A([1, 2, 3])))
 
     # If keys are provided, compute hash only using those attributes
     @attributes(a=1, b=2)
@@ -454,10 +468,10 @@ def test__hash(pickler_name):
     class A:
         ...
 
-    assert (hash(A()) == hash(A()))
-    assert (hash(A(b=-3)) == hash(A(b=4)))
-    assert (hash(A(a=-3)) != hash(A(a=4)))
-    assert (hash(A(a=-3, b='a')) == hash(A(a=-3, b=1)))
+    assert hash(A()) == hash(A())
+    assert hash(A(b=-3)) == hash(A(b=4))
+    assert hash(A(a=-3)) != hash(A(a=4))
+    assert hash(A(a=-3, b='a')) == hash(A(a=-3, b=1))
 
 
 @pytest.mark.parametrize('pickler_name', ['dill', 'cloudpickle'])
@@ -478,18 +492,18 @@ def test__comparison(pickler_name):
     a = A(1, 2, 3)
 
     # Since 'c' is not appearing in compare, it's ignored
-    assert (a == A(1, 2, 'hello!'))
+    assert a == A(1, 2, 'hello!')
 
     # 'a' is compared using lambda x,y: x == y (default)
-    assert (a != A(-1, 2, 3))
+    assert a != A(-1, 2, 3)
 
     # 'b' is compared using lambda x,y: abs(x) == abs(y)
-    assert (a == A(1, 2, 3))
-    assert (a == A(1, -2, 3))
-    assert (a != A(1, 3, 3))
+    assert a == A(1, 2, 3)
+    assert a == A(1, -2, 3)
+    assert a != A(1, 3, 3)
 
     # Compare after pickling
-    assert (pickle.loads(pickle.dumps(a)) == a)
+    assert pickle.loads(pickle.dumps(a)) == a
 
 
 @pytest.mark.parametrize('pickler_name', ['dill', 'cloudpickle'])
@@ -514,64 +528,69 @@ def test__attributes(pickler_name):
     try:
         A()
     except TypeError as e:
-        assert (str(e) == "test__attributes.<locals>.A.__init__() missing "
-                "required keyword-only argument: 'a'")
+        assert str(
+            e
+        ) == "test__attributes.<locals>.A.__init__() missing required keyword-only argument: 'a'"
 
     # Also, 'v' must be provided
     try:
         A(a=1.123)
     except TypeError as e:
-        assert ("__init__() missing 1 required positional argument: 'v'"
-                in str(e))
+        assert "__init__() missing 1 required positional argument: 'v'" in str(
+            e)
 
     # 'a' must be larger than zero, but 'int(a)' is called prior to assign 'a'.
     # Hence, the following should fail.
     try:
         A(v=1, a=0.123)
     except ValueError as e:
-        assert (str(e) == "Check failed for variable 'a'")
+        assert str(e) == "Check failed for variable 'a'"
 
     # Get new object
     a = A(v=1, a=1.123)
 
     # Check values
-    assert (a.a == int(1.123) and isinstance(a.a, int))
-    assert (a.b == str(42) and isinstance(a.b, str))
-    assert (a.c == float(1.23) and isinstance(a.c, float))
-    assert (a.v == 1)
-    assert (a.w == None)
+    assert a.a == int(1.123) and isinstance(a.a, int)
+    assert a.b == str(42) and isinstance(a.b, str)
+    assert a.c == float(1.23) and isinstance(a.c, float)
+    assert a.v == 1
+    assert a.w == None
 
     # Get new object with different values
     a = A(v=1, w=2, a=2.2, b='hello!', c=1.43)
 
     # Check values
-    assert (a.a == int(2.2) and isinstance(a.a, int))
-    assert (a.b == "hello!" and isinstance(a.b, str))
-    assert (a.c == 1.43 and isinstance(a.c, float))
-    assert (a.v == 1)
-    assert (a.w == 2)
+    assert a.a == int(2.2) and isinstance(a.a, int)
+    assert a.b == "hello!" and isinstance(a.b, str)
+    assert a.c == 1.43 and isinstance(a.c, float)
+    assert a.v == 1
+    assert a.w == 2
 
     # All attributes should be read-only
     for k in 'abc':
         try:
             setattr(a, k, 1)
         except AttributeError as e:
-            assert (str(e) == "can't set attribute")
+            from sys import version_info
+            if version_info[1] <= 10:
+                assert str(e) == "can't set attribute"
+            else:
+                assert "object has no setter" in str(e)
 
     # Since 'hello!' cannot be converted to float, the following should raise
     try:
         A(v=1, a=2, c='hello!')
     except ValueError as e:
-        assert (str(e) == "could not convert string to float: 'hello!'")
+        assert str(e) == "could not convert string to float: 'hello!'"
 
     # Try to pickle
     _a = pickle.loads(pickle.dumps(a))
 
     # Check comparison
-    assert (_a == a)
+    assert _a == a
 
     # Check dictionaries
-    assert (_a.__dict__ == a.__dict__)
+    assert _a.__dict__ == a.__dict__
 
 
 def test__printer():
@@ -594,26 +613,25 @@ def test__printer():
     class B(A):
         ...
 
-    assert (str(A()) == "[PRE] NAME(4.00: a=1, 4, f=1.23, nothing) [POST]")
-    assert (str(B()) ==
-            "[PRE] NewNAME([FIRST] 4.00: a=1, 4, nothing)[FirstPost]: [POST]")
+    assert str(A()) == "[PRE] NAME(4.00: a=1, 4, f=1.23, nothing) [POST]"
+    assert str(B(
+    )) == "[PRE] NewNAME([FIRST] 4.00: a=1, 4, nothing)[FirstPost]: [POST]"
 
 
 def test__PrintObject():
     try:
         PrintObject(any, order='a')
     except ValueError as e:
-        assert (str(e) == "invalid literal for int() with base 10: 'a'")
+        assert str(e) == "invalid literal for int() with base 10: 'a'"
 
     try:
         PrintObject(any, pos='a')
     except ValueError as e:
-        assert (
-            str(e) == "'pos' must be either 'pre', 'name', 'bulk' or 'post'")
+        assert str(e) == "'pos' must be either 'pre', 'name', 'bulk' or 'post'"
 
-    assert (PrintObject(any).fn == any)
-    assert (PrintObject(any).pos == 'bulk')
-    assert (PrintObject(any).sep == ', ')
-    assert (PrintObject(any).order == 100)
-    assert (PrintObject(any, pos='pre').pos == 'pre')
-    assert (PrintObject(any, order=12345).order == 12345)
+    assert PrintObject(any).func == any
+    assert PrintObject(any).pos == 'bulk'
+    assert PrintObject(any).sep == ', '
+    assert PrintObject(any).order == 100
+    assert PrintObject(any, pos='pre').pos == 'pre'
+    assert PrintObject(any, order=12345).order == 12345
