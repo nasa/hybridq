@@ -16,37 +16,36 @@ specific language governing permissions and limitations under the License.
 """
 
 from __future__ import annotations
-from ..utils import load_library
+from ..utils import get_lib_fn, load_library
+from functools import lru_cache
+from ..compile import compile
 import numpy as np
+import autoray
+import logging
 
 __all__ = ['transpose']
 
-# Load library
-_lib_swap = load_library('hybridq_swap.so')
+# Create logger
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.INFO)
+_LOGGER_CH = logging.StreamHandler()
+_LOGGER_CH.setLevel(logging.DEBUG)
+_LOGGER_CH.setFormatter(
+    logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s'))
+_LOGGER.addHandler(_LOGGER_CH)
 
-# If library isn't loaded properly, warn
-if _lib_swap is not None:
-    from ..utils import define_lib_fn
 
-    # Get _swap_core
-    _swap_core = {}
-    _swap_core.update({
-        np.dtype(t + b): define_lib_fn(_lib_swap, f'swap_{t + b}', 'int',
-                                       f'{t + b}*', 'uint32*', 'uint')
-        for t in ('int', 'uint') for b in ('8', '16', '32', '64')
-    })
-    _swap_core.update({
-        np.dtype(t + b): define_lib_fn(_lib_swap, f'swap_{t + b}', 'int',
-                                       f'{t + b}*', 'uint32*', 'uint')
-        for t in ('float',) for b in ('32', '64', '128')
-    })
-else:
-    from warnings import warn
-    warn("Cannot find C++ HybridQ core. "
-         "Falling back to 'numpy.transpose' instead.")
+@lru_cache
+def get_swap_lib(array_type, npos: int):
+    # Convert type
+    array_type = str(np.dtype(array_type))
 
-    # Set core to none
-    _swap_core = None
+    # Compile the library
+    compile('swap', swap_npos=npos, swap_array_type=array_type)
+
+    # Load and return function
+    return get_lib_fn(load_library(f'hybridq_swap_{array_type}_{npos}.so'),
+                      'swap', 'int32', f'{array_type}*', 'uint32*', 'uint32')
 
 
 def transpose(a: array_like,
@@ -54,7 +53,7 @@ def transpose(a: array_like,
               *,
               inplace: bool = False,
               force_backend: bool = False,
-              backend: str = 'numpy',
+              backend: str = None,
               raise_if_hcore_fails: bool = False):
     """
     Transpose `a` accordingly to `axes`.
@@ -85,76 +84,99 @@ def transpose(a: array_like,
     --------
     numpy.transpose
     """
-    from ..aligned_array import array
+    # Convert to numpy array
+    a = np.asarray(a)
 
-    # Use backend if forced
-    if force_backend:
-        from autoray import do
-        from warnings import warn
-        warn(f"HybridQ C++ core is ignored. Fallback to '{backend}'")
-        return do('transpose', a, axes, like=backend)
+    # Convert axes to array
+    axes = np.asarray(axes)
 
-    # Convert a to array
-    a = array(a, alignment=None, copy=not inplace)
+    # Axis must be a permutation of indexes
+    if np.any(np.sort(axes) != np.arange(a.ndim)):
+        raise ValueError("'axes' must be a valid permutation of indexes")
 
-    # Convert axes to array. If not provided, fully transpose array
-    axes = np.arange(
-        a.ndim).dtype('uint32')[::-1] if axes is None else np.asarray(
-            axes, dtype='uint32')
+    # Get c-axes relative to the axes needed to be swapped
+    c_axes = np.where(axes != np.arange(a.ndim))[0]
+    if c_axes.size:
+        c_axes = a.ndim - axes[c_axes[0]:][::-1] - 1
 
-    # Get position of first unordered axis
-    n_ord = next((i for i, x in enumerate(axes) if i != x), len(axes))
-
-    # If ordered, return
-    if n_ord == len(axes):
-        return a
-
-    #  Check if hcore can be used
-    _hcore_fail = []
-    if _swap_core is None:
-        _hcore_fail.append("Unable to load HybridQ C++ core")
-    if a.dtype not in _swap_core:
-        _hcore_fail.append(f"'{a.dtype}' not supported")
-    if a.shape != (2,) * a.ndim:
-        _hcore_fail.append("Only binary dimensions are allowed")
-    if not a.flags.c_contiguous:
-        _hcore_fail.append("Only 'C' order is supported")
-    if not (3 < len(axes) - n_ord <= 16):
-        _hcore_fail.append("'axes' order is not supported")
-
-    # Warn if _hcore is not available
-    if _hcore_fail:
-        _hcore_fail = '; '.join(_hcore_fail)
-        if raise_if_hcore_fails:
-            raise AssertionError(f"Cannot use HybridQ C++ core: {_hcore_fail}")
-        else:
-            from warnings import warn
-            warn(f"Cannot use HybridQ C++ core: {_hcore_fail}" +
-                 f". Fallback to '{backend}'")
-
-    # If hcore is available ...
-    if not _hcore_fail:
-        from ..utils import get_ctype
-
-        # Get only unordered axes
-        axes = axes[n_ord:]
-
-        # Rescale axes
-        axes = a.ndim - axes[::-1] - 1
-
-        # Get pointer to a and axes
-        _ptr_a = a.ctypes.data_as(get_ctype(str(a.dtype) + '*'))
-        _ptr_axes = axes.ctypes.data_as(get_ctype(str(axes.dtype) + '*'))
-
-        # Call library
-        if _swap_core[a.dtype](_ptr_a, _ptr_axes, a.ndim, len(axes)):
-            raise ValueError("Something went wrong.")
-
-        # Return
-        return a
-
-    # Otherwise, just use numpy
+    # If no axes to swap are found, just return a
     else:
-        from autoray import do
-        return np.transpose(a, axes)
-        return do('transpose', a, axes, like=backend)
+        return a
+
+    # Check if hcore can be used
+    _hcore_fails = []
+    if len(c_axes) >= 20:
+        _hcore_fails.append('Too many axes to swap')
+    if a.shape != (2,) * a.ndim:
+        _hcore_fails.append('Only binary axes are supported')
+    if not a.flags.c_contiguous:
+        _hcore_fails.append('Only c-contiguous arrays are allowed')
+    if force_backend:
+        _hcore_fails.append('Forced backend')
+
+    # If no checks have failed ...
+    if not _hcore_fails:
+
+        # Swap
+        try:
+            # Copy if needed
+            if not inplace:
+                a = a.copy()
+
+            # Initialize
+            _dtype = None
+            _shape = None
+
+            # If 'a' is a complex type, view as float
+            if np.iscomplexobj(a):
+                _dtype = a.dtype
+                _shape = a.shape
+                a = np.reshape(a.view(a.real.dtype), a.shape + (2,))
+                c_axes = np.concatenate([[0], c_axes + 1])
+
+            # There are no c-types for float16, view as uint16
+            if a.dtype == 'float16':
+                _dtype = a.dtype
+                a = a.view('uint16')
+
+            # Swap
+            get_swap_lib(a.dtype, len(c_axes))(a, c_axes, a.ndim)
+
+            # Restore dtype
+            if _dtype:
+                a = a.view(_dtype)
+
+            # Restore shape
+            if _shape:
+                a = np.reshape(a, _shape)
+
+            # Return swapped
+            return a
+
+        # If hcore fails
+        except Exception as e:
+            # Raise if required
+            if raise_if_hcore_fails:
+                raise e
+
+            # Otherwise, log
+            else:
+                _LOGGER.warning(e)
+
+    # Print reasons why hcore failed
+    else:
+        # Raise if required
+        if raise_if_hcore_fails:
+            raise RuntimeError('Cannot use HybridQ C++ core: ' +
+                               ', '.join(_hcore_fails))
+
+        # Otherwise, log
+        else:
+            _LOGGER.warning('Cannot use HybridQ C++ core: ' +
+                            ', '.join(_hcore_fails))
+
+    # Warn fallback
+    _LOGGER.warning('Fallback to %s', 'backend' if backend is None else backend)
+
+    # Return swapped
+    return autoray.do('transpose', a, axes, like=backend)
