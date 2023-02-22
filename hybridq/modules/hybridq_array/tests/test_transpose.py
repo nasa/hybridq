@@ -14,25 +14,28 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from hybridq_array.linalg import transpose
+from os import environ
+from sys import stderr
 import numpy as np
 import pytest
+
+from hybridq_array.linalg import transpose
 
 
 @pytest.fixture(autouse=True)
 def set_seed():
-    from numpy import random
-    from os import environ
-    from sys import stderr
+    """
+    Set seed for `pytest`.
+    """
 
     # Get random seed
-    seed = random.randint(2**32 - 1)
+    seed = np.random.randint(2**32 - 1)
 
     # Get state
-    state = random.get_state()
+    state = np.random.get_state()
 
     # Set seed
-    random.seed(seed)
+    np.random.seed(seed)
 
     # Print seed
     print(f"# Used seed [{environ['PYTEST_CURRENT_TEST']}]: {seed}",
@@ -42,17 +45,23 @@ def set_seed():
     yield
 
     # Set state
-    random.set_state(state)
+    np.random.set_state(state)
 
 
-@pytest.mark.parametrize('type,ndim,npos', ([type, ndim, npos] for type in [
-    'float', 'float16', 'float32', 'float64', 'float128', 'int8', 'int16',
-    'int32', 'int64', 'uint8', 'uint16', 'uint32', 'uint64', 'complex64',
-    'complex128'
-] for ndim in [10, 16] for npos in [2, 4, 6, 8, 10]))
-def test_transpose(type, ndim, npos):
+@pytest.mark.parametrize(
+    'array_type,ndim,npos', ([array_type, ndim, npos] for array_type in [
+        'float', 'float16', 'float32', 'float64', 'float128', 'int8', 'int16',
+        'int32', 'int64', 'uint8', 'uint16', 'uint32', 'uint64', 'complex64',
+        'complex128'
+    ] for ndim in [10, 16] for npos in [2, 4, 6, 8, 10]))
+# pylint: disable=invalid-name
+def test_transpose(array_type, ndim, npos):
+    """
+    Test `hybridq_array.linalg.transpose`.
+    """
+
     # Get random array
-    a = (1000 * np.random.random((2,) * ndim)).astype(type)
+    a = (1000 * np.random.random((2,) * ndim)).astype(array_type)
 
     # Get imaginary part
     if np.iscomplexobj(a):
