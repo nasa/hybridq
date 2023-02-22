@@ -43,9 +43,9 @@ CXXFLAGS := $(CXXFLAGS) \
 CXXFLAGS += $(CXXFLAGS_EXTRA)
 
 # Check support for openMP
-is_openmp_supported := $(shell echo | \
+is_openmp_supported := $(shell echo 'int main(){}' | \
                        $(CXX) $(CPPFLAGS) $(LDFLAGS) $(CXXFLAGS) \
-                          -fopenmp -x c++ -c - -o /dev/null 2>/dev/null && \
+                          -fopenmp -x c++ - -o /dev/null 2>/dev/null && \
                        echo yes || \
                        echo no)
 
@@ -76,7 +76,6 @@ endif
 
 .PHONY=all
 all: print_support \
-     $(OUTPUT_PATH)/hybridq_swap.so \
      $(OUTPUT_PATH)/hybridq.so
 
 .PHONY=print_support
@@ -92,13 +91,6 @@ print_support:
 	@# Print pack size
 	$(info # Size of Pack: 2^$(LOG2_PACK_SIZE))
 
-$(OUTPUT_PATH)/hybridq_swap.so: include/python_swap.cpp \
-                                include/swap.h \
-                                include/utils.h \
-                                include/pack.h
-	@# Compile
-	$(COMPILE) $< -o $@
-
 $(OUTPUT_PATH)/hybridq.so: include/python_U.cpp \
                            include/U.h \
                            include/utils.h \
@@ -107,6 +99,46 @@ $(OUTPUT_PATH)/hybridq.so: include/python_U.cpp \
 	$(COMPILE) $< -o $@ \
     -DLOG2_PACK_SIZE=$(LOG2_PACK_SIZE)
 
+# Get name of swap library
+SWAP_LIBNAME = $(OUTPUT_PATH)/hybridq_swap_$(swap_array_type)_$(swap_npos).so
+
+# Get type for swap
+ifeq ($(swap_array_type), float16)
+	SWAP_ARRAY_TYPE = uint16_t
+else ifeq ($(swap_array_type), float32)
+	SWAP_ARRAY_TYPE = float
+else ifeq ($(swap_array_type), float64)
+	SWAP_ARRAY_TYPE = double
+else ifeq ($(swap_array_type), float128)
+	SWAP_ARRAY_TYPE = __float128
+else ifeq ($(swap_array_type), int8)
+	SWAP_ARRAY_TYPE = int8_t
+else ifeq ($(swap_array_type), int16)
+	SWAP_ARRAY_TYPE = int16_t
+else ifeq ($(swap_array_type), int32)
+	SWAP_ARRAY_TYPE = int32_t
+else ifeq ($(swap_array_type), int64)
+	SWAP_ARRAY_TYPE = int64_t
+else ifeq ($(swap_array_type), uint8)
+	SWAP_ARRAY_TYPE = uint8_t
+else ifeq ($(swap_array_type), uint16)
+	SWAP_ARRAY_TYPE = uint16_t
+else ifeq ($(swap_array_type), uint32)
+	SWAP_ARRAY_TYPE = uint32_t
+else ifeq ($(swap_array_type), uint64)
+	SWAP_ARRAY_TYPE = uint64_t
+endif
+
+# Define swap
+swap: $(SWAP_LIBNAME)
+
+# Compile swap
+$(SWAP_LIBNAME): print_support \
+					       include/swap.cpp
+	$(COMPILE) $(filter-out $<, $^) -o $@ \
+		-DHYBRIDQ_ARRAY_SWAP_N_POS=$(swap_npos) \
+		-DHYBRIDQ_ARRAY_SWAP_ARRAY_TYPE=$(SWAP_ARRAY_TYPE)
+
 clean:
 	-rm -f $(OUTPUT_PATH)/hybridq.so
-	-rm -f $(OUTPUT_PATH)/hybridq_swap.so
+	-rm -f $(OUTPUT_PATH)/hybridq_swap_*.so
