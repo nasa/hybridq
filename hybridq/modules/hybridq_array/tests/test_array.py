@@ -616,7 +616,7 @@ def test__Array_np(dtype, order, alignment):
     assert_allclose(_array_1, _array_2)
 
     # Check tranpose
-    if not load_library('hybridq.so') or not load_library('hybridq_swap.so'):
+    if not load_library('hybridq.so'):
         pytest.skip("Cannot load HybridQ C++ core")
     else:
         _shape = np.random.permutation(array.ndim)
@@ -777,8 +777,7 @@ def test__array_asarray(dtype, order, alignment):
         pytest.skip("Too many attempts.")
 
 
-@pytest.mark.skipif(not load_library('hybridq.so') or
-                    not load_library('hybridq_swap.so'),
+@pytest.mark.skipif(not load_library('hybridq.so'),
                     reason="Cannot load HybridQ C++ core")
 @pytest.mark.parametrize(
     'dtype,order,alignment',
