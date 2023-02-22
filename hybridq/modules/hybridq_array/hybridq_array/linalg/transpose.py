@@ -16,12 +16,13 @@ specific language governing permissions and limitations under the License.
 """
 
 from __future__ import annotations
-from ..utils import get_lib_fn, load_library
 from functools import lru_cache
-from ..compile import compile
+import logging
 import numpy as np
 import autoray
-import logging
+
+from ..compile import compile as compile_lib
+from ..utils import get_lib_fn, load_library
 
 __all__ = ['transpose']
 
@@ -37,17 +38,24 @@ _LOGGER.addHandler(_LOGGER_CH)
 
 @lru_cache
 def get_swap_lib(array_type, npos: int):
+    """
+    Given an `array_type` and `npos`, return the corresponding function.
+    """
+
     # Convert type
     array_type = str(np.dtype(array_type))
 
     # Compile the library
-    compile('swap', swap_npos=npos, swap_array_type=array_type)
+    compile_lib('swap', swap_npos=npos, swap_array_type=array_type)
 
     # Load and return function
     return get_lib_fn(load_library(f'hybridq_swap_{array_type}_{npos}.so'),
                       'swap', 'int32', f'{array_type}*', 'uint32*', 'uint32')
 
 
+# pylint: disable=undefined-variable
+# pylint: disable=invalid-name
+# pylint: disable=too-many-branches
 def transpose(a: array_like,
               axes: array_like = None,
               *,
@@ -153,15 +161,15 @@ def transpose(a: array_like,
             # Return swapped
             return a
 
-        # If hcore fails
+        # If hcore fails ...
+        # pylint: disable=broad-exception-caught
         except Exception as e:
             # Raise if required
             if raise_if_hcore_fails:
                 raise e
 
             # Otherwise, log
-            else:
-                _LOGGER.warning(e)
+            _LOGGER.warning(e)
 
     # Print reasons why hcore failed
     else:
@@ -171,9 +179,8 @@ def transpose(a: array_like,
                                ', '.join(_hcore_fails))
 
         # Otherwise, log
-        else:
-            _LOGGER.warning('Cannot use HybridQ C++ core: ' +
-                            ', '.join(_hcore_fails))
+        _LOGGER.warning('Cannot use HybridQ C++ core: %s',
+                        ', '.join(_hcore_fails))
 
     # Warn fallback
     _LOGGER.warning('Fallback to %s', 'backend' if backend is None else backend)
