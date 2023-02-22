@@ -75,3 +75,55 @@ def compile():
         if load_library('hybridq.so') is None or load_library(
                 'hybridq_swap.so') is None:
             _LOGGER.warning("Cannot use C++ core.")
+
+
+def compile_lib(target: str, **kwargs) -> None:
+    """
+    Compile the HybridQ C++ core library.
+    """
+
+    from .defaults import _DEFAULTS
+    from .utils import load_library
+
+    # If library cannot be loaded, try to compile
+    if _DEFAULTS['libpath'] is None:
+        from distutils.sysconfig import get_python_lib
+        from subprocess import Popen, PIPE
+        import os
+
+        # Get root of the package
+        _root = os.path.join(get_python_lib(), 'hybridq_array/lib')
+
+        # Get cache folder
+        _cache = os.path.join(
+            os.path.expanduser('~'), '.cache/hybridq_array'
+        ) if _DEFAULTS['use_global_cache'] else os.path.join(
+            os.getcwd(), '.hybridq_array')
+
+        # Check if writable
+        if not os.access(os.path.dirname(_cache), os.W_OK):
+            _LOGGER.warning("Cannot create cache folder.")
+            _LOGGER.warning("Cannot use C++ core.")
+
+            # Return
+            return
+
+        # Create folder
+        os.makedirs(_cache, exist_ok=True)
+
+        # Check
+        assert (os.access(_cache, os.W_OK))
+
+        # Try to compile
+        _LOGGER.info("Try to compile C++ core to '%s'", _cache)
+        _cmd = 'make -C {} {} -j {} -e OUTPUT_PATH={} '.format(
+            _root, target, os.cpu_count(), _cache)
+        _cmd += ' '.join(f'{k}={v}' for k, v in kwargs.items())
+        _out, _err = Popen(_cmd.split(), stderr=PIPE, stdout=PIPE).communicate()
+
+        # Raise if make has an error
+        if len(_err):
+            raise OSError(_err.decode())
+
+        # Log output
+        _LOGGER.warning(_out.decode())
