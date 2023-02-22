@@ -21,7 +21,7 @@ import logging
 import numpy as np
 import autoray
 
-from ..compile import compile as compile_lib
+from ..compile import compile_lib
 from ..utils import get_lib_fn, load_library
 
 __all__ = ['transpose']
