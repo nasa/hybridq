@@ -17,8 +17,8 @@
  * the License.
  */
 
-#include <cstdint>
 #include <array>
+#include <cstdint>
 
 // Get number of positions
 static constexpr std::size_t n_pos = HYBRIDQ_ARRAY_SWAP_N_POS;
@@ -44,12 +44,10 @@ int32_t swap(array_type *array, uint32_t *pos, uint32_t n_qubits) {
    */
 
   // Check that array is not empty
-  if (array == nullptr)
-    return 1;
+  if (array == nullptr) return 1;
 
   // Check that pos is not empty
-  if (pos == nullptr)
-    return 2;
+  if (pos == nullptr) return 2;
 
   // Get swap size
   static constexpr std::size_t size = 1uLL << n_pos;
@@ -58,7 +56,7 @@ int32_t swap(array_type *array, uint32_t *pos, uint32_t n_qubits) {
   const std::size_t array_size = 1uLL << n_qubits;
 
   // Expand positions
-  std::array<std::size_t , size> _expanded;
+  std::array<std::size_t, size> _expanded;
   for (std::size_t i = 0; i < size; ++i) {
     _expanded[i] = swap_bits(i, pos);
   }
@@ -69,17 +67,13 @@ int32_t swap(array_type *array, uint32_t *pos, uint32_t n_qubits) {
     std::array<array_type, size> _array;
 
     // Swap to buffer
-    for (std::size_t j = 0; j < size; ++j)
-      _array[j] = array[i + _expanded[j]];
+    for (std::size_t j = 0; j < size; ++j) _array[j] = array[i + _expanded[j]];
 
     // Copy
-    for (std::size_t j = 0; j < size; ++j)
-      array[i + j] = _array[j];
-
+    for (std::size_t j = 0; j < size; ++j) array[i + j] = _array[j];
   }
 
   // Everything is ok
   return 0;
 }
-
 }
