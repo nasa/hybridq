@@ -150,7 +150,8 @@ def transpose(a: array_like,
                 a = a.view('uint16')
 
             # Swap
-            get_swap_lib(a.dtype, len(c_axes))(a, c_axes, a.ndim)
+            if get_swap_lib(a.dtype, len(c_axes))(a, c_axes, a.ndim):
+                raise RuntimeError("Something went wrong")
 
             # Restore dtype
             if _dtype:
