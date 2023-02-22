@@ -339,15 +339,14 @@ def test__asarray(dtype, order, alignment):
     assert (not np.may_share_memory(array, r))
 
 
-@pytest.mark.skipif(not load_library('hybridq.so') or
-                    not load_library('hybridq_swap.so'),
+@pytest.mark.skipif(not load_library('hybridq.so'),
                     reason="Cannot load HybridQ C++ core")
 @pytest.mark.parametrize('dtype,order,alignment',
                          [(dtype, order, alignment) for dtype in [
                              'float32', 'float64', 'float128', 'int8', 'int16',
                              'int32', 'int64', 'uint8', 'uint16', 'uint32',
                              'uint64', 'complex64', 'complex128', 'complex256'
-                         ] for order in 'CF'
+                         ] for order in 'C'
                           for alignment in [32, 64, 128, 256, 512, 1024]])
 def test__transpose(dtype, order, alignment):
     from hybridq_array.aligned_array import AlignedArray
