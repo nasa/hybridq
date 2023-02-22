@@ -233,13 +233,11 @@ def tensordot(a: array_like,
 
         # Swap if needed
         if len(_swap_order):
-            from .transpose import _swap_core
-            if _swap_core[_rtype](_b_re_ptr, _swap_order_ptr, b.ndim,
-                                  len(_swap_order)):
-                raise RuntimeError("Something went wrong")
-            if _swap_core[_rtype](_b_im_ptr, _swap_order_ptr, b.ndim,
-                                  len(_swap_order)):
-                raise RuntimeError("Something went wrong")
+            from .transpose import get_swap_lib
+            get_swap_lib(b.real.dtype, len(_swap_order))(b.real, _swap_order,
+                                                         b.ndim)
+            get_swap_lib(b.imag.dtype, len(_swap_order))(b.imag, _swap_order,
+                                                         b.ndim)
 
         # Apply matrix
         if _dot_core[_rtype](_b_re_ptr, _b_im_ptr, _a_ptr, _axes_ptr, b.ndim,
@@ -248,13 +246,11 @@ def tensordot(a: array_like,
 
         # Swap back if needed
         if len(_swap_order) and swap_back:
-            from .transpose import _swap_core
-            if _swap_core[_rtype](_b_re_ptr, _swap_order_ptr, b.ndim,
-                                  len(_swap_order)):
-                raise RuntimeError("Something went wrong")
-            if _swap_core[_rtype](_b_im_ptr, _swap_order_ptr, b.ndim,
-                                  len(_swap_order)):
-                raise RuntimeError("Something went wrong")
+            from .transpose import get_swap_lib
+            get_swap_lib(b.real.dtype, len(_swap_order))(b.real, _swap_order,
+                                                         b.ndim)
+            get_swap_lib(b.imag.dtype, len(_swap_order))(b.imag, _swap_order,
+                                                         b.ndim)
 
         # Otherwise, build final order
         else:
