@@ -17,9 +17,13 @@ specific language governing permissions and limitations under the License.
 
 from __future__ import annotations
 from .defaults import _DEFAULTS
+from functools import lru_cache
+import numpy as np
 import logging
 
-__all__ = ['isintegral', 'load_library', 'get_ctype', 'define_lib_fn']
+__all__ = [
+    'isintegral', 'load_library', 'get_ctype', 'define_lib_fn', 'get_lib_fn'
+]
 
 # Create logger
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +49,7 @@ def isintegral(x: any) -> bool:
 
 
 # Load library
+@lru_cache
 def load_library(libname: str,
                  prefix: iter[str, ...] = ('', 'lib', 'local/lib', 'usr/lib',
                                            'usr/local/lib'),
@@ -109,7 +114,8 @@ def load_library(libname: str,
 
 
 # Define shorthand to get ctypes
-def get_ctype(x):
+@lru_cache
+def get_ctype(x, pointer: bool = False):
     from numpy import dtype
     import ctypes
 
@@ -143,24 +149,30 @@ def get_ctype(x):
         from re import sub
 
         # Remove all spaces
-        _x = sub('\s+', '', x)
+        x = sub('\s+', '', x)
 
         # Check for special characters
         if sub(r'[A-Za-z0-9*]+', '',
-               _x) or _x.count('*') > 1 or (_x.count('*') == 1 and
-                                            _x[-1] != '*'):
+               x) or x.count('*') > 1 or (x.count('*') == 1 and x[-1] != '*'):
             raise ValueError(f"'{x}' is not a valid type")
 
-        # Get type
-        _type = _c_types_map[dtype(_x[:-1] if _x[-1] == '*' else _x)]
+        # Check if pointer
+        if x[-1] == '*':
+            # Set pointer to trye
+            pointer = True
 
-        # Return pointer or type
-        return ctypes.POINTER(_type) if _x[-1] == '*' else _type
-    else:
-        return _c_types_map[dtype(x)]
+            # Remove '*'
+            x = x[:-1]
+
+    # Get type
+    _type = _c_types_map[dtype(x)]
+
+    # Return pointer or type
+    return ctypes.POINTER(_type) if pointer else _type
 
 
 # Define shorthand for defining functions
+@lru_cache
 def define_lib_fn(lib, fname, restype, *argtypes):
     # Convert types
     restype = get_ctype(restype)
@@ -173,3 +185,38 @@ def define_lib_fn(lib, fname, restype, *argtypes):
 
     # Return
     return func
+
+
+# Return handle to the c-function to call using np.array's
+@lru_cache
+def get_lib_fn(lib, fname, restype, *argtypes):
+    from re import sub
+
+    # Convert type to string
+    def _str(x):
+        return sub('\s+', '', x if isinstance(x, str) else str(np.dtype(x)))
+
+    # Convert all arguments to string
+    restype = _str(restype)
+    argtypes = tuple(map(_str, argtypes))
+
+    # Get handle
+    _fun = define_lib_fn(lib, fname, restype, *argtypes)
+
+    # Get pointer
+    def _get_pointer(x, t):
+        # Convert to the right type
+        x = np.asarray(x, dtype=t[:-1] if t[-1] == '*' else t)
+
+        # Return pointer
+        return x.ctypes.data_as(get_ctype(x.dtype, pointer=t[-1]
+                                          == '*')) if x.ndim else x
+
+    # Define the function to call
+    def _caller(*_argtypes):
+        # Convert types and return result
+        return _fun(
+            *(map(lambda x, y: _get_pointer(x, y), _argtypes, argtypes)))
+
+    # Return caller
+    return _caller
