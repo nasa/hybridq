@@ -92,8 +92,10 @@ def transpose(a: array_like,
     --------
     numpy.transpose
     """
+    from ..aligned_array import asarray
+
     # Convert to numpy array
-    a = np.asarray(a)
+    a = asarray(a)
 
     # Convert axes to array
     axes = np.asarray(axes)
