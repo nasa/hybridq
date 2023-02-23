@@ -49,13 +49,15 @@ def set_seed():
 
 
 @pytest.mark.parametrize(
-    'array_type,ndim,npos', ([array_type, ndim, npos] for array_type in [
+    'array_type,ndim,npos,force_backend',
+    ([array_type, ndim, npos, force_backend] for array_type in [
         'float', 'float16', 'float32', 'float64', 'float128', 'int8', 'int16',
         'int32', 'int64', 'uint8', 'uint16', 'uint32', 'uint64', 'complex64',
         'complex128'
-    ] for ndim in [10, 16] for npos in [2, 4, 6, 8, 10]))
+    ] for ndim in [10, 16] for npos in [2, 4, 6, 8, 10]
+     for force_backend in [False, True]))
 # pylint: disable=invalid-name
-def test_transpose(array_type, ndim, npos):
+def test_transpose(array_type, ndim, npos, force_backend):
     """
     Test `hybridq_array.linalg.transpose`.
     """
@@ -73,4 +75,9 @@ def test_transpose(array_type, ndim, npos):
         [np.arange(a.ndim - axes.size), a.ndim - axes[::-1] - 1])
 
     # Check transposition
-    np.testing.assert_allclose(np.transpose(a, axes), transpose(a, axes))
+    np.testing.assert_allclose(
+        np.transpose(a, axes),
+        transpose(a,
+                  axes,
+                  raise_if_hcore_fails=not force_backend,
+                  force_backend=force_backend))
