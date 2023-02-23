@@ -20,17 +20,43 @@
 #include <array>
 #include <cstdint>
 
+// Get number of bytes for array_type
+static constexpr std::size_t n_bytes = HYBRIDQ_ARRAY_SWAP_N_BYTES;
+
 // Get number of positions
 static constexpr std::size_t n_pos = HYBRIDQ_ARRAY_SWAP_N_POS;
 
 // Get array_type
-using array_type = HYBRIDQ_ARRAY_SWAP_ARRAY_TYPE;
+template <std::size_t n_bytes>
+struct ArrayType {
+  typedef uint64_t type
+      __attribute__((vector_size(sizeof(uint64_t) * n_bytes / 8)));
+};
+template <>
+struct ArrayType<1> {
+  using type = uint8_t;
+};
+template <>
+struct ArrayType<2> {
+  using type = uint16_t;
+};
+template <>
+struct ArrayType<4> {
+  using type = uint32_t;
+};
+template <>
+struct ArrayType<8> {
+  using type = uint64_t;
+};
 
-auto swap_bits(uint32_t x, uint32_t *pos) {
+// Get array_type
+using array_type = typename ArrayType<n_bytes>::type;
+
+uint32_t swap_bits(uint32_t x, uint32_t *pos) {
   /*
    * Swap bits accordingly to 'pos'.
    */
-  auto _x = x & ~uint32_t(0) << n_pos;
+  uint32_t _x = x & ~uint32_t(0) << n_pos;
   for (std::size_t i = 0; i < n_pos; ++i)
     _x |= ((x >> i) & uint32_t(1)) << pos[i];
   return _x;
@@ -38,7 +64,7 @@ auto swap_bits(uint32_t x, uint32_t *pos) {
 
 extern "C" {
 
-int32_t swap(array_type *array, uint32_t *pos, uint32_t n_qubits) {
+int32_t swap(void *array, uint32_t *pos, uint32_t n_qubits) {
   /*
    * Swap array accordingly to pos.
    */
@@ -48,6 +74,9 @@ int32_t swap(array_type *array, uint32_t *pos, uint32_t n_qubits) {
 
   // Check that pos is not empty
   if (pos == nullptr) return 2;
+
+  // Reinterpret to the right pointer
+  array_type *_array = reinterpret_cast<array_type *>(array);
 
   // Get swap size
   static constexpr std::size_t size = 1uLL << n_pos;
@@ -64,13 +93,14 @@ int32_t swap(array_type *array, uint32_t *pos, uint32_t n_qubits) {
 #pragma omp parallel for
   for (std::size_t i = 0; i < array_size; i += size) {
     // Create temporary array
-    std::array<array_type, size> _array;
+    std::array<array_type, size> _buffer;
 
     // Swap to buffer
-    for (std::size_t j = 0; j < size; ++j) _array[j] = array[i + _expanded[j]];
+    for (std::size_t j = 0; j < size; ++j)
+      _buffer[j] = _array[i + _expanded[j]];
 
     // Copy
-    for (std::size_t j = 0; j < size; ++j) array[i + j] = _array[j];
+    for (std::size_t j = 0; j < size; ++j) _array[i + j] = _buffer[j];
   }
 
   // Everything is ok
