@@ -165,7 +165,7 @@ def get_ctype(x, pointer: bool = False):
             x = x[:-1]
 
     # Get type
-    _type = _c_types_map[dtype(x)]
+    _type = ctypes.c_void_p if x == 'void' else _c_types_map[dtype(x)]
 
     # Return pointer or type
     return ctypes.POINTER(_type) if pointer else _type
@@ -205,6 +205,12 @@ def get_lib_fn(lib, fname, restype, *argtypes):
 
     # Get pointer
     def _get_pointer(x, t):
+        import ctypes
+
+        # If type is 'void*', get pointer without conversion
+        if t == 'void*':
+            return x.ctypes.data_as(ctypes.POINTER(ctypes.c_void_p))
+
         # Convert to the right type
         x = np.asarray(x, dtype=t[:-1] if t[-1] == '*' else t)
 
