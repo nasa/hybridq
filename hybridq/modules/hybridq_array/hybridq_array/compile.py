@@ -127,5 +127,8 @@ def compile_lib(target: str, **kwargs) -> None:
             raise OSError(_err.decode())
 
         # Log output
-        _LOGGER.warning(_out.decode())
-        _LOGGER.error(_err.decode())
+        if _out:
+            _LOGGER.warning(_out.decode())
+
+        if _err:
+            _LOGGER.error(_err.decode())
