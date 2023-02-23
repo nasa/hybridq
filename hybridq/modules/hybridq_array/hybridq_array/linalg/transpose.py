@@ -37,20 +37,17 @@ _LOGGER.addHandler(_LOGGER_CH)
 
 
 @lru_cache
-def get_swap_lib(array_type, npos: int):
+def get_swap_lib(nbytes: int, npos: int):
     """
-    Given an `array_type` and `npos`, return the corresponding function.
+    Return swap function.
     """
-
-    # Convert type
-    array_type = str(np.dtype(array_type))
 
     # Compile the library
-    compile_lib('swap', swap_npos=npos, swap_array_type=array_type)
+    compile_lib('swap', swap_npos=npos, swap_nbytes=nbytes)
 
     # Load and return function
-    return get_lib_fn(load_library(f'hybridq_swap_{array_type}_{npos}.so'),
-                      'swap', 'int32', f'{array_type}*', 'uint32*', 'uint32')
+    return get_lib_fn(load_library(f'hybridq_swap_{nbytes}_{npos}.so'), 'swap',
+                      'int32', 'void*', 'uint32*', 'uint32')
 
 
 # pylint: disable=undefined-variable
@@ -133,33 +130,21 @@ def transpose(a: array_like,
             if not inplace:
                 a = a.copy()
 
-            # Initialize
-            _dtype = None
-            _shape = None
-
             # If 'a' is a complex type, view as float
+            _complex = False
             if np.iscomplexobj(a):
-                _dtype = a.dtype
-                _shape = a.shape
-                a = np.reshape(a.view(a.real.dtype), a.shape + (2,))
+                _complex = True
+                a = a.view(a.real.dtype)
                 c_axes = np.concatenate([[0], c_axes + 1])
 
-            # There are no c-types for float16, view as uint16
-            if a.dtype == 'float16':
-                _dtype = a.dtype
-                a = a.view('uint16')
-
             # Swap
-            if get_swap_lib(a.dtype, len(c_axes))(a, c_axes, a.ndim):
+            if get_swap_lib(a.dtype.itemsize, len(c_axes))(a, c_axes,
+                                                           a.ndim + _complex):
                 raise RuntimeError("Something went wrong")
 
-            # Restore dtype
-            if _dtype:
-                a = a.view(_dtype)
-
-            # Restore shape
-            if _shape:
-                a = np.reshape(a, _shape)
+            # Restore complex
+            if _complex:
+                a = a.view((1j * a.dtype.type([1])).dtype)
 
             # Return swapped
             return a
