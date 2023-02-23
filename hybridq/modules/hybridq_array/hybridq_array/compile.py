@@ -119,11 +119,13 @@ def compile_lib(target: str, **kwargs) -> None:
         _cmd = 'make -C {} {} -j {} -e OUTPUT_PATH={} '.format(
             _root, target, os.cpu_count(), _cache)
         _cmd += ' '.join(f'{k}={v}' for k, v in kwargs.items())
-        _out, _err = Popen(_cmd.split(), stderr=PIPE, stdout=PIPE).communicate()
+        _cmd = Popen(_cmd.split(), stderr=PIPE, stdout=PIPE)
+        _out, _err = _cmd.communicate()
 
         # Raise if make has an error
-        if len(_err):
+        if _cmd.returncode:
             raise OSError(_err.decode())
 
         # Log output
         _LOGGER.warning(_out.decode())
+        _LOGGER.error(_err.decode())
