@@ -118,11 +118,9 @@ def transpose(a: array_like,
         _hcore_fails.append('Only binary axes are supported')
     if not a.flags.c_contiguous:
         _hcore_fails.append('Only c-contiguous arrays are allowed')
-    if force_backend:
-        _hcore_fails.append('Forced backend')
 
     # If no checks have failed ...
-    if not _hcore_fails:
+    if not force_backend and not _hcore_fails:
 
         # Swap
         try:
@@ -138,13 +136,16 @@ def transpose(a: array_like,
                 c_axes = np.concatenate([[0], c_axes + 1])
 
             # Swap
-            if get_swap_lib(a.dtype.itemsize, len(c_axes))(a, c_axes,
-                                                           a.ndim + _complex):
-                raise RuntimeError("Something went wrong")
+            _err = get_swap_lib(a.dtype.itemsize,
+                                len(c_axes))(a, c_axes, a.ndim + _complex)
 
             # Restore complex
             if _complex:
                 a = a.view((1j * a.dtype.type([1])).dtype)
+
+            # If there was an error, raise
+            if _err:
+                raise RuntimeError("Something went wrong")
 
             # Return swapped
             return a
@@ -162,13 +163,13 @@ def transpose(a: array_like,
     # Print reasons why hcore failed
     else:
         # Raise if required
-        if raise_if_hcore_fails:
+        if not force_backend and raise_if_hcore_fails:
             raise RuntimeError('Cannot use HybridQ C++ core: ' +
                                ', '.join(_hcore_fails))
 
-        # Otherwise, log
-        _LOGGER.warning('Cannot use HybridQ C++ core: %s',
-                        ', '.join(_hcore_fails))
+            # Otherwise, log
+            _LOGGER.warning('Cannot use HybridQ C++ core: %s',
+                            ', '.join(_hcore_fails))
 
     # Warn fallback
     _LOGGER.warning('Fallback to %s', 'backend' if backend is None else backend)
