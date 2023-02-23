@@ -106,9 +106,12 @@ SWAP_LIBNAME = $(OUTPUT_PATH)/hybridq_swap_$(swap_nbytes)_$(swap_npos).so
 swap: $(SWAP_LIBNAME)
 
 # Compile swap
-$(SWAP_LIBNAME): print_support \
-					       include/swap.cpp
-	$(COMPILE) $(filter-out $<, $^) -o $@ \
+$(SWAP_LIBNAME): include/swap.cpp
+	@# Print support for OpenMP
+	$(info # Support OpenMP? $(is_openmp_supported))
+
+	@# Compile
+	$(COMPILE) $< -o $@ \
 		-DHYBRIDQ_ARRAY_SWAP_N_POS=$(swap_npos) \
 		-DHYBRIDQ_ARRAY_SWAP_N_BYTES=$(swap_nbytes)
 
