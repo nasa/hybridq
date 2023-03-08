@@ -115,7 +115,8 @@ def compile_lib(target: str, **kwargs) -> None:
         assert (os.access(_cache, os.W_OK))
 
         # Try to compile
-        _LOGGER.info("Try to compile C++ core to '%s'", _cache)
+        _LOGGER.info("Try to compile C++ core to '%s' with parameters %s",
+                     _cache, ', '.join(f'{k}={v}' for k, v in kwargs.items()))
         _cmd = 'make -C {} {} -j {} -e OUTPUT_PATH={} '.format(
             _root, target, os.cpu_count(), _cache)
         _cmd += ' '.join(f'{k}={v}' for k, v in kwargs.items())
