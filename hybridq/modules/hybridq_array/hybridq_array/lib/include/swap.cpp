@@ -52,7 +52,7 @@ struct ArrayType<8> {
 // Get array_type
 using array_type = typename ArrayType<n_bytes>::type;
 
-uint32_t swap_bits(uint32_t x, uint32_t *pos) {
+uint32_t swap_bits(uint32_t x, const uint32_t *pos) {
   /*
    * Swap bits accordingly to 'pos'.
    */
@@ -64,7 +64,7 @@ uint32_t swap_bits(uint32_t x, uint32_t *pos) {
 
 extern "C" {
 
-int32_t swap(void *array, uint32_t *pos, uint32_t n_qubits) {
+int32_t swap(void *array, const uint32_t *pos, const uint32_t n_qubits) {
   /*
    * Swap array accordingly to pos.
    */
