@@ -54,6 +54,7 @@ def get_swap_lib(nbytes: int, npos: int):
 # pylint: disable=invalid-name
 # pylint: disable=too-many-branches
 def transpose(a: array_like,
+              /,
               axes: array_like = None,
               *,
               inplace: bool = False,
