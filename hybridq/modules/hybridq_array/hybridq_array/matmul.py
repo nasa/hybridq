@@ -43,8 +43,8 @@ def get_dot_lib(float_type: str, npos: int, max_log2_pack_size: int = None):
     from subprocess import Popen, PIPE
     import os
 
-    from ..compile import compile_lib
-    from ..utils import get_lib_fn, load_library
+    from .compile import compile_lib
+    from .utils import get_lib_fn, load_library
 
     # Get root of the package
     root_ = os.path.join(get_python_lib(), 'hybridq_array/lib')
@@ -133,7 +133,7 @@ def matmul(a: matrix_like,
     a_@_b
         `a_@_b` being the result of the matrix/array multiplication.
     """
-    from ..utils import get_ctype
+    from .utils import get_ctype
 
     # Convert to numpy arrays
     a = np.asarray(a)

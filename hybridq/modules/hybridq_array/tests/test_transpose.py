@@ -19,7 +19,7 @@ from sys import stderr
 import numpy as np
 import pytest
 
-from hybridq_array.linalg import transpose
+from hybridq_array import transpose
 
 
 @pytest.fixture(autouse=True)
@@ -59,7 +59,7 @@ def set_seed():
 # pylint: disable=invalid-name
 def test_transpose(array_type, ndim, npos, force_backend):
     """
-    Test `hybridq_array.linalg.transpose`.
+    Test `hybridq_array.transpose`.
     """
 
     # Get random array

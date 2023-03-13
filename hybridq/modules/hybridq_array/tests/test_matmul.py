@@ -19,7 +19,7 @@ from sys import stderr
 import numpy as np
 import pytest
 
-from hybridq_array.linalg import matmul
+from hybridq_array import matmul
 
 
 @pytest.fixture(autouse=True)
