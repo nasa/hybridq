@@ -15,11 +15,3 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 from .defaults import _DEFAULTS
-from .compile import compile
-
-# Try to compile C++ core
-if _DEFAULTS['force_compilation']:
-    compile()
-
-# Load the rest
-from .array import *

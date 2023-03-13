@@ -17,8 +17,7 @@
  * the License.
  */
 
-#include <array>
-#include <cstdint>
+#include "swap.h"
 
 // Get number of bytes for array_type
 static constexpr std::size_t n_bytes = HYBRIDQ_ARRAY_SWAP_N_BYTES;

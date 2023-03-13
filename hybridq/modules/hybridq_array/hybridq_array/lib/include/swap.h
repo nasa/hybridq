@@ -17,36 +17,13 @@
  * the License.
  */
 
-#ifndef HYBRIDQ_GLOBAL_H
-#define HYBRIDQ_GLOBAL_H
+#ifndef HYBRIDQ_ARRAY_SWAP__HPP
+#define HYBRIDQ_ARRAY_SWAP__HPP
 
-#include <immintrin.h>
+#include <array>
+#include <cstdint>
 
-#include <stdexcept>
-#include <utility>
-
-namespace hybridq {
-
-// Define pack structure
-template <typename _base_type, std::size_t _size>
-struct __pack__ {
-  using base_type = _base_type;
-  static constexpr std::size_t size = _size;
-
-  typedef base_type value_type
-      __attribute__((vector_size(sizeof(base_type) * size)));
-
-  static constexpr value_type get(base_type value) {
-    return _get(value, std::make_index_sequence<size>{});
-  }
-
- private:
-  template <std::size_t... I>
-  static constexpr value_type _get(base_type value, std::index_sequence<I...>) {
-    return value_type{(static_cast<void>(I), value)...};
-  }
-};
-
-}  // namespace hybridq
+extern "C" int32_t swap(void *array, const uint32_t *pos,
+                        const uint32_t n_qubits);
 
 #endif
