@@ -55,7 +55,7 @@ CXXFLAGS ?= -Wall \
 
 # Add flags for shared library
 CXXFLAGS := $(CXXFLAGS) \
-            -std=c++17 \
+            -std=c++14 \
             -shared \
             -fPIC
 
