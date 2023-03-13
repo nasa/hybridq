@@ -134,7 +134,6 @@ def matmul(a: matrix_like,
         `a_@_b` being the result of the matrix/array multiplication.
     """
     from ..utils import get_ctype
-    from ..array import array
 
     # Convert to numpy arrays
     a = np.asarray(a)
