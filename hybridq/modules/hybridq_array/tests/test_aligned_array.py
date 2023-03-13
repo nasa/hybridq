@@ -339,8 +339,6 @@ def test__asarray(dtype, order, alignment):
     assert (not np.may_share_memory(array, r))
 
 
-@pytest.mark.skipif(not load_library('hybridq.so'),
-                    reason="Cannot load HybridQ C++ core")
 @pytest.mark.parametrize('dtype,order,alignment',
                          [(dtype, order, alignment) for dtype in [
                              'float32', 'float64', 'float128', 'int8', 'int16',
@@ -350,7 +348,7 @@ def test__asarray(dtype, order, alignment):
                           for alignment in [32, 64, 128, 256, 512, 1024]])
 def test__transpose(dtype, order, alignment):
     from hybridq_array.aligned_array import AlignedArray
-    from hybridq_array.linalg import transpose
+    from hybridq_array import transpose
 
     # Get random shape
     shape = (2,) * 10
