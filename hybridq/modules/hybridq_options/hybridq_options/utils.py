@@ -142,7 +142,7 @@ def parse_default(opts: Options,
         raise ValueError("Keypath separator for 'Option' must be '.'")
 
     # Get module name
-    _module = getattr(getmodule(stack()[0][0]), '__name__',
+    _module = getattr(getmodule(stack()[1][0]), '__name__',
                       '') if module is None else str(module)
 
     # Convert prefix
@@ -171,11 +171,19 @@ def parse_default(opts: Options,
 
         # Get positional parameters
         _args = tuple(
-            filter(lambda x: x.kind != _ParameterKind.KEYWORD_ONLY, _params))
+            filter(
+                lambda x: x.kind != _ParameterKind.KEYWORD_ONLY and x.kind
+                not in
+                [_ParameterKind.VAR_POSITIONAL, _ParameterKind.VAR_KEYWORD],
+                _params))
 
         # Get kw only parameters
         _kwargs = tuple(
-            filter(lambda x: x.kind == _ParameterKind.KEYWORD_ONLY, _params))
+            filter(
+                lambda x: x.kind == _ParameterKind.KEYWORD_ONLY and x.kind
+                not in
+                [_ParameterKind.VAR_POSITIONAL, _ParameterKind.VAR_KEYWORD],
+                _params))
 
         # Get default parameters
         _defaults = tuple(x.name for x in filter(
