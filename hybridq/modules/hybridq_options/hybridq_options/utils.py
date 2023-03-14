@@ -16,7 +16,7 @@ specific language governing permissions and limitations under the License.
 """
 
 from __future__ import annotations
-from inspect import stack, getmodule, signature, _ParameterKind
+from inspect import stack, getmodule, signature, _ParameterKind, _empty
 from functools import wraps
 from os import environ
 
@@ -163,59 +163,97 @@ def parse_default(opts: Options,
             # pylint: disable=raise-missing-from
             raise DefaultException(module=_module, param=name)
 
+    def _is_empty(x):
+        return isinstance(x, type) and issubclass(x, _empty)
+
     # Define the actual decorator
     def _parse_default(func: callable):
 
         # Get parameters
-        _params = signature(func).parameters.values()
+        _params = signature(func).parameters
 
-        # Get positional parameters
+        # Get positional-only parameters
+        _pos_only = tuple(
+            filter(lambda x: x.kind == _ParameterKind.POSITIONAL_ONLY,
+                   _params.values()))
+
+        # Get positional or keyword parameters
         _args = tuple(
-            filter(
-                lambda x: x.kind != _ParameterKind.KEYWORD_ONLY and x.kind
-                not in
-                [_ParameterKind.VAR_POSITIONAL, _ParameterKind.VAR_KEYWORD],
-                _params))
+            filter(lambda x: x.kind == _ParameterKind.POSITIONAL_OR_KEYWORD,
+                   _params.values()))
 
         # Get kw only parameters
         _kwargs = tuple(
-            filter(
-                lambda x: x.kind == _ParameterKind.KEYWORD_ONLY and x.kind
-                not in
-                [_ParameterKind.VAR_POSITIONAL, _ParameterKind.VAR_KEYWORD],
-                _params))
+            filter(lambda x: x.kind == _ParameterKind.KEYWORD_ONLY,
+                   _params.values()))
 
         # Get default parameters
         _defaults = tuple(x.name for x in filter(
-            lambda x: isinstance(x.default, DefaultType), _params))
+            lambda x: isinstance(x.default, DefaultType), _params.values()))
+
+        # Check signature's order
+        assert [x.name for p in [_pos_only, _args, _kwargs] for x in p] == [
+            x for x, y in _params.items() if y.kind not in
+            [_ParameterKind.VAR_POSITIONAL, _ParameterKind.VAR_KEYWORD]
+        ]
 
         @wraps(func)
         def _f(*args, **kwargs):
-            # Fill positional arguments
-            args = tuple(
-                kwargs.pop(_par.name,
-                           args[_pos] if _pos < len(args) else _par.default)
-                for _pos, _par in enumerate(_args))
+            from itertools import zip_longest
 
-            # Substitute default values
-            args = tuple(
-                _get_default(_par.name) if isinstance(_v, DefaultType) else _v
-                for _v, _par in zip(args, _args))
+            # Get positional-only arguments ...
+            _x = tuple(
+                _get_default(par.name) if all(
+                    isinstance(x, DefaultType)
+                    for x in [val, par.default]) else val
+                for par, val in zip(_pos_only, args))
 
-            # Fill kw arguments only
-            kwargs = {
-                _par.name: kwargs.get(_par.name, _par.default)
-                for _par in _kwargs
-            }
+            # ... and pad with default values
+            _x += tuple(
+                _get_default(par.name) if isinstance(par.default, DefaultType
+                                                    ) else par.default
+                for par in _pos_only[len(args):len(_pos_only)])
 
-            # Substitute default values
-            kwargs = {
-                k: _get_default(k) if isinstance(v, DefaultType) else v
-                for k, v in kwargs.items()
-            }
+            # Add positional or keyword arguments
+            _x += tuple(
+                _get_default(par.name) if all(
+                    isinstance(x, DefaultType)
+                    for x in [val, par.default]) else val
+                for par, val in ((par, val if not _is_empty(val) else kwargs.
+                                  pop(par.name, par.default))
+                                 for par, val in zip_longest(
+                                     _args,
+                                     args[len(_pos_only):len(_pos_only) +
+                                          len(_args)],
+                                     fillvalue=_empty)))
+
+            # Check that all arguments have been processed
+            assert len(_x) == len(_pos_only) + len(_args)
+
+            # Check for no missing arguments
+            _missing = tuple(
+                y.name for x, y in zip(_x, _pos_only + _args) if _is_empty(x))
+
+            if _missing:
+                raise TypeError(
+                    f'{func.__name__}{signature(func)} missing {len(_missing)} required positional argument(s): '
+                    + ', '.join(_missing))
+
+            # Add extra positional arguments
+            _x += args[len(_pos_only) + len(_args):]
+
+            # Get default value for keyword only arguments
+            kwargs.update({
+                k: v for k, v in ((par.name, _get_default(par.name) if all(
+                    isinstance(x, DefaultType)
+                    for x in [val, par.default]) else val)
+                                  for par, val in (
+                                      (par, kwargs.pop(par.name, par.default))
+                                      for par in _kwargs)) if not _is_empty(v)
+            })
 
             # Call function
-            return func(*args, **kwargs)
+            return func(*_x, **kwargs)
 
         _f.__doc__ = _DynamicDoc('' if _f.__doc__ is None else _f.__doc__)
 
