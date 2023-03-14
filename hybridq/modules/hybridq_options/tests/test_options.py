@@ -163,13 +163,14 @@ def test_parse_default(dummy):
             b=Default,
             # pylint: disable=invalid-name
             C=3,
-            *,
+            *args,
             D=4,
             c=Default,
             E=5,
-            d=Default):
-        return A, a, B, b, C, D, c, E, d
+            d=Default,
+            **kwargs):
+        return A, a, B, b, C, D, c, E, d, args, kwargs
 
     # Check
     assert func() == (1, opts['key0.a'], 2, opts['key0.b'], 3, 4,
-                      opts['key0.c'], 5, opts['key0.d'])
+                      opts['key0.c'], 5, opts['key0.d'], (), {})
