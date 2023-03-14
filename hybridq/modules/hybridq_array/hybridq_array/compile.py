@@ -15,7 +15,12 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 
+from subprocess import Popen, PIPE
+from sysconfig import get_path
 import logging
+import os
+
+from .defaults import _DEFAULTS
 
 __all__ = []
 
@@ -34,17 +39,11 @@ def compile_lib(target: str, **kwargs) -> None:
     Compile the HybridQ C++ core library.
     """
 
-    from .defaults import _DEFAULTS
-    from .utils import load_library
-
     # If library cannot be loaded, try to compile
     if _DEFAULTS['libpath'] is None:
-        from distutils.sysconfig import get_python_lib
-        from subprocess import Popen, PIPE
-        import os
 
         # Get root of the package
-        _root = os.path.join(get_python_lib(), 'hybridq_array/lib')
+        _root = os.path.join(get_path('purelib'), 'hybridq_array/lib')
 
         # Get cache folder
         _cache = os.path.join(
@@ -63,21 +62,18 @@ def compile_lib(target: str, **kwargs) -> None:
         # Create folder
         os.makedirs(_cache, exist_ok=True)
 
-        # Check
-        assert (os.access(_cache, os.W_OK))
-
         # Try to compile
         _LOGGER.info("Try to compile C++ core to '%s' with parameters %s",
                      _cache, ', '.join(f'{k}={v}' for k, v in kwargs.items()))
-        _cmd = 'make -C {} {} -j {} -e OUTPUT_PATH={} '.format(
-            _root, target, os.cpu_count(), _cache)
+        _cmd = f'make -C {_root} {target} -j {os.cpu_count()} -e OUTPUT_PATH={_cache} '
         _cmd += ' '.join(f'{k}={v}' for k, v in kwargs.items())
-        _cmd = Popen(_cmd.split(), stderr=PIPE, stdout=PIPE)
-        _out, _err = _cmd.communicate()
+        with Popen(_cmd.split(), stderr=PIPE, stdout=PIPE) as _cmd:
+            # Get results
+            _out, _err = _cmd.communicate()
 
-        # Raise if make has an error
-        if _cmd.returncode:
-            raise OSError(_err.decode())
+            # Raise if make has an error
+            if _cmd.returncode:
+                raise OSError(_err.decode())
 
         # Log output
         if _out:

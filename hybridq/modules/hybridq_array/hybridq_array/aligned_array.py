@@ -16,9 +16,10 @@ specific language governing permissions and limitations under the License.
 """
 
 from __future__ import annotations
+import numpy as np
+
 from .defaults import _DEFAULTS
 from .utils import isintegral
-import numpy as np
 
 # Available methods
 __all__ = [
@@ -27,7 +28,7 @@ __all__ = [
 ]
 
 
-def isaligned(a: numpy.ndarray, alignment: int) -> bool:
+def isaligned(a: np.ndarray, /, alignment: int) -> bool:
     """
     Return `True` if `a` is aligned with `alignment`.
 
@@ -46,7 +47,7 @@ def isaligned(a: numpy.ndarray, alignment: int) -> bool:
     return (a.ctypes.data % alignment) == 0
 
 
-def get_alignment(a: numpy.ndarray, log2_max_alignment: int = 32) -> int:
+def get_alignment(a: np.ndarray, /, log2_max_alignment: int = 32) -> int:
     """
     Get the largest alignment for `a`, up to `max_alignment`.
 
@@ -124,8 +125,8 @@ class AlignedArray(np.ndarray):
         return (array if copy else asarray)(self, alignment=alignment)
 
     def copy(self,
-             alignment: int = _DEFAULTS['alignment'],
-             order: str = 'K') -> AlignedArray:
+             order: str = 'K',
+             alignment: int = _DEFAULTS['alignment']) -> AlignedArray:
         """
         Return a copy of `AlignedArray`.
 
@@ -257,7 +258,7 @@ def empty(shape: any,
     buffer = np.reshape(buffer, shape, order=order)
 
     # Check alignment before returning
-    assert (buffer.ctypes.data % alignment == 0)
+    assert buffer.ctypes.data % alignment == 0
 
     # Fill if needed
     if fill is not None:
@@ -271,8 +272,7 @@ def zeros(shape: any,
           dtype: any = float,
           order: 'C' | 'F' = _DEFAULTS['order'],
           *,
-          alignment: int = _DEFAULTS['alignment'],
-          **kwargs) -> AlignedArray:
+          alignment: int = _DEFAULTS['alignment']) -> AlignedArray:
     """
     Return an `numpy.ndarray` of zeros which is aligned to the given
     `alignment`.
@@ -311,8 +311,7 @@ def ones(shape: any,
          dtype: any = float,
          order: 'C' | 'F' = _DEFAULTS['order'],
          *,
-         alignment: int = _DEFAULTS['alignment'],
-         **kwargs) -> AlignedArray:
+         alignment: int = _DEFAULTS['alignment']) -> AlignedArray:
     """
     Return an `numpy.ndarray` of ones which is aligned to the given `alignment`.
 
@@ -346,8 +345,13 @@ def ones(shape: any,
                  fill=1)
 
 
-def empty_like(a: numpy.ndarray,
+def empty_like(a: np.ndarray,
+               /,
                alignment: int = _DEFAULTS['alignment']) -> AlignedArray:
+    """
+    Equivalent to `numpy.empty_like`.
+    """
+
     # Get params
     shape = a.shape
     dtype = a.dtype
@@ -357,8 +361,13 @@ def empty_like(a: numpy.ndarray,
     return empty(shape=shape, dtype=dtype, order=order, alignment=alignment)
 
 
-def zeros_like(a: numpy.ndarray,
+def zeros_like(a: np.ndarray,
+               /,
                alignment: int = _DEFAULTS['alignment']) -> AlignedArray:
+    """
+    Equivalent to `numpy.zeros_like`.
+    """
+
     # Get params
     shape = a.shape
     dtype = a.dtype
@@ -368,8 +377,13 @@ def zeros_like(a: numpy.ndarray,
     return zeros(shape=shape, dtype=dtype, order=order, alignment=alignment)
 
 
-def ones_like(a: numpy.ndarray,
+def ones_like(a: np.ndarray,
+              /,
               alignment: int = _DEFAULTS['alignment']) -> AlignedArray:
+    """
+    Equivalent to `numpy.ones_like`.
+    """
+
     # Get params
     shape = a.shape
     dtype = a.dtype
@@ -380,6 +394,7 @@ def ones_like(a: numpy.ndarray,
 
 
 def array(a: any,
+          /,
           dtype: any = None,
           order: 'C' | 'F' | 'A' | 'K' = 'K',
           *,
@@ -428,7 +443,6 @@ def array(a: any,
     # Get dtype, size and alignment
     dtype = a.dtype
     shape = a.shape
-    size = np.prod(shape)
     order = ('C' if a.flags.c_contiguous else 'F') if order == 'K' else order
     alignment = get_alignment(a) if alignment is None else int(alignment)
 
@@ -457,6 +471,7 @@ def array(a: any,
 
 
 def asarray(a: any,
+            /,
             dtype: any = None,
             order: 'C' | 'F' | 'A' | 'K' = 'K',
             *,
@@ -496,9 +511,4 @@ def asarray(a: any,
         return np.asarray(a=a, dtype=dtype, order=order)
 
     # Otherwise, return AlignedArray
-    else:
-        return array(a=a,
-                     dtype=dtype,
-                     order=order,
-                     alignment=alignment,
-                     copy=False)
+    return array(a, dtype=dtype, order=order, alignment=alignment, copy=False)

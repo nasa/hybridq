@@ -18,8 +18,9 @@ specific language governing permissions and limitations under the License.
 from __future__ import annotations
 from string import ascii_letters
 from functools import lru_cache
-import numpy as np
 import logging
+
+import numpy as np
 import autoray
 
 __all__ = ['matmul']
@@ -39,7 +40,10 @@ def get_dot_lib(float_type: str, npos: int, max_log2_pack_size: int = None):
     """
     Return dot function.
     """
-    from distutils.sysconfig import get_python_lib
+    # pylint: disable=too-many-locals
+    # pylint: disable=import-outside-toplevel
+
+    from sysconfig import get_path
     from subprocess import Popen, PIPE
     import os
 
@@ -47,27 +51,32 @@ def get_dot_lib(float_type: str, npos: int, max_log2_pack_size: int = None):
     from .utils import get_lib_fn, load_library
 
     # Get root of the package
-    root_ = os.path.join(get_python_lib(), 'hybridq_array/lib')
+    root_ = os.path.join(get_path('purelib'), 'hybridq_array/lib')
 
     # Check support for SIMD instructions
-    cmd_ = Popen('make -C {} print_support'.format(root_).split(), stdout=PIPE)
-    support_ = cmd_.communicate()
+    with Popen(f'make -C {root_} print_support'.split(), stdout=PIPE) as cmd_:
+        # Get results
+        support_ = cmd_.communicate()
 
-    # Check support for SIMD instructions
-    if cmd_.returncode:
-        avx_ = False
-        avx2_ = False
-        avx512_ = False
-        _LOGGER.error("Cannot determine supported SIMD instructions")
-    else:
-        support_ = support_[0].decode().strip().split('\n')
-        avx_ = support_[2].split()[-1] == 'yes'
-        avx2_ = support_[3].split()[-1] == 'yes'
-        avx512_ = support_[4].split()[-1] == 'yes'
+        # Check support for SIMD instructions
+        if cmd_.returncode:
+            avx_ = False
+            avx2_ = False
+            avx512_ = False
+            _LOGGER.error("Cannot determine supported SIMD instructions")
+        else:
+            support_ = support_[0].decode().strip().split('\n')
+            avx_ = support_[2].split()[-1] == 'yes'
+            avx2_ = support_[3].split()[-1] == 'yes'
+            avx512_ = support_[4].split()[-1] == 'yes'
 
     # Get optimal log2_pack_size
     if avx512_:
         log2_pack_size = 4
+    elif avx2_:
+        log2_pack_size = 3
+    elif avx_:
+        log2_pack_size = 3
     else:
         log2_pack_size = 3
 
@@ -88,23 +97,24 @@ def get_dot_lib(float_type: str, npos: int, max_log2_pack_size: int = None):
                 f'hybridq_dot_{float_type}_{log2_pack_size}_{npos}.so'),
             'apply', 'int32', float_type + '*', float_type + '*', 'uint32*',
             'uint32')
-    except OSError as e:
+    except OSError as error:
         # Otherwise, log error ...
-        _LOGGER.error(e)
+        _LOGGER.error(error)
 
         # ... and return None
         return None
 
 
-def matmul(a: matrix_like,
-           b: array_like,
-           /,
-           axes: int | array_like = None,
-           *,
-           inplace: bool = False,
-           force_backend: bool = False,
-           backend: str = None,
-           raise_if_hcore_fails: bool = False):
+def matmul(  # pylint: disable=undefined-variable
+        a: matrix_like,
+        b: array_like,
+        /,
+        axes: int | array_like = None,
+        *,
+        inplace: bool = False,
+        force_backend: bool = False,
+        backend: str = None,
+        raise_if_hcore_fails: bool = False):
     """
     Multiply matrix `a` to array `b` at specific `axes`. For instance, for
     `a.ndim == 2`, this is equivalent to:
@@ -133,7 +143,7 @@ def matmul(a: matrix_like,
     a_@_b
         `a_@_b` being the result of the matrix/array multiplication.
     """
-    from .utils import get_ctype
+    # pylint: disable=too-many-branches
 
     # Convert to numpy arrays
     a = np.asarray(a)

@@ -16,10 +16,14 @@ specific language governing permissions and limitations under the License.
 """
 
 from __future__ import annotations
-from .defaults import _DEFAULTS
 from functools import lru_cache
-import numpy as np
+from re import sub
 import logging
+import ctypes
+import os
+
+import numpy as np
+from .defaults import _DEFAULTS
 
 __all__ = [
     'isintegral', 'load_library', 'get_ctype', 'define_lib_fn', 'get_lib_fn'
@@ -35,19 +39,22 @@ _LOGGER_CH.setFormatter(
 _LOGGER.addHandler(_LOGGER_CH)
 
 
-def isintegral(x: any) -> bool:
+def isintegral(x: any, /) -> bool:
     """
     Return `True` if `x` is integral. The test is done by converting the `x` to
     `int`.
     """
+    # Check if 'x' can be converted to 'int'
     try:
         int(x)
-    except:
+    except (ValueError, TypeError):
         return False
-    else:
-        return int(x) == x
+
+    # If convertible, check that 'x' is not truncated when converted
+    return int(x) == x
 
 
+# pylint: disable=unsubscriptable-object
 # Load library
 @lru_cache
 def load_library(libname: str,
@@ -72,9 +79,6 @@ def load_library(libname: str,
     CDLL | None:
         Return `CDLL` if the library can be loaded and `None` othewise.
     """
-    from sys import base_prefix, exec_prefix
-    from os import path, getcwd
-    import ctypes
 
     def _load(path):
         try:
@@ -86,15 +90,17 @@ def load_library(libname: str,
 
             # Return library
             return _lib
+
+        # pylint: disable=bare-except
         except:
             return None
 
     # If libpath is None, set to current folder
     if libpath is None:
         libpath = [
-            path.join(path.expanduser('~'), '.cache/hybridq_array')
-            if _DEFAULTS['use_global_cache'] else path.join(
-                getcwd(), '.hybridq_array')
+            os.path.join(os.path.expanduser('~'), '.cache/hybridq_array')
+            if _DEFAULTS['use_global_cache'] else os.path.join(
+                os.getcwd(), '.hybridq_array')
         ]
 
     # Otherwise, use provided
@@ -108,48 +114,60 @@ def load_library(libname: str,
     # Look for the library
     return next((lib for lib in map(
         _load,
-        map(lambda x: path.join(*x, libname), (
+        map(lambda x: os.path.join(*x, libname), (
             (base, path) for base in libpath for path in prefix)))
                  if lib is not None), None)
 
 
 # Define shorthand to get ctypes
 @lru_cache
-def get_ctype(x, pointer: bool = False):
-    from numpy import dtype
-    import ctypes
+def get_ctype(x: np.dtype | str, /, pointer: bool = False):
+    """
+    Given `numpy.dtype`, return corresponding `ctype`.
+
+    Parameters
+    ----------
+    x: numpy.dtype
+        Type to convert to ctype.
+
+    pointer: bool
+        If `True`, return a pointer.
+
+    Returns
+    -------
+    ctype
+    """
 
     # Get c_type
     _c_types_map = {
-        dtype(f'float{ctypes.sizeof(8*ctypes.c_float)}'):
+        np.dtype(f'float{ctypes.sizeof(8*ctypes.c_float)}'):
             ctypes.c_float,
-        dtype(f'float{ctypes.sizeof(8*ctypes.c_double)}'):
+        np.dtype(f'float{ctypes.sizeof(8*ctypes.c_double)}'):
             ctypes.c_double,
-        dtype(f'float{ctypes.sizeof(8*ctypes.c_longdouble)}'):
+        np.dtype(f'float{ctypes.sizeof(8*ctypes.c_longdouble)}'):
             ctypes.c_longdouble,
-        dtype('int8'):
+        np.dtype('int8'):
             ctypes.c_int8,
-        dtype('int16'):
+        np.dtype('int16'):
             ctypes.c_int16,
-        dtype('int32'):
+        np.dtype('int32'):
             ctypes.c_int32,
-        dtype('int64'):
+        np.dtype('int64'):
             ctypes.c_int64,
-        dtype('uint8'):
+        np.dtype('uint8'):
             ctypes.c_uint8,
-        dtype('uint16'):
+        np.dtype('uint16'):
             ctypes.c_uint16,
-        dtype('uint32'):
+        np.dtype('uint32'):
             ctypes.c_uint32,
-        dtype('uint64'):
+        np.dtype('uint64'):
             ctypes.c_uint64,
     }
 
     if isinstance(x, str):
-        from re import sub
 
         # Remove all spaces
-        x = sub('\s+', '', x)
+        x = sub(r'\s+', '', x)
 
         # Check for special characters
         if sub(r'[A-Za-z0-9*]+', '',
@@ -165,7 +183,7 @@ def get_ctype(x, pointer: bool = False):
             x = x[:-1]
 
     # Get type
-    _type = ctypes.c_void_p if x == 'void' else _c_types_map[dtype(x)]
+    _type = ctypes.c_void_p if x == 'void' else _c_types_map[np.dtype(x)]
 
     # Return pointer or type
     return ctypes.POINTER(_type) if pointer else _type
@@ -174,12 +192,16 @@ def get_ctype(x, pointer: bool = False):
 # Define shorthand for defining functions
 @lru_cache
 def define_lib_fn(lib, fname, restype, *argtypes):
+    """
+    Given a c-library handle `lib`, return function handle.
+    """
+
     # Convert types
     restype = get_ctype(restype)
     argtypes = tuple(map(get_ctype, argtypes))
 
     # Create function
-    func = lib.__getattr__(fname)
+    func = getattr(lib, fname)
     func.argtypes = argtypes
     func.restype = restype
 
@@ -190,11 +212,13 @@ def define_lib_fn(lib, fname, restype, *argtypes):
 # Return handle to the c-function to call using np.array's
 @lru_cache
 def get_lib_fn(lib, fname, restype, *argtypes):
-    from re import sub
+    """
+    Given a c-library handle `lib`, return python function.
+    """
 
     # Convert type to string
-    def _str(x):
-        return sub('\s+', '', x if isinstance(x, str) else str(np.dtype(x)))
+    def _str(x, /):
+        return sub(r'\s+', '', x if isinstance(x, str) else str(np.dtype(x)))
 
     # Convert all arguments to string
     restype = _str(restype)
@@ -204,8 +228,7 @@ def get_lib_fn(lib, fname, restype, *argtypes):
     _fun = define_lib_fn(lib, fname, restype, *argtypes)
 
     # Get pointer
-    def _get_pointer(x, t):
-        import ctypes
+    def _get_pointer(x, t, /):
 
         # If type is 'void*', get pointer without conversion
         if t == 'void*':
@@ -221,8 +244,7 @@ def get_lib_fn(lib, fname, restype, *argtypes):
     # Define the function to call
     def _caller(*_argtypes):
         # Convert types and return result
-        return _fun(
-            *(map(lambda x, y: _get_pointer(x, y), _argtypes, argtypes)))
+        return _fun(*(map(_get_pointer, _argtypes, argtypes)))
 
     # Return caller
     return _caller

@@ -15,10 +15,7 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 
-from distutils.sysconfig import get_python_lib
-from autoray import register_function
-from os import environ, path
-import numpy as np
+from os import environ
 
 __all__ = []
 
@@ -41,10 +38,3 @@ _DEFAULTS = {
     'raise_if_hcore_fails':
         int(environ.get('HYBRIDQ_ARRAY_RAISE_IF_HCORE_FAILS', 0))
 }
-
-# Register functions for autoray
-register_function('hybridq_array', 'transpose', np.transpose)
-register_function('hybridq_array', 'reshape', np.reshape)
-register_function('hybridq_array', 'linalg.norm', np.linalg.norm)
-register_function('hybridq_array', 'linalg.svd', np.linalg.svd)
-register_function('hybridq_array', 'einsum', np.einsum)

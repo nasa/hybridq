@@ -23,6 +23,7 @@ import autoray
 
 from .compile import compile_lib
 from .utils import get_lib_fn, load_library
+from .aligned_array import asarray
 
 __all__ = ['transpose']
 
@@ -50,17 +51,15 @@ def get_swap_lib(nbytes: int, npos: int):
                       'int32', 'void*', 'uint32*', 'uint32')
 
 
-# pylint: disable=undefined-variable
-# pylint: disable=invalid-name
-# pylint: disable=too-many-branches
-def transpose(a: array_like,
-              /,
-              axes: array_like = None,
-              *,
-              inplace: bool = False,
-              force_backend: bool = False,
-              backend: str = None,
-              raise_if_hcore_fails: bool = False):
+def transpose(  # pylint: disable=undefined-variable
+        a: array_like,
+        /,
+        axes: array_like = None,
+        *,
+        inplace: bool = False,
+        force_backend: bool = False,
+        backend: str = None,
+        raise_if_hcore_fails: bool = False):
     """
     Transpose `a` accordingly to `axes`.
 
@@ -90,7 +89,8 @@ def transpose(a: array_like,
     --------
     numpy.transpose
     """
-    from .aligned_array import asarray
+
+    # pylint: disable=too-many-branches
 
     # Convert to numpy array
     a = asarray(a)
@@ -153,13 +153,13 @@ def transpose(a: array_like,
 
         # If hcore fails ...
         # pylint: disable=broad-exception-caught
-        except Exception as e:
+        except Exception as error:
             # Raise if required
             if raise_if_hcore_fails:
-                raise e
+                raise error
 
             # Otherwise, log
-            _LOGGER.warning(e)
+            _LOGGER.warning(error)
 
     # Print reasons why hcore failed
     else:
@@ -168,9 +168,9 @@ def transpose(a: array_like,
             raise RuntimeError('Cannot use HybridQ C++ core: ' +
                                ', '.join(_hcore_fails))
 
-            # Otherwise, log
-            _LOGGER.warning('Cannot use HybridQ C++ core: %s',
-                            ', '.join(_hcore_fails))
+        # Otherwise, log
+        _LOGGER.warning('Cannot use HybridQ C++ core: %s',
+                        ', '.join(_hcore_fails))
 
     # Warn fallback
     _LOGGER.warning('Fallback to %s', 'backend' if backend is None else backend)
