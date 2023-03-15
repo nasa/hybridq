@@ -38,7 +38,11 @@ _LOGGER.addHandler(_LOGGER_CH)
 
 
 @lru_cache
-def get_dot_lib(float_type: str, npos: int, max_log2_pack_size: int = None):
+def get_dot_lib(float_type: str,
+                *,
+                npos: int,
+                max_log2_pack_size: int = None,
+                tag: str = ''):
     """
     Return dot function.
     """
@@ -97,8 +101,8 @@ def get_dot_lib(float_type: str, npos: int, max_log2_pack_size: int = None):
         return get_lib_fn(
             load_library(
                 f'hybridq_dot_{float_type}_{log2_pack_size}_{npos}.so'),
-            'apply', 'int32', float_type + '*', float_type + '*', 'uint32*',
-            'uint32')
+            'apply_' + tag, 'int32', float_type + '*', float_type + '*',
+            'uint32*', 'uint32')
     except OSError as error:
         # Otherwise, log error ...
         _LOGGER.error(error)
@@ -165,6 +169,10 @@ def matmul(  # pylint: disable=undefined-variable
                 axes >= b.ndim) or len(set(axes)) != axes.size:
         raise ValueError("'axes' is not valid")
 
+    # Check if a/b are complex
+    complex_a_ = np.iscomplexobj(a)
+    complex_b_ = np.iscomplexobj(b)
+
     # Check if hcore can be used
     _hcore_fails = []
     if b.shape != (2,) * b.ndim:
@@ -175,12 +183,6 @@ def matmul(  # pylint: disable=undefined-variable
         _hcore_fails.append("'a' must be c-contiguous")
     if not b.flags.c_contiguous:
         _hcore_fails.append("'b' must be c-contiguous")
-
-    # Temporary fails
-    if not np.iscomplexobj(a):
-        _hcore_fails.append("'a' must complex array")
-    if not np.iscomplexobj(b):
-        _hcore_fails.append("'b' must complex array")
 
     # If no checks have failed ...
     if not force_backend and not _hcore_fails:
@@ -199,19 +201,28 @@ def matmul(  # pylint: disable=undefined-variable
         # Get positions
         pos_ = b.ndim - np.asarray(axes[::-1], dtype='uint32') - 1
 
+        # Get right tag
+        if not complex_a_ and not complex_b_:
+            tag_ = 'rr'
+        else:
+            tag_ = 'c' + ('c' if complex_a_ else 'r')
+
         # Load library
         lib_ = get_dot_lib(str(rtype_),
                            npos=axes.size,
-                           max_log2_pack_size=max_log2_pack_size_)
+                           max_log2_pack_size=max_log2_pack_size_,
+                           tag=tag_)
 
         if lib_ is not None:
             # Convert both a and b to the common type
-            a = np.asarray(a, dtype=dtype_)
-            b = (np.asarray if inplace else np.array)(b, dtype=dtype_)
+            a_ = np.asarray(a, dtype=dtype_ if complex_a_ else rtype_)
+            b_ = np.asarray(b, dtype=dtype_)
+            if not inplace and b.ctypes.data == b_.ctypes.data:
+                b_ = np.copy(b_)
 
             # Call library
-            if not lib_(b.view(rtype_), a.view(rtype_), pos_, b.ndim):
-                return b
+            if not lib_(b_.view(rtype_), a_.view(rtype_), pos_, b.ndim):
+                return b_
 
         # If it didn't return, there was an error in running the library
         _hcore_fails.append("Cannot use C++ library")

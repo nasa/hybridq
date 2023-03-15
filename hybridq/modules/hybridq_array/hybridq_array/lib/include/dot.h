@@ -47,8 +47,14 @@ static const auto zero = __pack__<array_type, pack_size>::get(0);
 // Get pack type
 using pack_type = __pack__<array_type, pack_size>::value_type;
 
-extern "C" int32_t apply(array_type *psi, const array_type *U,
-                         const uint32_t *pos, const uint32_t n_qubits);
+extern "C" int32_t apply_cc(array_type *psi, const array_type *U,
+                            const uint32_t *pos, const uint32_t n_qubits);
+
+extern "C" int32_t apply_cr(array_type *psi, const array_type *U_re,
+                            const uint32_t *pos, const uint32_t n_qubits);
+
+extern "C" int32_t apply_rr(array_type *psi, const array_type *U_re,
+                            const uint32_t *pos, const uint32_t n_qubits);
 
 }  // namespace hybridq_new
 
