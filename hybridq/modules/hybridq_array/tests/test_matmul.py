@@ -148,19 +148,122 @@ def test_matmul_1(dtype, inplace, force_backend):
 @pytest.mark.parametrize('n,p,dtype,inplace',
                          [(n, p, dtype, inplace) for n in range(3, 13)
                           for p in range(1, 7)
-                          for dtype in ['complex64', 'complex128']
-                          for inplace in [False, True] for _ in range(10)])
-def test_matmul_2(n, p, dtype, inplace):
+                          for dtype in ['float32', 'float64']
+                          for inplace in [False, True] for _ in range(4)])
+def test_matmul_2_cc(n, p, dtype, inplace):
+    # p cannot be larger than n!
+    p = min(p, n)
+
+    # Get random matrix
+    U = np.random.standard_normal(
+        (2**p, 2**p)).astype(dtype) + 1j * np.random.standard_normal(
+            (2**p, 2**p)).astype(dtype)
+
+    # Get random array
+    psi = np.random.standard_normal(
+        (2,) * n).astype(dtype) + 1j * np.random.standard_normal(
+            (2,) * n).astype(dtype)
+
+    # Get random axes
+    axes = np.random.choice(n, size=p, replace=False)
+
+    # Multiply
+    psi1 = matmul(U, psi, axes=axes, force_backend=True)
+    psi2 = psi.copy()
+    psi2_ = matmul(U,
+                   psi2,
+                   axes=axes,
+                   inplace=inplace,
+                   force_backend=False,
+                   raise_if_hcore_fails=True)
+    if not inplace:
+        psi2 = psi2_
+
+    # Check
+    np.testing.assert_allclose(psi1, psi2, atol=1e-4)
+
+
+@pytest.mark.parametrize('n,p,dtype', [(n, p, dtype) for n in range(3, 13)
+                                       for p in range(1, 7)
+                                       for dtype in ['float32', 'float64']
+                                       for _ in range(4)])
+def test_matmul_2_cr(n, p, dtype):
+    # p cannot be larger than n!
+    p = min(p, n)
+
+    # Get random matrix
+    U = np.random.standard_normal(
+        (2**p, 2**p)).astype(dtype) + 1j * np.random.standard_normal(
+            (2**p, 2**p)).astype(dtype)
+
+    # Get random array
+    psi = np.random.standard_normal((2,) * n).astype(dtype)
+
+    # Get random axes
+    axes = np.random.choice(n, size=p, replace=False)
+
+    # Multiply
+    psi1 = matmul(U, psi, axes=axes, force_backend=True)
+    psi2 = matmul(U,
+                  psi,
+                  axes=axes,
+                  force_backend=False,
+                  raise_if_hcore_fails=True)
+
+    # Check
+    np.testing.assert_allclose(psi1, psi2, atol=1e-4)
+
+
+@pytest.mark.parametrize('n,p,dtype,inplace',
+                         [(n, p, dtype, inplace) for n in range(3, 13)
+                          for p in range(1, 7)
+                          for dtype in ['float32', 'float64']
+                          for inplace in [False, True] for _ in range(4)])
+def test_matmul_2_rc(n, p, dtype, inplace):
     # p cannot be larger than n!
     p = min(p, n)
 
     # Get random matrix
     U = np.random.standard_normal((2**p, 2**p)).astype(dtype)
-    U += 1j * np.random.standard_normal((2**p, 2**p)).astype(dtype)
+
+    # Get random array
+    psi = np.random.standard_normal(
+        (2,) * n).astype(dtype) + 1j * np.random.standard_normal(
+            (2,) * n).astype(dtype)
+
+    # Get random axes
+    axes = np.random.choice(n, size=p, replace=False)
+
+    # Multiply
+    psi1 = matmul(U, psi, axes=axes, force_backend=True)
+    psi2 = psi.copy()
+    psi2_ = matmul(U,
+                   psi2,
+                   axes=axes,
+                   inplace=inplace,
+                   force_backend=False,
+                   raise_if_hcore_fails=True)
+    if not inplace:
+        psi2 = psi2_
+
+    # Check
+    np.testing.assert_allclose(psi1, psi2, atol=1e-4)
+
+
+@pytest.mark.parametrize('n,p,dtype,inplace',
+                         [(n, p, dtype, inplace) for n in range(3, 13)
+                          for p in range(1, 7)
+                          for dtype in ['float32', 'float64']
+                          for inplace in [False, True] for _ in range(4)])
+def test_matmul_2_rr(n, p, dtype, inplace):
+    # p cannot be larger than n!
+    p = min(p, n)
+
+    # Get random matrix
+    U = np.random.standard_normal((2**p, 2**p)).astype(dtype)
 
     # Get random array
     psi = np.random.standard_normal((2,) * n).astype(dtype)
-    psi += 1j * np.random.standard_normal((2,) * n).astype(dtype)
 
     # Get random axes
     axes = np.random.choice(n, size=p, replace=False)
