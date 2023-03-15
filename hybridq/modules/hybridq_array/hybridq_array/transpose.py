@@ -53,15 +53,14 @@ def get_swap_lib(nbytes: int, npos: int):
 
 
 @parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
-def transpose(  # pylint: disable=undefined-variable
-        a: array_like,
-        /,
-        axes: array_like = None,
-        *,
-        inplace: bool = False,
-        force_backend: bool = False,
-        backend: str = Default,
-        raise_if_hcore_fails: bool = Default):
+def transpose(a: array_like,
+              /,
+              axes: array_like = None,
+              *,
+              inplace: bool = False,
+              force_backend: bool = False,
+              backend: str = Default,
+              raise_if_hcore_fails: bool = Default):
     """
     Transpose `a` accordingly to `axes`.
 
@@ -91,8 +90,6 @@ def transpose(  # pylint: disable=undefined-variable
     --------
     numpy.transpose
     """
-
-    # pylint: disable=too-many-branches
 
     # Convert to numpy array
     a = asarray(a)
@@ -154,7 +151,6 @@ def transpose(  # pylint: disable=undefined-variable
             return a
 
         # If hcore fails ...
-        # pylint: disable=broad-exception-caught
         except Exception as error:
             # Raise if required
             if raise_if_hcore_fails:

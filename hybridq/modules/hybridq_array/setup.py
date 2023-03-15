@@ -16,8 +16,8 @@ specific language governing permissions and limitations under the License.
 """
 
 from os import path
-from setuptools import setup, find_packages
 from glob import glob
+from setuptools import setup, find_packages
 
 # Locate right path
 here = path.abspath(path.dirname(__file__))

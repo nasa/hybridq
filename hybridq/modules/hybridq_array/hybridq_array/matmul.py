@@ -46,8 +46,6 @@ def get_dot_lib(float_type: str,
     """
     Return dot function.
     """
-    # pylint: disable=too-many-locals
-    # pylint: disable=import-outside-toplevel
 
     from sysconfig import get_path
     from subprocess import Popen, PIPE
@@ -112,16 +110,15 @@ def get_dot_lib(float_type: str,
 
 
 @parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
-def matmul(  # pylint: disable=undefined-variable
-        a: matrix_like,
-        b: array_like,
-        /,
-        axes: int | array_like = None,
-        *,
-        inplace: bool = False,
-        force_backend: bool = False,
-        backend: str = Default,
-        raise_if_hcore_fails: bool = Default):
+def matmul(a: matrix_like,
+           b: array_like,
+           /,
+           axes: int | array_like = None,
+           *,
+           inplace: bool = False,
+           force_backend: bool = False,
+           backend: str = Default,
+           raise_if_hcore_fails: bool = Default):
     """
     Multiply matrix `a` to array `b` at specific `axes`. For instance, for
     `a.ndim == 2`, this is equivalent to:
@@ -150,7 +147,6 @@ def matmul(  # pylint: disable=undefined-variable
     a_@_b
         `a_@_b` being the result of the matrix/array multiplication.
     """
-    # pylint: disable=too-many-branches
 
     # Convert to numpy arrays
     a = np.asarray(a)

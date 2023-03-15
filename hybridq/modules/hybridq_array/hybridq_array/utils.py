@@ -54,7 +54,6 @@ def isintegral(x: any, /) -> bool:
     return int(x) == x
 
 
-# pylint: disable=unsubscriptable-object
 # Load library
 @lru_cache
 @parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
@@ -93,7 +92,6 @@ def load_library(libname: str,
             # Return library
             return _lib
 
-        # pylint: disable=bare-except
         except:
             return None
 

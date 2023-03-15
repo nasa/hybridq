@@ -15,11 +15,14 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 
-from hybridq_array.aligned_array import *
 from functools import partial as partial_fn
-from hybridq_array.utils import load_library
 import numpy as np
 import pytest
+
+from hybridq_array.aligned_array import get_alignment, array, asarray
+from hybridq_array.aligned_array import empty, empty_like
+from hybridq_array.aligned_array import zeros, zeros_like
+from hybridq_array.aligned_array import ones, ones_like
 
 # Define assert_allclose
 assert_allclose = partial_fn(np.testing.assert_allclose, atol=1e-7)
@@ -72,106 +75,106 @@ def test__AlignedArray(dtype, order, alignment):
     array[:] = r
 
     # Checks
-    assert (isinstance(array, AlignedArray))
+    assert isinstance(array, AlignedArray)
     np.testing.assert_allclose(array, r)
-    assert (array.shape == shape)
-    assert (array.dtype == dtype)
-    assert (array.alignment >= alignment)
-    assert (array.alignment == get_alignment(array))
-    assert (array.isaligned(alignment // 2))
-    assert (array.isaligned(alignment))
-    assert (array.isaligned(get_alignment(array)))
-    assert (not array.isaligned(2 * get_alignment(array)))
+    assert array.shape == shape
+    assert array.dtype == dtype
+    assert array.alignment >= alignment
+    assert array.alignment == get_alignment(array)
+    assert array.isaligned(alignment // 2)
+    assert array.isaligned(alignment)
+    assert array.isaligned(get_alignment(array))
+    assert not array.isaligned(2 * get_alignment(array))
 
     # Check align (default, copy == True)
     if ((alignment // 2) % np.dtype(dtype).itemsize) == 0:
         _array = array.align(alignment // 2)
-        assert (not np.may_share_memory(array, _array))
+        assert not np.may_share_memory(array, _array)
         np.testing.assert_allclose(array, _array)
     #
     _array = array.align(alignment)
-    assert (not np.may_share_memory(array, _array))
+    assert not np.may_share_memory(array, _array)
     np.testing.assert_allclose(array, _array)
     #
     _array = array.align(array.alignment)
-    assert (not np.may_share_memory(array, _array))
+    assert not np.may_share_memory(array, _array)
     np.testing.assert_allclose(array, _array)
     #
     _array = array.align(2 * array.alignment)
-    assert (not np.may_share_memory(array, _array))
+    assert not np.may_share_memory(array, _array)
     np.testing.assert_allclose(array, _array)
 
     # Check align (copy == False)
     if ((alignment // 2) % np.dtype(dtype).itemsize) == 0:
         _array = array.align(alignment // 2, copy=False)
-        assert (np.may_share_memory(array, _array))
+        assert np.may_share_memory(array, _array)
         np.testing.assert_allclose(array, _array)
     #
     _array = array.align(alignment, copy=False)
-    assert (np.may_share_memory(array, _array))
+    assert np.may_share_memory(array, _array)
     np.testing.assert_allclose(array, _array)
     #
     _array = array.align(array.alignment, copy=False)
-    assert (np.may_share_memory(array, _array))
+    assert np.may_share_memory(array, _array)
     np.testing.assert_allclose(array, _array)
     #
     _array = array.align(2 * array.alignment, copy=False)
-    assert (not np.may_share_memory(array, _array))
+    assert not np.may_share_memory(array, _array)
     np.testing.assert_allclose(array, _array)
 
     # Check copy
     _array = array.copy()
-    assert (not np.may_share_memory(array, _array))
+    assert not np.may_share_memory(array, _array)
     np.testing.assert_allclose(array, _array)
     #
     _array = array.copy(alignment=2 * alignment)
-    assert (_array.alignment >= 2 * alignment)
-    assert (not np.may_share_memory(array, _array))
+    assert _array.alignment >= 2 * alignment
+    assert not np.may_share_memory(array, _array)
     np.testing.assert_allclose(array, _array)
 
     # Check astype (default, copy == True)
     _array = array.astype('complex' if not 'complex' in dtype else 'float',
                           alignment=2 * array.alignment)
-    assert (_array.dtype == 'complex' if not 'complex' in dtype else 'float')
-    assert (_array.alignment >= 2 * array.alignment)
-    assert (not np.may_share_memory(array, _array))
+    assert _array.dtype == 'complex' if not 'complex' in dtype else 'float'
+    assert _array.alignment >= 2 * array.alignment
+    assert not np.may_share_memory(array, _array)
     np.testing.assert_allclose(array, _array)
     #
     _array = array.astype(dtype, alignment=2 * array.alignment)
-    assert (_array.dtype == array.dtype)
-    assert (_array.alignment >= 2 * array.alignment)
-    assert (not np.may_share_memory(array, _array))
+    assert _array.dtype == array.dtype
+    assert _array.alignment >= 2 * array.alignment
+    assert not np.may_share_memory(array, _array)
     np.testing.assert_allclose(array, _array)
     #
     if ((alignment // 2) % np.dtype(dtype).itemsize) == 0:
         _array = array.astype(dtype, alignment=array.alignment // 2)
-        assert (array.alignment >= array.alignment // 2)
-        assert (not np.may_share_memory(array, _array))
+        assert array.alignment >= array.alignment // 2
+        assert not np.may_share_memory(array, _array)
         np.testing.assert_allclose(array, _array)
 
     # Check astype (default, copy == False)
     _array = array.astype('complex' if not 'complex' in dtype else 'float',
                           alignment=2 * array.alignment,
                           copy=False)
-    assert (_array.dtype == 'complex' if not 'complex' in dtype else 'float')
-    assert (_array.alignment >= 2 * array.alignment)
-    assert (not np.may_share_memory(array, _array))
+    assert _array.dtype == 'complex' if not 'complex' in dtype else 'float'
+    assert _array.alignment >= 2 * array.alignment
+    assert not np.may_share_memory(array, _array)
     np.testing.assert_allclose(array, _array)
     #
     _array = array.astype(dtype, alignment=2 * array.alignment, copy=False)
-    assert (_array.dtype == array.dtype)
-    assert (_array.alignment >= 2 * array.alignment)
-    assert (not np.may_share_memory(array, _array))
+    assert _array.dtype == array.dtype
+    assert _array.alignment >= 2 * array.alignment
+    assert not np.may_share_memory(array, _array)
     np.testing.assert_allclose(array, _array)
     #
     _array = array.astype(dtype, copy=False)
-    assert (_array.alignment == array.alignment)
-    assert (np.may_share_memory(array, _array))
+    assert _array.alignment == array.alignment
+    assert np.may_share_memory(array, _array)
     np.testing.assert_allclose(array, _array)
     #
     _array = array.astype(dtype, alignment=array.alignment, copy=False)
-    assert (_array.alignment == array.alignment)
-    assert (np.may_share_memory(array, _array))
+    assert _array.alignment == array.alignment
+    assert np.may_share_memory(array, _array)
     np.testing.assert_allclose(array, _array)
 
 
@@ -191,68 +194,74 @@ def test__empty_zeros_ones(dtype, order, alignment):
     array = empty(shape=shape, dtype=dtype, order=order, alignment=alignment)
 
     # Checks
-    assert (array.shape == shape)
-    assert (array.dtype == dtype)
-    assert (array.alignment >= alignment and
-            array.alignment == get_alignment(array))
-    assert ((order == 'C' and array.flags.c_contiguous) or
-            (order == 'F' and array.flags.f_contiguous))
+    assert array.shape == shape
+    assert array.dtype == dtype
+    assert array.alignment >= alignment and array.alignment == get_alignment(
+        array)
+    assert (order == 'C' and
+            array.flags.c_contiguous) or (order == 'F' and
+                                          array.flags.f_contiguous)
 
     # Get new aligned array
     array = empty_like(r)
 
     # Checks
-    assert (array.shape == shape)
-    assert (array.dtype == dtype)
-    assert (array.alignment == get_alignment(array))
-    assert ((order == 'C' and array.flags.c_contiguous) or
-            (order == 'F' and array.flags.f_contiguous))
+    assert array.shape == shape
+    assert array.dtype == dtype
+    assert array.alignment == get_alignment(array)
+    assert (order == 'C' and
+            array.flags.c_contiguous) or (order == 'F' and
+                                          array.flags.f_contiguous)
 
     # Get new zeros array
     array = zeros(shape=shape, dtype=dtype, order=order, alignment=alignment)
 
     # Checks
     np.testing.assert_allclose(array, 0)
-    assert (array.shape == shape)
-    assert (array.dtype == dtype)
-    assert (array.alignment >= alignment and
-            array.alignment == get_alignment(array))
-    assert ((order == 'C' and array.flags.c_contiguous) or
-            (order == 'F' and array.flags.f_contiguous))
+    assert array.shape == shape
+    assert array.dtype == dtype
+    assert array.alignment >= alignment and array.alignment == get_alignment(
+        array)
+    assert (order == 'C' and
+            array.flags.c_contiguous) or (order == 'F' and
+                                          array.flags.f_contiguous)
 
     # Get new ones array
     array = ones(shape=shape, dtype=dtype, order=order, alignment=alignment)
 
     # Checks
     np.testing.assert_allclose(array, 1)
-    assert (array.shape == shape)
-    assert (array.dtype == dtype)
-    assert (array.alignment >= alignment and
-            array.alignment == get_alignment(array))
-    assert ((order == 'C' and array.flags.c_contiguous) or
-            (order == 'F' and array.flags.f_contiguous))
+    assert array.shape == shape
+    assert array.dtype == dtype
+    assert array.alignment >= alignment and array.alignment == get_alignment(
+        array)
+    assert (order == 'C' and
+            array.flags.c_contiguous) or (order == 'F' and
+                                          array.flags.f_contiguous)
 
     # Get new zeros array
     array = zeros_like(r)
 
     # Checks
     np.testing.assert_allclose(array, 0)
-    assert (array.shape == shape)
-    assert (array.dtype == dtype)
-    assert (array.alignment == get_alignment(array))
-    assert ((order == 'C' and array.flags.c_contiguous) or
-            (order == 'F' and array.flags.f_contiguous))
+    assert array.shape == shape
+    assert array.dtype == dtype
+    assert array.alignment == get_alignment(array)
+    assert (order == 'C' and
+            array.flags.c_contiguous) or (order == 'F' and
+                                          array.flags.f_contiguous)
 
     # Get new ones array
     array = ones_like(r)
 
     # Checks
     np.testing.assert_allclose(array, 1)
-    assert (array.shape == shape)
-    assert (array.dtype == dtype)
-    assert (array.alignment == get_alignment(array))
-    assert ((order == 'C' and array.flags.c_contiguous) or
-            (order == 'F' and array.flags.f_contiguous))
+    assert array.shape == shape
+    assert array.dtype == dtype
+    assert array.alignment == get_alignment(array)
+    assert (order == 'C' and
+            array.flags.c_contiguous) or (order == 'F' and
+                                          array.flags.f_contiguous)
 
 
 @pytest.mark.parametrize(
@@ -271,12 +280,12 @@ def test__array(dtype, order, alignment):
     a = array(r, dtype=dtype, order=order, alignment=alignment)
 
     # Checks
-    assert (a.shape == shape)
-    assert (a.dtype == dtype)
-    assert (a.alignment >= alignment and a.alignment == get_alignment(a))
-    assert ((order == 'C' and a.flags.c_contiguous) or
-            (order == 'F' and a.flags.f_contiguous))
-    assert (not np.may_share_memory(a, r))
+    assert a.shape == shape
+    assert a.dtype == dtype
+    assert a.alignment >= alignment and a.alignment == get_alignment(a)
+    assert (order == 'C' and a.flags.c_contiguous) or (order == 'F' and
+                                                       a.flags.f_contiguous)
+    assert not np.may_share_memory(a, r)
     np.testing.assert_allclose(a, r)
 
     # Get array (copy == False)
@@ -287,13 +296,13 @@ def test__array(dtype, order, alignment):
               copy=False)
 
     # Checks
-    assert (a.shape == shape)
-    assert (a.dtype == dtype)
-    assert (a.alignment >= 2 * get_alignment(r) and
-            a.alignment == get_alignment(a))
-    assert ((order == 'C' and a.flags.c_contiguous) or
-            (order == 'F' and a.flags.f_contiguous))
-    assert (not np.may_share_memory(a, r))
+    assert a.shape == shape
+    assert a.dtype == dtype
+    assert a.alignment >= 2 * get_alignment(r) and a.alignment == get_alignment(
+        a)
+    assert (order == 'C' and a.flags.c_contiguous) or (order == 'F' and
+                                                       a.flags.f_contiguous)
+    assert not np.may_share_memory(a, r)
     np.testing.assert_allclose(a, r)
 
     # Get array (copy == False)
@@ -305,13 +314,13 @@ def test__array(dtype, order, alignment):
                   copy=False)
 
         # Checks
-        assert (a.shape == shape)
-        assert (a.dtype == dtype)
-        assert (a.alignment == get_alignment(r) and
-                a.alignment == get_alignment(a))
-        assert ((order == 'C' and a.flags.c_contiguous) or
-                (order == 'F' and a.flags.f_contiguous))
-        assert (np.may_share_memory(a, r))
+        assert a.shape == shape
+        assert a.dtype == dtype
+        assert a.alignment == get_alignment(r) and a.alignment == get_alignment(
+            a)
+        assert (order == 'C' and a.flags.c_contiguous) or (order == 'F' and
+                                                           a.flags.f_contiguous)
+        assert np.may_share_memory(a, r)
         np.testing.assert_allclose(a, r)
 
 
@@ -331,13 +340,13 @@ def test__asarray(dtype, order, alignment):
     array = asarray(r)
 
     # Check
-    assert (np.may_share_memory(array, r))
+    assert np.may_share_memory(array, r)
 
     # If alignment is provided, may create new
     array = asarray(r, alignment=2 * get_alignment(r))
 
     # Check
-    assert (not np.may_share_memory(array, r))
+    assert not np.may_share_memory(array, r)
 
 
 @pytest.mark.parametrize('dtype,order,alignment',
@@ -360,10 +369,10 @@ def test__transpose(dtype, order, alignment):
                     alignment=alignment)
 
     # Checks
-    assert (array.dtype == dtype)
-    assert ((array.flags.c_contiguous and order == 'C') or
-            (array.flags.f_contiguous and order == 'F'))
-    assert (array.alignment >= alignment)
+    assert array.dtype == dtype
+    assert (array.flags.c_contiguous and
+            order == 'C') or (array.flags.f_contiguous and order == 'F')
+    assert array.alignment >= alignment
 
     try:
         # Transpose (default, inplace == False)
@@ -371,9 +380,9 @@ def test__transpose(dtype, order, alignment):
         _axes[-8:] = np.random.permutation(_axes[-8:])
         _array_1 = transpose(array, _axes, raise_if_hcore_fails=True)
         _array_2 = transpose(array, _axes, force_backend=True)
-        assert (isinstance(_array_1, AlignedArray))
-        assert (not np.may_share_memory(_array_1, array))
-        assert (_array_1.dtype == dtype)
+        assert isinstance(_array_1, AlignedArray)
+        assert not np.may_share_memory(_array_1, array)
+        assert _array_1.dtype == dtype
         assert_allclose(_array_1, _array_2)
 
         # Transpose (inplace == True)
@@ -385,11 +394,11 @@ def test__transpose(dtype, order, alignment):
                              raise_if_hcore_fails=True,
                              inplace=True)
         _array_2 = transpose(array, _axes, force_backend=True)
-        assert (isinstance(_array_1, AlignedArray))
-        assert (not np.may_share_memory(_array_1, array))
-        assert (np.may_share_memory(_array_1, _array))
-        assert (not np.may_share_memory(_array_2, _array))
-        assert (_array_1.dtype == dtype)
+        assert isinstance(_array_1, AlignedArray)
+        assert not np.may_share_memory(_array_1, array)
+        assert np.may_share_memory(_array_1, _array)
+        assert not np.may_share_memory(_array_2, _array)
+        assert _array_1.dtype == dtype
         assert_allclose(_array_1, _array_2)
         assert_allclose(_array_1, _array)
 
@@ -403,8 +412,8 @@ def test__transpose(dtype, order, alignment):
     _axes[-8:] = np.random.permutation(_axes[-8:])
     _array_1 = transpose(array, _axes)
     _array_2 = transpose(array, _axes, force_backend=True)
-    assert (isinstance(_array_1, AlignedArray))
-    assert (_array_1.dtype == dtype)
+    assert isinstance(_array_1, AlignedArray)
+    assert _array_1.dtype == dtype
     assert_allclose(_array_1, _array_2)
 
     # Transpose (inplace == True)
@@ -413,6 +422,6 @@ def test__transpose(dtype, order, alignment):
     _array = array.copy()
     _array_1 = transpose(_array, _axes, inplace=True)
     _array_2 = transpose(array, _axes, force_backend=True)
-    assert (isinstance(_array_1, AlignedArray))
-    assert (_array_1.dtype == dtype)
+    assert isinstance(_array_1, AlignedArray)
+    assert _array_1.dtype == dtype
     assert_allclose(_array_1, _array_2)

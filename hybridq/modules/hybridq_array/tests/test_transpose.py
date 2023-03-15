@@ -57,7 +57,6 @@ def set_seed():
         'complex128'
     ] for ndim in [10, 16] for npos in [2, 4, 6, 8, 10]
      for force_backend in [False, True]))
-# pylint: disable=invalid-name
 def test_transpose(array_type, ndim, npos, force_backend):
     """
     Test `hybridq_array.transpose`.
