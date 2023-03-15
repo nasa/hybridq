@@ -21,6 +21,7 @@ import logging
 import numpy as np
 import autoray
 
+from .defaults import _DEFAULTS, Default, parse_default
 from .compile import compile_lib
 from .utils import get_lib_fn, load_library
 from .aligned_array import asarray
@@ -51,6 +52,7 @@ def get_swap_lib(nbytes: int, npos: int):
                       'int32', 'void*', 'uint32*', 'uint32')
 
 
+@parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
 def transpose(  # pylint: disable=undefined-variable
         a: array_like,
         /,
@@ -58,8 +60,8 @@ def transpose(  # pylint: disable=undefined-variable
         *,
         inplace: bool = False,
         force_backend: bool = False,
-        backend: str = None,
-        raise_if_hcore_fails: bool = False):
+        backend: str = Default,
+        raise_if_hcore_fails: bool = Default):
     """
     Transpose `a` accordingly to `axes`.
 

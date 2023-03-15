@@ -23,6 +23,8 @@ import logging
 import numpy as np
 import autoray
 
+from .defaults import _DEFAULTS, Default, parse_default
+
 __all__ = ['matmul']
 
 # Create logger
@@ -105,6 +107,7 @@ def get_dot_lib(float_type: str, npos: int, max_log2_pack_size: int = None):
         return None
 
 
+@parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
 def matmul(  # pylint: disable=undefined-variable
         a: matrix_like,
         b: array_like,
@@ -113,8 +116,8 @@ def matmul(  # pylint: disable=undefined-variable
         *,
         inplace: bool = False,
         force_backend: bool = False,
-        backend: str = None,
-        raise_if_hcore_fails: bool = False):
+        backend: str = Default,
+        raise_if_hcore_fails: bool = Default):
     """
     Multiply matrix `a` to array `b` at specific `axes`. For instance, for
     `a.ndim == 2`, this is equivalent to:

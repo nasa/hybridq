@@ -1,3 +1,4 @@
 autoray
 numpy
 opt_einsum
+hybridq-options @ git+https://github.com/nasa/hybridq@devel#egg=hybridq-options&subdirectory=hybridq/modules/hybridq_options

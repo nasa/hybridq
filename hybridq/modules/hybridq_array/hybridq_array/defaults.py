@@ -15,26 +15,19 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 
-from os import environ
+from hybridq_options import Options, Default, parse_default
 
 __all__ = []
 
-# Define default parameters
-_DEFAULTS = {
-    'libpath':
-        environ.get('HYBRIDQ_ARRAY_LIBPATH', None),
-    'alignment':
-        int(environ.get('HYBRIDQ_ARRAY_ALIGNMENT', 32)),
-    'dtype':
-        environ.get('HYBRIDQ_ARRAY_DTYPE', 'float32'),
-    'order':
-        environ.get('HYBRIDQ_ARRAY_ORDER', 'C'),
-    'force_compilation':
-        int(environ.get('HYBRIDQ_ARRAY_FORCE_COMPILATION', 1)),
-    'use_global_cache':
-        int(environ.get('HYBRIDQ_ARRAY_USE_GLOBAL_CACHE', 1)),
-    'backend':
-        environ.get('HYBRIDQ_ARRAY_BACKEND', 'numpy'),
-    'raise_if_hcore_fails':
-        int(environ.get('HYBRIDQ_ARRAY_RAISE_IF_HCORE_FAILS', 0))
-}
+# Initialize defaults
+_DEFAULTS = Options()
+
+# Set default parameters
+_DEFAULTS['hybridq_array.libpath'] = None
+_DEFAULTS['hybridq_array.alignment'] = 32
+_DEFAULTS['hybridq_array.dtype'] = 'float32'
+_DEFAULTS['hybridq_array.order'] = 'C'
+_DEFAULTS['hybridq_array.force_compilation'] = True
+_DEFAULTS['hybridq_array.use_global_cache'] = True
+_DEFAULTS['hybridq_array.backend'] = None
+_DEFAULTS['hybridq_array.raise_if_hcore_fails'] = False

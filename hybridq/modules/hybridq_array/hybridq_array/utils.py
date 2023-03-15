@@ -23,7 +23,7 @@ import ctypes
 import os
 
 import numpy as np
-from .defaults import _DEFAULTS
+from .defaults import _DEFAULTS, Default, parse_default
 
 __all__ = [
     'isintegral', 'load_library', 'get_ctype', 'define_lib_fn', 'get_lib_fn'
@@ -57,10 +57,12 @@ def isintegral(x: any, /) -> bool:
 # pylint: disable=unsubscriptable-object
 # Load library
 @lru_cache
+@parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
 def load_library(libname: str,
                  prefix: iter[str, ...] = ('', 'lib', 'local/lib', 'usr/lib',
                                            'usr/local/lib'),
-                 libpath: str | iter[str, ...] = _DEFAULTS['libpath']):
+                 libpath: str | iter[str, ...] = Default,
+                 use_global_cache: bool = Default):
     """
     Load library `libname`.
 
@@ -99,8 +101,7 @@ def load_library(libname: str,
     if libpath is None:
         libpath = [
             os.path.join(os.path.expanduser('~'), '.cache/hybridq_array')
-            if _DEFAULTS['use_global_cache'] else os.path.join(
-                os.getcwd(), '.hybridq_array')
+            if use_global_cache else os.path.join(os.getcwd(), '.hybridq_array')
         ]
 
     # Otherwise, use provided

@@ -20,7 +20,7 @@ from sysconfig import get_path
 import logging
 import os
 
-from .defaults import _DEFAULTS
+from .defaults import _DEFAULTS, Default, parse_default
 
 __all__ = []
 
@@ -34,22 +34,26 @@ _LOGGER_CH.setFormatter(
 _LOGGER.addHandler(_LOGGER_CH)
 
 
-def compile_lib(target: str, **kwargs) -> None:
+@parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
+def compile_lib(target: str,
+                libpath: str = Default,
+                use_global_cache: bool = Default,
+                **kwargs) -> None:
     """
     Compile the HybridQ C++ core library.
     """
 
     # If library cannot be loaded, try to compile
-    if _DEFAULTS['libpath'] is None:
+    if libpath is None:
 
         # Get root of the package
         _root = os.path.join(get_path('purelib'), 'hybridq_array/lib')
 
         # Get cache folder
         _cache = os.path.join(
-            os.path.expanduser('~'), '.cache/hybridq_array'
-        ) if _DEFAULTS['use_global_cache'] else os.path.join(
-            os.getcwd(), '.hybridq_array')
+            os.path.expanduser('~'),
+            '.cache/hybridq_array') if use_global_cache else os.path.join(
+                os.getcwd(), '.hybridq_array')
 
         # Check if writable
         if not os.access(os.path.dirname(_cache), os.W_OK):

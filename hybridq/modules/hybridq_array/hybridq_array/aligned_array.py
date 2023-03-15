@@ -18,7 +18,7 @@ specific language governing permissions and limitations under the License.
 from __future__ import annotations
 import numpy as np
 
-from .defaults import _DEFAULTS
+from .defaults import _DEFAULTS, Default, parse_default
 from .utils import isintegral
 
 # Available methods
@@ -124,9 +124,8 @@ class AlignedArray(np.ndarray):
         """
         return (array if copy else asarray)(self, alignment=alignment)
 
-    def copy(self,
-             order: str = 'K',
-             alignment: int = _DEFAULTS['alignment']) -> AlignedArray:
+    @parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
+    def copy(self, order: str = 'K', alignment: int = Default) -> AlignedArray:
         """
         Return a copy of `AlignedArray`.
 
@@ -192,11 +191,12 @@ class AlignedArray(np.ndarray):
                      copy=copy)
 
 
+@parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
 def empty(shape: any,
-          dtype: any = float,
-          order: 'C' | 'F' = _DEFAULTS['order'],
+          dtype: any = Default,
+          order: 'C' | 'F' = Default,
           *,
-          alignment: int = _DEFAULTS['alignment'],
+          alignment: int = Default,
           fill: any = None) -> AlignedArray:
     """
     Return an `numpy.ndarray` which is aligned to the given `alignment`.
@@ -268,11 +268,12 @@ def empty(shape: any,
     return buffer.view(AlignedArray)
 
 
+@parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
 def zeros(shape: any,
-          dtype: any = float,
-          order: 'C' | 'F' = _DEFAULTS['order'],
+          dtype: any = Default,
+          order: 'C' | 'F' = Default,
           *,
-          alignment: int = _DEFAULTS['alignment']) -> AlignedArray:
+          alignment: int = Default) -> AlignedArray:
     """
     Return an `numpy.ndarray` of zeros which is aligned to the given
     `alignment`.
@@ -307,11 +308,12 @@ def zeros(shape: any,
                  fill=0)
 
 
+@parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
 def ones(shape: any,
-         dtype: any = float,
-         order: 'C' | 'F' = _DEFAULTS['order'],
+         dtype: any = Default,
+         order: 'C' | 'F' = Default,
          *,
-         alignment: int = _DEFAULTS['alignment']) -> AlignedArray:
+         alignment: int = Default) -> AlignedArray:
     """
     Return an `numpy.ndarray` of ones which is aligned to the given `alignment`.
 
@@ -345,9 +347,8 @@ def ones(shape: any,
                  fill=1)
 
 
-def empty_like(a: np.ndarray,
-               /,
-               alignment: int = _DEFAULTS['alignment']) -> AlignedArray:
+@parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
+def empty_like(a: np.ndarray, /, alignment: int = Default) -> AlignedArray:
     """
     Equivalent to `numpy.empty_like`.
     """
@@ -361,9 +362,8 @@ def empty_like(a: np.ndarray,
     return empty(shape=shape, dtype=dtype, order=order, alignment=alignment)
 
 
-def zeros_like(a: np.ndarray,
-               /,
-               alignment: int = _DEFAULTS['alignment']) -> AlignedArray:
+@parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
+def zeros_like(a: np.ndarray, /, alignment: int = Default) -> AlignedArray:
     """
     Equivalent to `numpy.zeros_like`.
     """
@@ -377,9 +377,8 @@ def zeros_like(a: np.ndarray,
     return zeros(shape=shape, dtype=dtype, order=order, alignment=alignment)
 
 
-def ones_like(a: np.ndarray,
-              /,
-              alignment: int = _DEFAULTS['alignment']) -> AlignedArray:
+@parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
+def ones_like(a: np.ndarray, /, alignment: int = Default) -> AlignedArray:
     """
     Equivalent to `numpy.ones_like`.
     """
@@ -393,12 +392,13 @@ def ones_like(a: np.ndarray,
     return ones(shape=shape, dtype=dtype, order=order, alignment=alignment)
 
 
+@parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
 def array(a: any,
           /,
           dtype: any = None,
           order: 'C' | 'F' | 'A' | 'K' = 'K',
           *,
-          alignment: int = _DEFAULTS['alignment'],
+          alignment: int = Default,
           copy: bool = True,
           **kwargs) -> AlignedArray:
     """
