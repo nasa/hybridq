@@ -69,6 +69,20 @@ is_openmp_supported := $(shell echo 'int main(){}' | \
                        echo yes || \
                        echo no)
 
+# Check support for float16
+is_float16_supported := $(shell echo 'int main(){ _Float16 a; }' | \
+                        $(CXX) $(CPPFLAGS) $(LDFLAGS) $(CXXFLAGS) \
+                           -x c++ - -o /dev/null 2>/dev/null && \
+                        echo yes || \
+                        echo no)
+
+# Check support for float128
+is_float128_supported := $(shell echo 'int main(){ __float128 a; }' | \
+                         $(CXX) $(CPPFLAGS) $(LDFLAGS) $(CXXFLAGS) \
+                            -x c++ - -o /dev/null 2>/dev/null && \
+                         echo yes || \
+                         echo no)
+
 # Update CXXFLAGS is OpenMP is supported
 ifeq ($(is_openmp_supported), yes)
   CXXFLAGS += -fopenmp
@@ -107,6 +121,10 @@ print_support:
 	@# Print pack size
 	$(info # Size of Pack: 2^$(LOG2_PACK_SIZE))
 
+	@# Print support for float16 and float128
+	$(info # Float16? $(is_float16_supported))
+	$(info # Float128? $(is_float128_supported))
+
 # Get name of dot library
 DOT_LIBNAME = $(OUTPUT_PATH)/hybridq_dot_$(dot_type)_$(LOG2_PACK_SIZE)_$(dot_npos).so
 
@@ -118,6 +136,18 @@ dot: $(DOT_LIBNAME)
 
 # Define swap
 swap: $(SWAP_LIBNAME)
+
+# Define dot options
+DOT_OPTIONS += -DHYBRIDQ_ARRAY_DOT_LOG2_PACK_SIZE=$(LOG2_PACK_SIZE)
+DOT_OPTIONS += -DHYBRIDQ_ARRAY_DOT_ARRAY_TYPE=$(DOT_TYPE)
+DOT_OPTIONS += -DHYBRIDQ_ARRAY_DOT_ARRAY_NBITS=$(DOT_NBITS)
+DOT_OPTIONS += -DHYBRIDQ_ARRAY_DOT_NPOS=$(dot_npos)
+ifeq ($(is_float16_supported), yes)
+	DOT_OPTIONS += -DHYBRIDQ_ARRAY_FLOAT16=1
+endif
+ifeq ($(is_float128_supported), yes)
+	DOT_OPTIONS += -DHYBRIDQ_ARRAY_FLOAT128=1
+endif
 
 # Compile swap
 $(DOT_LIBNAME): include/dot.cpp include/*.h
@@ -132,15 +162,16 @@ $(DOT_LIBNAME): include/dot.cpp include/*.h
 	@# Print pack size
 	$(info # Size of Pack: 2^$(LOG2_PACK_SIZE))
 
+	@# Print support for float16 and float128
+	$(info # Float16? $(is_float16_supported))
+	$(info # Float128? $(is_float128_supported))
+
 	@# Print array type
 	$(info # Array type: $(dot_type))
 
 	@# Compile
-	$(COMPILE) $< -o $@ \
-		-DHYBRIDQ_ARRAY_DOT_LOG2_PACK_SIZE=$(LOG2_PACK_SIZE) \
-		-DHYBRIDQ_ARRAY_DOT_ARRAY_TYPE=$(DOT_TYPE) \
-		-DHYBRIDQ_ARRAY_DOT_ARRAY_NBITS=$(DOT_NBITS) \
-		-DHYBRIDQ_ARRAY_DOT_NPOS=$(dot_npos)
+	$(COMPILE) $< -o $@ $(DOT_OPTIONS)
+
 
 # Compile swap
 $(SWAP_LIBNAME): include/swap.cpp

@@ -48,11 +48,13 @@ struct __pack__ {
 template <int type, std::size_t nbits>
 struct get_type {};
 
+#ifdef HYBRIDQ_ARRAY_FLOAT16
 template <>
 struct get_type<0, 8 * 2> {
   using type = _Float16;
   static_assert(sizeof(type) == 2, "Wrong number of bytes");
 };
+#endif
 
 template <>
 struct get_type<0, 8 * 4> {
@@ -66,11 +68,13 @@ struct get_type<0, 8 * 8> {
   static_assert(sizeof(type) == 8, "Wrong number of bytes");
 };
 
+#ifdef HYBRIDQ_ARRAY_FLOAT128
 template <>
 struct get_type<0, 8 * 16> {
-  using type = _Float128;
+  using type = __float128;
   static_assert(sizeof(type) == 16, "Wrong number of bytes");
 };
+#endif
 
 template <>
 struct get_type<1, 8 * 1> {
