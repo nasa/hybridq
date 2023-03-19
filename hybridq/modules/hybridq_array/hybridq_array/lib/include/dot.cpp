@@ -82,8 +82,10 @@ int32_t apply_cc(array_type *psi, const array_type *U, const uint32_t *pos,
   if (pos == nullptr) return 3;
 
   // Get real and imaginary parts of
-  auto *U_re = static_cast<array_type *>(malloc(sizeof(array_type) * U_size * U_size));
-  auto *U_im = static_cast<array_type *>(malloc(sizeof(array_type) * U_size * U_size));
+  auto *U_re =
+      static_cast<array_type *>(malloc(sizeof(array_type) * U_size * U_size));
+  auto *U_im =
+      static_cast<array_type *>(malloc(sizeof(array_type) * U_size * U_size));
   for (std::size_t i = 0; i < U_size * U_size; ++i) {
     U_re[i] = U[2 * i + 0];
     U_im[i] = U[2 * i + 1];
