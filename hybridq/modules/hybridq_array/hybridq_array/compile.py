@@ -16,6 +16,7 @@ specific language governing permissions and limitations under the License.
 """
 
 from subprocess import Popen, PIPE
+from functools import lru_cache
 from sysconfig import get_path
 import logging
 import os
@@ -34,6 +35,72 @@ _LOGGER_CH.setFormatter(
 _LOGGER.addHandler(_LOGGER_CH)
 
 
+@lru_cache
+def get_config():
+    """
+    Get HybridQ core configuration.
+    """
+
+    # Get root of the package
+    root_ = os.path.join(get_path('purelib'), 'hybridq_array/lib')
+
+    # Get command for make
+    cmd_ = f'make -C {root_} print_support'
+    with Popen(cmd_.split(), stderr=PIPE, stdout=PIPE) as cmd_:
+        # Get results
+        out_, err_ = cmd_.communicate()
+
+        # Raise if make has an error
+        if cmd_.returncode:
+            raise OSError(err_.decode())
+
+    # Strip and split data
+    out_ = out_.decode().strip().split('\n')
+
+    # Initialize support
+    support_ = {}
+
+    # Get supported
+    support_['openmp'] = next(filter(lambda x: ' OpenMP?' in x,
+                                     out_)).split()[-1] == 'yes'
+    support_['avx'] = next(filter(lambda x: ' AVX?' in x,
+                                  out_)).split()[-1] == 'yes'
+    support_['avx2'] = next(filter(lambda x: ' AVX-2?' in x,
+                                   out_)).split()[-1] == 'yes'
+    support_['avx512'] = next(filter(lambda x: ' AVX-512?' in x,
+                                     out_)).split()[-1] == 'yes'
+    support_['float16'] = next(filter(lambda x: ' Float16?' in x,
+                                      out_)).split()[-1] == 'yes'
+    support_['float128'] = next(filter(lambda x: ' Float128?' in x,
+                                       out_)).split()[-1] == 'yes'
+
+    # Return
+    return support_
+
+
+@lru_cache
+def show_config():
+    """
+    Show HybridQ core configuration.
+    """
+    # Get root of the package
+    root_ = os.path.join(get_path('purelib'), 'hybridq_array/lib')
+
+    # Get command for make
+    cmd_ = f'make -C {root_} print_support'
+    with Popen(cmd_.split(), stderr=PIPE, stdout=PIPE) as cmd_:
+        # Get results
+        out_, err_ = cmd_.communicate()
+
+        # Raise if make has an error
+        if cmd_.returncode:
+            raise OSError(err_.decode())
+
+    return '\n'.join(
+        filter(lambda x: x[0] == '#',
+               out_.decode().strip().split('\n')))
+
+
 @parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
 def compile_lib(target: str,
                 libpath: str = Default,
@@ -47,7 +114,7 @@ def compile_lib(target: str,
     if libpath is None:
 
         # Get root of the package
-        _root = os.path.join(get_path('purelib'), 'hybridq_array/lib')
+        root_ = os.path.join(get_path('purelib'), 'hybridq_array/lib')
 
         # Get cache folder
         _cache = os.path.join(
@@ -69,19 +136,19 @@ def compile_lib(target: str,
         # Try to compile
         _LOGGER.info("Try to compile C++ core to '%s' with parameters %s",
                      _cache, ', '.join(f'{k}={v}' for k, v in kwargs.items()))
-        _cmd = f'make -C {_root} {target} -j {os.cpu_count()} -e OUTPUT_PATH={_cache} '
-        _cmd += ' '.join(f'{k}={v}' for k, v in kwargs.items())
-        with Popen(_cmd.split(), stderr=PIPE, stdout=PIPE) as _cmd:
+        cmd_ = f'make -C {root_} {target} -j {os.cpu_count()} -e OUTPUT_PATH={_cache} '
+        cmd_ += ' '.join(f'{k}={v}' for k, v in kwargs.items())
+        with Popen(cmd_.split(), stderr=PIPE, stdout=PIPE) as cmd_:
             # Get results
-            _out, _err = _cmd.communicate()
+            out_, err_ = cmd_.communicate()
 
             # Raise if make has an error
-            if _cmd.returncode:
-                raise OSError(_err.decode())
+            if cmd_.returncode:
+                raise OSError(err_.decode())
 
         # Log output
-        if _out:
-            _LOGGER.warning(_out.decode())
+        if out_:
+            _LOGGER.warning(out_.decode())
 
-        if _err:
-            _LOGGER.error(_err.decode())
+        if err_:
+            _LOGGER.error(err_.decode())
