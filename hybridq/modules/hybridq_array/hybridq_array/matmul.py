@@ -51,35 +51,18 @@ def get_dot_lib(float_type: str,
     from subprocess import Popen, PIPE
     import os
 
-    from .compile import compile_lib
+    from .compile import compile_lib, get_config
     from .utils import get_lib_fn, load_library
 
-    # Get root of the package
-    root_ = os.path.join(get_path('purelib'), 'hybridq_array/lib')
-
-    # Check support for SIMD instructions
-    with Popen(f'make -C {root_} print_support'.split(), stdout=PIPE) as cmd_:
-        # Get results
-        support_ = cmd_.communicate()
-
-        # Check support for SIMD instructions
-        if cmd_.returncode:
-            avx_ = False
-            avx2_ = False
-            avx512_ = False
-            _LOGGER.error("Cannot determine supported SIMD instructions")
-        else:
-            support_ = support_[0].decode().strip().split('\n')
-            avx_ = support_[2].split()[-1] == 'yes'
-            avx2_ = support_[3].split()[-1] == 'yes'
-            avx512_ = support_[4].split()[-1] == 'yes'
+    # Get supported
+    config_ = get_config()
 
     # Get optimal log2_pack_size
-    if avx512_:
+    if config_['avx512']:
         log2_pack_size = 4
-    elif avx2_:
+    elif config_['avx2']:
         log2_pack_size = 3
-    elif avx_:
+    elif config_['avx']:
         log2_pack_size = 3
     else:
         log2_pack_size = 3
