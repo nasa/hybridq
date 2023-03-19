@@ -20,8 +20,8 @@
 #ifndef HYBRIDQ_ARRAY_SWAP__HPP
 #define HYBRIDQ_ARRAY_SWAP__HPP
 
-#include <array>
 #include <cstdint>
+#include <cstdlib>
 
 extern "C" int32_t swap(void *array, const uint32_t *pos,
                         const uint32_t n_qubits);

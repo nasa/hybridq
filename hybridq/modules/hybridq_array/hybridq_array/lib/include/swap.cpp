@@ -84,7 +84,7 @@ int32_t swap(void *array, const uint32_t *pos, const uint32_t n_qubits) {
   const std::size_t array_size = 1uLL << n_qubits;
 
   // Expand positions
-  std::array<std::size_t, size> _expanded;
+  auto *_expanded = static_cast<std::size_t *>(malloc(sizeof(std::size_t) * size));
   for (std::size_t i = 0; i < size; ++i) {
     _expanded[i] = swap_bits(i, pos);
   }
@@ -92,7 +92,7 @@ int32_t swap(void *array, const uint32_t *pos, const uint32_t n_qubits) {
 #pragma omp parallel for
   for (std::size_t i = 0; i < array_size; i += size) {
     // Create temporary array
-    std::array<array_type, size> _buffer;
+    auto *_buffer = static_cast<array_type *>(malloc(sizeof(array_type) * size));
 
     // Swap to buffer
     for (std::size_t j = 0; j < size; ++j)
@@ -100,9 +100,15 @@ int32_t swap(void *array, const uint32_t *pos, const uint32_t n_qubits) {
 
     // Copy
     for (std::size_t j = 0; j < size; ++j) _array[i + j] = _buffer[j];
+
+    // Free buffer
+    free(_buffer);
   }
 
-  // Everything is ok
+  // Free expanded positions
+  free(_expanded);
+
+  // Everything OK
   return 0;
 }
 }
