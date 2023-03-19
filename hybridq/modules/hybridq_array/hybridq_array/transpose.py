@@ -112,8 +112,6 @@ def transpose(a: array_like,
 
     # Check if hcore can be used
     _hcore_fails = []
-    if len(c_axes) >= 20:
-        _hcore_fails.append('Too many axes to swap')
     if a.shape != (2,) * a.ndim:
         _hcore_fails.append('Only binary axes are supported')
     if not a.flags.c_contiguous:
