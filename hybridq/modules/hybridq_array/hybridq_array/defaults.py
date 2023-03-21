@@ -29,5 +29,6 @@ _DEFAULTS['hybridq_array.dtype'] = 'float32'
 _DEFAULTS['hybridq_array.order'] = 'C'
 _DEFAULTS['hybridq_array.force_compilation'] = True
 _DEFAULTS['hybridq_array.use_global_cache'] = True
+_DEFAULTS['hybridq_array.parallel'] = True
 _DEFAULTS['hybridq_array.backend'] = None
 _DEFAULTS['hybridq_array.raise_if_hcore_fails'] = False
