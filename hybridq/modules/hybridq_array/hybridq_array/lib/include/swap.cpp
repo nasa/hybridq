@@ -17,7 +17,7 @@
  * the License.
  */
 
-#include "swap.h"
+#include "swap.hpp"
 
 // Get number of bytes for array_type
 static constexpr std::size_t n_bytes = HYBRIDQ_ARRAY_SWAP_N_BYTES;
@@ -63,7 +63,8 @@ uint32_t swap_bits(uint32_t x, const uint32_t *pos) {
 
 extern "C" {
 
-int32_t swap(void *array, const uint32_t *pos, const uint32_t n_qubits) {
+int32_t swap(void *array, const uint32_t *pos, const uint32_t n_qubits,
+             const uint32_t num_threads = 0) {
   /*
    * Swap array accordingly to pos.
    */
@@ -73,6 +74,16 @@ int32_t swap(void *array, const uint32_t *pos, const uint32_t n_qubits) {
 
   // Check that pos is not empty
   if (pos == nullptr) return 2;
+
+  // Get number of threads
+  int _num_threads = omp_get_max_threads();
+
+  // If 'num_threads' is provided, use it
+  if (num_threads > 0) _num_threads = num_threads;
+
+  // Otherwise, check if env variable is provided
+  else if (const auto _nt = std::getenv("HYBRIDQ_ARRAY_NUM_THREADS"))
+    _num_threads = atoi(_nt);
 
   // Reinterpret to the right pointer
   array_type *_array = reinterpret_cast<array_type *>(array);
@@ -90,7 +101,7 @@ int32_t swap(void *array, const uint32_t *pos, const uint32_t n_qubits) {
     _expanded[i] = swap_bits(i, pos);
   }
 
-#pragma omp parallel for
+#pragma omp parallel for num_threads(_num_threads)
   for (std::size_t i = 0; i < array_size; i += size) {
     // Create temporary array
     auto *_buffer =

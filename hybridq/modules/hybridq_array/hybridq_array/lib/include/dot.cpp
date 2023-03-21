@@ -17,7 +17,7 @@
  * the License.
  */
 
-#include "dot.h"
+#include "dot.hpp"
 
 namespace hybridq_new {
 
@@ -71,7 +71,7 @@ constexpr inline auto expand(std::size_t x, Positions &&pos) {
 extern "C" {
 
 int32_t apply_cc(array_type *psi, const array_type *U, const uint32_t *pos,
-                 const uint32_t n_qubits) {
+                 const uint32_t n_qubits, const uint32_t num_threads = 0) {
   // Check that psi is not empty
   if (psi == nullptr) return 1;
 
@@ -80,6 +80,16 @@ int32_t apply_cc(array_type *psi, const array_type *U, const uint32_t *pos,
 
   // Check that pos is not empty
   if (pos == nullptr) return 3;
+
+  // Get number of threads
+  int _num_threads = omp_get_max_threads();
+
+  // If 'num_threads' is provided, use it
+  if (num_threads > 0) _num_threads = num_threads;
+
+  // Otherwise, check if env variable is provided
+  else if (const auto _nt = std::getenv("HYBRIDQ_ARRAY_NUM_THREADS"))
+    _num_threads = atoi(_nt);
 
   // Get real and imaginary parts of
   auto *U_re =
@@ -102,7 +112,7 @@ int32_t apply_cc(array_type *psi, const array_type *U, const uint32_t *pos,
   // Get number of elements to compute
   const std::size_t psi_size = 1uLL << (n_qubits - log2_pack_size - n_pos);
 
-#pragma omp parallel for
+#pragma omp parallel for num_threads(_num_threads)
   for (std::size_t x = 0; x < psi_size; ++x) {
     // Get indexes
     const auto pos_ = expand(x, shift_pos);
@@ -144,7 +154,7 @@ int32_t apply_cc(array_type *psi, const array_type *U, const uint32_t *pos,
 }
 
 int32_t apply_cr(array_type *psi, const array_type *U_re, const uint32_t *pos,
-                 const uint32_t n_qubits) {
+                 const uint32_t n_qubits, const uint32_t num_threads = 0) {
   // Check that psi is not empty
   if (psi == nullptr) return 1;
 
@@ -153,6 +163,16 @@ int32_t apply_cr(array_type *psi, const array_type *U_re, const uint32_t *pos,
 
   // Check that pos is not empty
   if (pos == nullptr) return 3;
+
+  // Get number of threads
+  int _num_threads = omp_get_max_threads();
+
+  // If 'num_threads' is provided, use it
+  if (num_threads > 0) _num_threads = num_threads;
+
+  // Otherwise, check if env variable is provided
+  else if (const auto _nt = std::getenv("HYBRIDQ_ARRAY_NUM_THREADS"))
+    _num_threads = atoi(_nt);
 
   // Shift positions
   const auto shift_pos = [pos]() {
@@ -165,7 +185,7 @@ int32_t apply_cr(array_type *psi, const array_type *U_re, const uint32_t *pos,
   // Get number of elements to compute
   const std::size_t psi_size = 1uLL << (n_qubits - log2_pack_size - n_pos);
 
-#pragma omp parallel for
+#pragma omp parallel for num_threads(_num_threads)
   for (std::size_t x = 0; x < psi_size; ++x) {
     // Get indexes
     const auto pos_ = expand(x, shift_pos);
@@ -201,12 +221,26 @@ int32_t apply_cr(array_type *psi, const array_type *U_re, const uint32_t *pos,
 }
 
 int32_t apply_rr(array_type *psi_re, const array_type *U_re,
-                 const uint32_t *pos, const uint32_t n_qubits) {
+                 const uint32_t *pos, const uint32_t n_qubits,
+                 const uint32_t num_threads = 0) {
   // Check that psi is not empty
   if (psi_re == nullptr) return 1;
 
   // Check that U is not empty
   if (U_re == nullptr) return 2;
+
+  // Check that pos is not empty
+  if (pos == nullptr) return 3;
+
+  // Get number of threads
+  int _num_threads = omp_get_max_threads();
+
+  // If 'num_threads' is provided, use it
+  if (num_threads > 0) _num_threads = num_threads;
+
+  // Otherwise, check if env variable is provided
+  else if (const auto _nt = std::getenv("HYBRIDQ_ARRAY_NUM_THREADS"))
+    _num_threads = atoi(_nt);
 
   // Shift positions
   const auto shift_pos = [pos]() {
@@ -219,7 +253,7 @@ int32_t apply_rr(array_type *psi_re, const array_type *U_re,
   // Get number of elements to compute
   const std::size_t psi_size = 1uLL << (n_qubits - log2_pack_size - n_pos);
 
-#pragma omp parallel for
+#pragma omp parallel for num_threads(_num_threads)
   for (std::size_t x = 0; x < psi_size; ++x) {
     // Get indexes
     const auto pos_ = expand(x, shift_pos);

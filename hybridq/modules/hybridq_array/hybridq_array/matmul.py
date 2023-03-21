@@ -83,7 +83,7 @@ def get_dot_lib(float_type: str,
             load_library(
                 f'hybridq_dot_{float_type}_{log2_pack_size}_{npos}.so'),
             'apply_' + tag, 'int32', float_type + '*', float_type + '*',
-            'uint32*', 'uint32')
+            'uint32*', 'uint32', 'uint32')
     except OSError as error:
         # Otherwise, log error ...
         _LOGGER.error(error)
@@ -96,8 +96,9 @@ def get_dot_lib(float_type: str,
 def matmul(a: matrix_like,
            b: array_like,
            /,
-           axes: int | array_like = None,
+           axes: array_like = None,
            *,
+           parallel: bool | int = True,
            inplace: bool = False,
            force_backend: bool = False,
            backend: str = Default,
@@ -115,6 +116,12 @@ def matmul(a: matrix_like,
     ----------
     a, b: matrix_like, array_like
         Matrix multiplication `a @ b` at specific `axes` for `b`.
+    axes: array_like
+        Axes for array `b` to which `a` is applied.
+    parallel: bool | int
+        Run `transpose` using multi-threading. If `parallel == True`, all
+        available threads are used. Otherwise, if `parallel` is
+        int-convertible, a `parallel` number of threads is used instead.
     inplace: bool, optional
         If `True`, the multiplication is performed inplace whenever possible.
     force_backend: bool, optional
@@ -199,8 +206,13 @@ def matmul(a: matrix_like,
             if not inplace and b.ctypes.data == b_.ctypes.data:
                 b_ = np.copy(b_)
 
+            # Parallel?
+            _parallel = int(not parallel) if isinstance(parallel,
+                                                        bool) else int(parallel)
+
             # Call library
-            if not lib_(b_.view(rtype_), a_.view(rtype_), pos_, b.ndim):
+            if not lib_(b_.view(rtype_), a_.view(rtype_), pos_, b.ndim,
+                        _parallel):
                 return b_
 
         # If it didn't return, there was an error in running the library

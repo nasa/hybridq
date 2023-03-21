@@ -149,8 +149,8 @@ ifeq ($(is_float128_supported), yes)
 	DOT_OPTIONS += -DHYBRIDQ_ARRAY_FLOAT128=1
 endif
 
-# Compile swap
-$(DOT_LIBNAME): include/dot.cpp include/*.h
+# Compile dot
+$(DOT_LIBNAME): include/dot.cpp include/dot.hpp include/utils.hpp
 	@# Print support for OpenMP
 	$(info # Support OpenMP? $(is_openmp_supported))
 
@@ -174,7 +174,7 @@ $(DOT_LIBNAME): include/dot.cpp include/*.h
 
 
 # Compile swap
-$(SWAP_LIBNAME): include/swap.cpp
+$(SWAP_LIBNAME): include/swap.cpp include/swap.hpp
 	@# Print support for OpenMP
 	$(info # Support OpenMP? $(is_openmp_supported))
 

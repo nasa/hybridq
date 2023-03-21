@@ -49,7 +49,7 @@ def get_swap_lib(nbytes: int, npos: int):
 
     # Load and return function
     return get_lib_fn(load_library(f'hybridq_swap_{nbytes}_{npos}.so'), 'swap',
-                      'int32', 'void*', 'uint32*', 'uint32')
+                      'int32', 'void*', 'uint32*', 'uint32', 'uint32')
 
 
 @parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
@@ -57,6 +57,7 @@ def transpose(a: array_like,
               /,
               axes: array_like = None,
               *,
+              parallel: bool | int = True,
               inplace: bool = False,
               force_backend: bool = False,
               backend: str = Default,
@@ -70,6 +71,10 @@ def transpose(a: array_like,
         Array to transpose.
     axes: array_like
         A permutation of axes of `a`.
+    parallel: bool | int
+        Run `transpose` using multi-threading. If `parallel == True`, all
+        available threads are used. Otherwise, if `parallel` is
+        int-convertible, a `parallel` number of threads is used instead.
     inplace: bool, optional
         If `True`, the transposition is performed inplace using the HybridQ C++
         core if possible. If `False`, same as `backend.transpose`.
@@ -133,9 +138,14 @@ def transpose(a: array_like,
                 a = a.view(a.real.dtype)
                 c_axes = np.concatenate([[0], c_axes + 1])
 
+            # Parallel?
+            _parallel = int(not parallel) if isinstance(parallel,
+                                                        bool) else int(parallel)
+
             # Swap
             _err = get_swap_lib(a.dtype.itemsize,
-                                len(c_axes))(a, c_axes, a.ndim + _complex)
+                                len(c_axes))(a, c_axes, a.ndim + _complex,
+                                             _parallel)
 
             # Restore complex
             if _complex:
