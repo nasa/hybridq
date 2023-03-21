@@ -61,7 +61,7 @@ setup(
     install_requires=install_requires,
     include_package_data=True,
     data_files=[('', ['hybridq_array/lib/Makefile'] +
-                 glob('hybridq_array/lib/include/*.h') +
+                 glob('hybridq_array/lib/include/*.hpp') +
                  glob('hybridq_array/lib/include/*.cpp'))],
     project_urls={
         'Bug Reports': 'https://github.com/nasa/hybridq/issues',
