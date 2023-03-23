@@ -46,11 +46,6 @@ def get_dot_lib(float_type: str,
     """
     Return dot function.
     """
-
-    from sysconfig import get_path
-    from subprocess import Popen, PIPE
-    import os
-
     from .compile import compile_lib, get_config
     from .utils import get_lib_fn, load_library
 
@@ -78,19 +73,20 @@ def get_dot_lib(float_type: str,
                     dot_type=float_type,
                     dot_log2_pack_size=log2_pack_size)
 
-        # Load and return function
+        # Return lib with psi split in real and imaginary part
         if tag[0] == 'q':
             return get_lib_fn(
                 load_library(
                     f'hybridq_dot_{float_type}_{log2_pack_size}_{npos}.so'),
                 'apply_' + tag, 'int64', float_type + '*', float_type + '*',
                 float_type + '*', 'uint64*', 'uint64', 'uint64')
-        else:
-            return get_lib_fn(
-                load_library(
-                    f'hybridq_dot_{float_type}_{log2_pack_size}_{npos}.so'),
-                'apply_' + tag, 'int64', float_type + '*', float_type + '*',
-                'uint64*', 'uint64', 'uint64')
+
+        # Return lib with psi as array of complex numbers
+        return get_lib_fn(
+            load_library(
+                f'hybridq_dot_{float_type}_{log2_pack_size}_{npos}.so'),
+            'apply_' + tag, 'int64', float_type + '*', float_type + '*',
+            'uint64*', 'uint64', 'uint64')
     except OSError as error:
         # Otherwise, log error ...
         _LOGGER.error(error)
