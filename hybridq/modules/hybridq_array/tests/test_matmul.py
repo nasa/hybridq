@@ -20,6 +20,7 @@ from sys import stderr
 import numpy as np
 import pytest
 
+from hybridq_array.aligned_array import asarray
 from hybridq_array import matmul
 
 
@@ -145,12 +146,13 @@ def test_matmul_1(dtype, inplace, force_backend):
     np.testing.assert_allclose(psi1, psi2, atol=1e-3)
 
 
-@pytest.mark.parametrize('n,p,dtype,inplace',
-                         [(n, p, dtype, inplace) for n in range(3, 13)
-                          for p in range(1, 7)
+@pytest.mark.parametrize('n,p,dtype,inplace,alignment',
+                         [(n, p, dtype, inplace, alignment)
+                          for n in range(3, 13) for p in range(1, 7)
                           for dtype in ['float32', 'float64']
-                          for inplace in [False, True] for _ in range(4)])
-def test_matmul_2_cc(n, p, dtype, inplace):
+                          for inplace in [False, True]
+                          for alignment in [16, 32]])
+def test_matmul_2_cc(n, p, dtype, inplace, alignment):
     # p cannot be larger than n!
     p = min(p, n)
 
@@ -160,9 +162,10 @@ def test_matmul_2_cc(n, p, dtype, inplace):
             (2**p, 2**p)).astype(dtype)
 
     # Get random array
-    psi = np.random.standard_normal(
+    psi = asarray(np.random.standard_normal(
         (2,) * n).astype(dtype) + 1j * np.random.standard_normal(
-            (2,) * n).astype(dtype)
+            (2,) * n).astype(dtype),
+                  alignment=alignment)
 
     # Get random axes
     axes = np.random.choice(n, size=p, replace=False)
@@ -181,6 +184,46 @@ def test_matmul_2_cc(n, p, dtype, inplace):
 
     # Check
     np.testing.assert_allclose(psi1, psi2, atol=1e-4)
+
+
+@pytest.mark.parametrize('n,p,dtype,inplace,alignment',
+                         [(n, p, dtype, inplace, alignment)
+                          for n in range(3, 13) for p in range(1, 7)
+                          for dtype in ['float32', 'float64']
+                          for inplace in [False, True]
+                          for alignment in [16, 32]])
+def test_matmul_2_cq(n, p, dtype, inplace, alignment):
+    # p cannot be larger than n!
+    p = min(p, n)
+
+    # Get random matrix
+    U = np.random.standard_normal(
+        (2**p, 2**p)).astype(dtype) + 1j * np.random.standard_normal(
+            (2**p, 2**p)).astype(dtype)
+
+    # Get random array
+    psi_re = asarray(np.random.standard_normal((2,) * n).astype(dtype),
+                     alignment=alignment)
+    psi_im = asarray(np.random.standard_normal((2,) * n).astype(dtype),
+                     alignment=alignment)
+
+    # Get random axes
+    axes = np.random.choice(n, size=p, replace=False)
+
+    # Multiply
+    psi1 = matmul(U, (psi_re, psi_im), axes=axes, force_backend=True)
+    psi2 = (psi_re, psi_im)
+    psi2_ = matmul(U, (psi_re, psi_im),
+                   axes=axes,
+                   inplace=inplace,
+                   force_backend=False,
+                   raise_if_hcore_fails=True)
+    if not inplace:
+        psi2 = psi2_
+
+    # Check
+    np.testing.assert_allclose(psi1.real, psi2[0], atol=1e-4)
+    np.testing.assert_allclose(psi1.imag, psi2[1], atol=1e-4)
 
 
 @pytest.mark.parametrize('n,p,dtype', [(n, p, dtype) for n in range(3, 13)
@@ -214,12 +257,13 @@ def test_matmul_2_cr(n, p, dtype):
     np.testing.assert_allclose(psi1, psi2, atol=1e-4)
 
 
-@pytest.mark.parametrize('n,p,dtype,inplace',
-                         [(n, p, dtype, inplace) for n in range(3, 13)
-                          for p in range(1, 7)
+@pytest.mark.parametrize('n,p,dtype,inplace,alignment',
+                         [(n, p, dtype, inplace, alignment)
+                          for n in range(3, 13) for p in range(1, 7)
                           for dtype in ['float32', 'float64']
-                          for inplace in [False, True] for _ in range(4)])
-def test_matmul_2_rc(n, p, dtype, inplace):
+                          for inplace in [False, True]
+                          for alignment in [16, 32]])
+def test_matmul_2_rc(n, p, dtype, inplace, alignment):
     # p cannot be larger than n!
     p = min(p, n)
 
@@ -227,9 +271,10 @@ def test_matmul_2_rc(n, p, dtype, inplace):
     U = np.random.standard_normal((2**p, 2**p)).astype(dtype)
 
     # Get random array
-    psi = np.random.standard_normal(
+    psi = asarray(np.random.standard_normal(
         (2,) * n).astype(dtype) + 1j * np.random.standard_normal(
-            (2,) * n).astype(dtype)
+            (2,) * n).astype(dtype),
+                  alignment=alignment)
 
     # Get random axes
     axes = np.random.choice(n, size=p, replace=False)
@@ -250,12 +295,13 @@ def test_matmul_2_rc(n, p, dtype, inplace):
     np.testing.assert_allclose(psi1, psi2, atol=1e-4)
 
 
-@pytest.mark.parametrize('n,p,dtype,inplace',
-                         [(n, p, dtype, inplace) for n in range(3, 13)
-                          for p in range(1, 7)
+@pytest.mark.parametrize('n,p,dtype,inplace,alignment',
+                         [(n, p, dtype, inplace, alignment)
+                          for n in range(3, 13) for p in range(1, 7)
                           for dtype in ['float32', 'float64']
-                          for inplace in [False, True] for _ in range(4)])
-def test_matmul_2_rr(n, p, dtype, inplace):
+                          for inplace in [False, True]
+                          for alignment in [16, 32]])
+def test_matmul_2_rr(n, p, dtype, inplace, alignment):
     # p cannot be larger than n!
     p = min(p, n)
 
@@ -263,7 +309,8 @@ def test_matmul_2_rr(n, p, dtype, inplace):
     U = np.random.standard_normal((2**p, 2**p)).astype(dtype)
 
     # Get random array
-    psi = np.random.standard_normal((2,) * n).astype(dtype)
+    psi = asarray(np.random.standard_normal((2,) * n).astype(dtype),
+                  alignment=alignment)
 
     # Get random axes
     axes = np.random.choice(n, size=p, replace=False)
