@@ -22,6 +22,7 @@
 
 #include <omp.h>
 
+#include <array>
 #include <cstdint>
 #include <cstdlib>
 
