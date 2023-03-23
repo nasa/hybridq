@@ -22,27 +22,7 @@
 
 #include <cstdlib>
 
-namespace hybridq_new {
-
-// Define pack structure
-template <typename _base_type, std::size_t _size>
-struct __pack__ {
-  using base_type = _base_type;
-  static constexpr std::size_t size = _size;
-
-  typedef base_type value_type
-      __attribute__((vector_size(sizeof(base_type) * size)));
-
-  static constexpr value_type get(base_type value) {
-    return _get(value, std::make_index_sequence<size>{});
-  }
-
- private:
-  template <std::size_t... I>
-  static constexpr value_type _get(base_type value, std::index_sequence<I...>) {
-    return value_type{(static_cast<void>(I), value)...};
-  }
-};
+namespace hybridq {
 
 // Get type given index and nbits
 template <int type, std::size_t nbits>
@@ -136,6 +116,6 @@ struct get_type<2, 8 * 16> {
   static_assert(sizeof(type) == 16, "Wrong number of bytes");
 };
 
-}  // namespace hybridq_new
+}  // namespace hybridq
 
 #endif

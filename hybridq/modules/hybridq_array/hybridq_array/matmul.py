@@ -59,13 +59,13 @@ def get_dot_lib(float_type: str,
 
     # Get optimal log2_pack_size
     if config_['avx512']:
-        log2_pack_size = 4
+        log2_pack_size = 5
     elif config_['avx2']:
-        log2_pack_size = 3
+        log2_pack_size = 5
     elif config_['avx']:
-        log2_pack_size = 3
+        log2_pack_size = 5
     else:
-        log2_pack_size = 3
+        log2_pack_size = 5
 
     # Get minimum between log2_pack_size and provided one
     if max_log2_pack_size is not None:
@@ -79,11 +79,18 @@ def get_dot_lib(float_type: str,
                     dot_log2_pack_size=log2_pack_size)
 
         # Load and return function
-        return get_lib_fn(
-            load_library(
-                f'hybridq_dot_{float_type}_{log2_pack_size}_{npos}.so'),
-            'apply_' + tag, 'int32', float_type + '*', float_type + '*',
-            'uint32*', 'uint32', 'uint32')
+        if tag[0] == 'q':
+            return get_lib_fn(
+                load_library(
+                    f'hybridq_dot_{float_type}_{log2_pack_size}_{npos}.so'),
+                'apply_' + tag, 'int64', float_type + '*', float_type + '*',
+                float_type + '*', 'uint64*', 'uint64', 'uint64')
+        else:
+            return get_lib_fn(
+                load_library(
+                    f'hybridq_dot_{float_type}_{log2_pack_size}_{npos}.so'),
+                'apply_' + tag, 'int64', float_type + '*', float_type + '*',
+                'uint64*', 'uint64', 'uint64')
     except OSError as error:
         # Otherwise, log error ...
         _LOGGER.error(error)
@@ -94,9 +101,9 @@ def get_dot_lib(float_type: str,
 
 @parse_default(_DEFAULTS, env_prefix='HYBRIDQ_ARRAY')
 def matmul(a: matrix_like,
-           b: array_like,
+           b: array_like | tuple[array_like, array_like],
            /,
-           axes: array_like = None,
+           axes: array_like,
            *,
            parallel: bool | int = Default,
            inplace: bool = False,
@@ -114,11 +121,13 @@ def matmul(a: matrix_like,
 
     Parameters
     ----------
-    a, b: matrix_like, array_like
-        Matrix multiplication `a @ b` at specific `axes` for `b`.
+    a, b: matrix_like, array_like | tuple[array_like, array_like]
+        Matrix multiplication `a @ b` at specific `axes` for `b`. If `b` is a
+        `tuple`, the first element of the tuple will be used as real part,
+        while the second element as imaginary part.
     axes: array_like
         Axes for array `b` to which `a` is applied.
-    parallel: bool | int
+    parallel: bool | int, optional
         Run `transpose` using multi-threading. If `parallel == True`, all
         available threads are used. Otherwise, if `parallel` is
         int-convertible, a `parallel` number of threads is used instead.
@@ -137,43 +146,54 @@ def matmul(a: matrix_like,
     a_@_b
         `a_@_b` being the result of the matrix/array multiplication.
     """
+    # Check if 'b' is split into real and imaginary part
+    is_b_tuple_ = isinstance(b, tuple) and len(b) == 2
 
     # Convert to numpy arrays
     a = np.asarray(a)
-    b = np.asarray(b)
+    b = tuple(map(np.asarray, b)) if is_b_tuple_ else np.asarray(b)
 
     # 'a' must be a square matrix
     if a.ndim != 2 or a.shape[0] != a.shape[1]:
         raise ValueError("'a' must be a square matrix")
 
+    # If 'b' is tuple, check consistency
+    if is_b_tuple_:
+        if b[0].shape != b[1].shape or b[0].dtype != b[
+                1].dtype or np.iscomplexobj(b[0]):
+            raise ValueError("'b' is not valid")
+
     # Convert axes
     axes = np.arange(a.shape[1]) if axes is None else np.asarray(axes)
 
     # Check axes
-    if axes.ndim != 1 or a.shape[1] != np.prod(np.asarray(
-            b.shape)[axes]) or np.any(
-                axes >= b.ndim) or len(set(axes)) != axes.size:
+    if axes.ndim != 1 or a.shape[1] != np.prod(
+            np.asarray((b[0] if is_b_tuple_ else b).shape)[axes]) or np.any(
+                axes >= (b[0] if is_b_tuple_ else b).ndim) or len(
+                    set(axes)) != axes.size:
         raise ValueError("'axes' is not valid")
 
     # Check if a/b are complex
     complex_a_ = np.iscomplexobj(a)
-    complex_b_ = np.iscomplexobj(b)
+    complex_b_ = True if is_b_tuple_ else np.iscomplexobj(b)
 
     # Check if hcore can be used
     _hcore_fails = []
-    if b.shape != (2,) * b.ndim:
+    if any(b.shape != (2,) * b.ndim for b in (b if is_b_tuple_ else [b])):
         _hcore_fails.append("Only binary dimensions are supported for 'b'")
     if axes.size > 18:
         _hcore_fails.append("Too many axes")
     if not a.flags.c_contiguous:
         _hcore_fails.append("'a' must be c-contiguous")
-    if not b.flags.c_contiguous:
+    if any(not b.flags.c_contiguous for b in (b if is_b_tuple_ else [b])):
         _hcore_fails.append("'b' must be c-contiguous")
 
     # If no checks have failed ...
     if not force_backend and not _hcore_fails:
         # Get common type
-        dtype_ = (a.dtype.type([1]) + b.dtype.type([1])).dtype
+        dtype_ = (a.dtype.type([1]) +
+                  (b[0].dtype.type([1]) + 1j * b[1].dtype.type([1])
+                   if is_b_tuple_ else b.dtype.type([1]))).dtype
 
         # Check if complex
         complex_ = np.iscomplexobj(dtype_.type([1]))
@@ -181,17 +201,18 @@ def matmul(a: matrix_like,
         # Get real type
         rtype_ = dtype_.type([1]).real.dtype if complex_ else dtype_
 
-        # Get maximum allower size of pack
-        max_log2_pack_size_ = b.ndim - np.sort(axes)[-1] - 1
-
         # Get positions
-        pos_ = b.ndim - np.asarray(axes[::-1], dtype='uint32') - 1
+        pos_ = (b[0] if is_b_tuple_ else b).ndim - np.asarray(
+            axes[::-1], dtype='uint64') - 1
+
+        # Get maximum allower size of pack
+        max_log2_pack_size_ = np.sort(pos_)[0]
 
         # Get right tag
         if not complex_a_ and not complex_b_:
             tag_ = 'rr'
         else:
-            tag_ = 'c' + ('c' if complex_a_ else 'r')
+            tag_ = ('q' if is_b_tuple_ else 'c') + ('c' if complex_a_ else 'r')
 
         # Load library
         lib_ = get_dot_lib(str(rtype_),
@@ -200,20 +221,33 @@ def matmul(a: matrix_like,
                            tag=tag_)
 
         if lib_ is not None:
-            # Convert both a and b to the common type
-            a_ = np.asarray(a, dtype=dtype_ if complex_a_ else rtype_)
-            b_ = np.asarray(b, dtype=dtype_)
-            if not inplace and b.ctypes.data == b_.ctypes.data:
-                b_ = np.copy(b_)
-
             # Parallel?
-            _parallel = int(not parallel) if isinstance(parallel,
+            parallel_ = int(not parallel) if isinstance(parallel,
                                                         bool) else int(parallel)
 
+            # Convert both a and b to the common type
+            a_ = np.asarray(a, dtype=dtype_ if complex_a_ else rtype_)
+            if is_b_tuple_:
+                b_ = list(map(lambda x: np.asarray(x, dtype=rtype_), b))
+                if not inplace:
+                    if b[0].ctypes.data == b_[0].ctypes.data:
+                        b_[0] = np.copy(b_[0])
+                    if b[1].ctypes.data == b_[1].ctypes.data:
+                        b_[1] = np.copy(b_[1])
+            else:
+                b_ = np.asarray(b, dtype=dtype_)
+                if not inplace and b.ctypes.data == b_.ctypes.data:
+                    b_ = np.copy(b_)
+
             # Call library
-            if not lib_(b_.view(rtype_), a_.view(rtype_), pos_, b.ndim,
-                        _parallel):
-                return b_
+            if is_b_tuple_:
+                if not lib_(b_[0].view(rtype_), b_[1].view(rtype_),
+                            a_.view(rtype_), pos_, b[0].ndim, parallel_):
+                    return b_
+            else:
+                if not lib_(b_.view(rtype_), a_.view(rtype_), pos_, b.ndim,
+                            parallel_):
+                    return b_
 
         # If it didn't return, there was an error in running the library
         _hcore_fails.append("Cannot use C++ library")
@@ -231,6 +265,10 @@ def matmul(a: matrix_like,
 
     # Warn fallback
     _LOGGER.warning('Fallback to %s', 'backend' if backend is None else backend)
+
+    # If tuple, convert to to array
+    if is_b_tuple_:
+        b = b[0] + 1j * b[1]
 
     # Build map
     _map = ''.join(

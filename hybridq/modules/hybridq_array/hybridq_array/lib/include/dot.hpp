@@ -24,10 +24,11 @@
 
 #include <array>
 #include <cstdint>
+#include <cstdlib>
 
-#include "utils.hpp"
+#include "type.hpp"
 
-namespace hybridq_new {
+namespace hybridq {
 
 // Set  array type
 using array_type =
@@ -39,28 +40,46 @@ static constexpr std::size_t n_pos = HYBRIDQ_ARRAY_DOT_NPOS;
 // Get size of U
 static constexpr std::size_t U_size = 1uLL << n_pos;
 
-// Set size of the pack
+// Set log2 size of the pack
 static constexpr std::size_t log2_pack_size = HYBRIDQ_ARRAY_DOT_LOG2_PACK_SIZE;
-static constexpr std::size_t pack_size = 1uLL << log2_pack_size;
 
-// Get zero
-static const auto zero = __pack__<array_type, pack_size>::get(0);
+// Define size of the pack
+static const std::size_t pack_size = 1uL << log2_pack_size;
 
-// Get pack type
-using pack_type = __pack__<array_type, pack_size>::value_type;
+// Get types
+typedef array_type pack_type
+    __attribute__((vector_size(sizeof(array_type) * pack_size)));
+typedef array_type cpack_type
+    __attribute__((vector_size(sizeof(array_type) * 2 * pack_size)));
 
-extern "C" int32_t apply_cc(array_type *psi, const array_type *U,
-                            const uint32_t *pos, const uint32_t n_qubits,
-                            const uint32_t num_threads);
+// Define union two manipulate real and imaginary part
+typedef union {
+  pack_type pp[2];
+  cpack_type c;
+} ctype;
 
-extern "C" int32_t apply_cr(array_type *psi, const array_type *U_re,
-                            const uint32_t *pos, const uint32_t n_qubits,
-                            const uint32_t num_threads);
+extern "C" int64_t apply_qc(array_type *psi_re, array_type *psi_im,
+                            const array_type *U, const uint64_t *pos,
+                            const uint64_t n_qubits,
+                            const uint64_t num_threads);
 
-extern "C" int32_t apply_rr(array_type *psi, const array_type *U_re,
-                            const uint32_t *pos, const uint32_t n_qubits,
-                            const uint32_t num_threads);
+extern "C" int64_t apply_qr(array_type *psi_re, array_type *psi_im,
+                            const array_type *U_re, const uint64_t *pos,
+                            const uint64_t n_qubits,
+                            const uint64_t num_threads);
 
-}  // namespace hybridq_new
+extern "C" int64_t apply_rr(array_type *psi_re, const array_type *U_re,
+                            const uint64_t *pos, const uint64_t n_qubits,
+                            const uint64_t num_threads);
+
+extern "C" int64_t apply_cc(array_type *psi, const array_type *U,
+                            const uint64_t *pos, const uint64_t n_qubits,
+                            const uint64_t num_threads);
+
+extern "C" int64_t apply_cr(array_type *psi, const array_type *U_re,
+                            const uint64_t *pos, const uint64_t n_qubits,
+                            const uint64_t num_threads);
+
+}  // namespace hybridq
 
 #endif

@@ -55,7 +55,7 @@ CXXFLAGS ?= -Wall \
 
 # Add flags for shared library
 CXXFLAGS := $(CXXFLAGS) \
-            -std=c++14 \
+            -std=c++17 \
             -shared \
             -fPIC
 
@@ -150,7 +150,7 @@ ifeq ($(is_float128_supported), yes)
 endif
 
 # Compile dot
-$(DOT_LIBNAME): include/dot.cpp include/dot.hpp include/utils.hpp
+$(DOT_LIBNAME): include/dot.cpp include/dot.hpp include/type.hpp
 	@# Print support for OpenMP
 	$(info # Support OpenMP? $(is_openmp_supported))
 
