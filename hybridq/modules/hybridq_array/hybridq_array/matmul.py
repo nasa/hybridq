@@ -17,13 +17,14 @@ specific language governing permissions and limitations under the License.
 
 from __future__ import annotations
 from string import ascii_letters
-from functools import lru_cache
+from functools import lru_cache, partial as partial_fn
 import logging
 
 import numpy as np
 import autoray
 
 from .defaults import _DEFAULTS, Default, parse_default
+from .transpose import transpose
 
 __all__ = ['matmul']
 
@@ -105,7 +106,8 @@ def matmul(a: matrix_like,
            inplace: bool = False,
            force_backend: bool = False,
            backend: str = Default,
-           raise_if_hcore_fails: bool = Default):
+           raise_if_hcore_fails: bool = Default,
+           transpose_back: bool = True):
     """
     Multiply matrix `a` to array `b` at specific `axes`. For instance, for
     `a.ndim == 2`, this is equivalent to:
@@ -136,11 +138,20 @@ def matmul(a: matrix_like,
     raise_if_hcore_fails: bool, optional
         If `True`, raise an error if the HybridQ C++ core cannot be used.
         Otherwise, a warning is emitted.
+    transpose_back: bool, optional
+        To improve the performance, `b` may be transposed to take advantage of
+        SIMD instructions. If `transpose_back` is `True`, the result of `a_@_b`
+        is transposed back to its original order. If `transpose_back` is
+        `False`, the result `a_@_b` is not transposed back and an extra array
+        is returned corresponding to the transposition to restore `a_@_b` to
+        its original axes.
 
     Returns
     -------
-    a_@_b
-        `a_@_b` being the result of the matrix/array multiplication.
+    a_@_b[, axes]
+        `a_@_b` being the result of the matrix/array multiplication. If
+        `transpose_back` is `False`, `axes` are returned to restore `a_@_b` to
+        its original order.
     """
     # Check if 'b' is split into real and imaginary part
     is_b_tuple_ = isinstance(b, tuple) and len(b) == 2
@@ -184,8 +195,15 @@ def matmul(a: matrix_like,
     if any(not b.flags.c_contiguous for b in (b if is_b_tuple_ else [b])):
         _hcore_fails.append("'b' must be c-contiguous")
 
+    # Get number of dimensions
+    ndim_ = b[0].ndim if is_b_tuple_ else b.ndim
+
     # If no checks have failed ...
     if not force_backend and not _hcore_fails:
+        # Parallel?
+        parallel_ = int(not parallel) if isinstance(parallel,
+                                                    bool) else int(parallel)
+
         # Get common type
         dtype_ = (a.dtype.type([1]) +
                   (b[0].dtype.type([1]) + 1j * b[1].dtype.type([1])
@@ -197,53 +215,105 @@ def matmul(a: matrix_like,
         # Get real type
         rtype_ = dtype_.type([1]).real.dtype if complex_ else dtype_
 
-        # Get positions
-        pos_ = (b[0] if is_b_tuple_ else b).ndim - np.asarray(
-            axes[::-1], dtype='uint64') - 1
-
-        # Get maximum allower size of pack
-        max_log2_pack_size_ = np.sort(pos_)[0]
-
         # Get right tag
         if not complex_a_ and not complex_b_:
             tag_ = 'rr'
         else:
             tag_ = ('q' if is_b_tuple_ else 'c') + ('c' if complex_a_ else 'r')
 
+        # Convert both a and b to the common type
+        a_ = np.asarray(a, dtype=dtype_ if complex_a_ else rtype_)
+        if is_b_tuple_:
+            b_ = list(map(lambda x: np.asarray(x, dtype=rtype_), b))
+            if not inplace:
+                if b[0].ctypes.data == b_[0].ctypes.data:
+                    b_[0] = np.copy(b_[0])
+                if b[1].ctypes.data == b_[1].ctypes.data:
+                    b_[1] = np.copy(b_[1])
+        else:
+            b_ = np.asarray(b, dtype=dtype_)
+            if not inplace and b.ctypes.data == b_.ctypes.data:
+                b_ = np.copy(b_)
+
+        # Swap if needed
+        if ndim_ >= 10 and np.any(
+                axes >= ndim_ - 2) and (np.sum(axes >= ndim_ - 10) <= 8):
+            # Collect all positions within the last 5 least significant axes
+            _axes_swap = axes[axes >= ndim_ - 5]
+
+            # Get transposition
+            _axes_swap = np.concatenate([
+                np.arange(ndim_ - 10), _axes_swap,
+                np.setdiff1d(np.arange(ndim_ - 10, ndim_), _axes_swap)
+            ])
+
+            # Set transpose function
+            transpose_ = partial_fn(transpose,
+                                    inplace=True,
+                                    raise_if_hcore_fails=raise_if_hcore_fails,
+                                    parallel=parallel,
+                                    backend=backend)
+
+            # Swap arrays
+            if is_b_tuple_:
+                transpose_(b_[0], _axes_swap)
+                transpose_(b_[1], _axes_swap)
+            else:
+                transpose_(b_, _axes_swap)
+
+            # Get positions accordintly to the new axes
+            pos_ = np.array([
+                ndim_ - np.where(_axes_swap == x)[0][0] - 1 for x in axes[::-1]
+            ],
+                            dtype='uint32')
+
+        # Otherwise, mark as not swapped
+        else:
+            _axes_swap = None
+
+            # Get positions
+            pos_ = ndim_ - np.asarray(axes[::-1], dtype='uint64') - 1
+
+        # Get maximum allower size of pack
+        min_pos_ = np.sort(pos_)[0]
+
         # Load library
         lib_ = get_dot_lib(str(rtype_),
                            npos=axes.size,
-                           max_log2_pack_size=max_log2_pack_size_,
+                           max_log2_pack_size=min_pos_,
                            tag=tag_)
 
+        # Call library
         if lib_ is not None:
-            # Parallel?
-            parallel_ = int(not parallel) if isinstance(parallel,
-                                                        bool) else int(parallel)
-
-            # Convert both a and b to the common type
-            a_ = np.asarray(a, dtype=dtype_ if complex_a_ else rtype_)
             if is_b_tuple_:
-                b_ = list(map(lambda x: np.asarray(x, dtype=rtype_), b))
-                if not inplace:
-                    if b[0].ctypes.data == b_[0].ctypes.data:
-                        b_[0] = np.copy(b_[0])
-                    if b[1].ctypes.data == b_[1].ctypes.data:
-                        b_[1] = np.copy(b_[1])
+                _err = lib_(b_[0].view(rtype_), b_[1].view(rtype_),
+                            a_.view(rtype_), pos_, ndim_, parallel_)
             else:
-                b_ = np.asarray(b, dtype=dtype_)
-                if not inplace and b.ctypes.data == b_.ctypes.data:
-                    b_ = np.copy(b_)
+                _err = lib_(b_.view(rtype_), a_.view(rtype_), pos_, ndim_,
+                            parallel_)
 
-            # Call library
-            if is_b_tuple_:
-                if not lib_(b_[0].view(rtype_), b_[1].view(rtype_),
-                            a_.view(rtype_), pos_, b[0].ndim, parallel_):
-                    return b_
-            else:
-                if not lib_(b_.view(rtype_), a_.view(rtype_), pos_, b.ndim,
-                            parallel_):
-                    return b_
+        # Check for errors
+        if not _err:
+            # Swap back if needed
+            if _axes_swap is not None:
+                # Reverse transposition
+                _axes_swap = [
+                    np.where(_axes_swap == x)[0][0] for x in range(ndim_)
+                ]
+
+                # Swap arrays
+                if transpose_back:
+                    if is_b_tuple_:
+                        transpose_(b_[0], _axes_swap)
+                        transpose_(b_[1], _axes_swap)
+                    else:
+                        transpose_(b_, _axes_swap)
+
+                # Return swapped arrays
+                return b_ if transpose_back else (b_, _axes_swap)
+
+            # Return arrays
+            return b_
 
         # If it didn't return, there was an error in running the library
         _hcore_fails.append("Cannot use C++ library")
