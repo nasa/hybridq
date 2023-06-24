@@ -80,7 +80,7 @@ _MATRIX_SET = [
 
 @numba.njit(fastmath=True, cache=True)
 def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
-                         phase: float, pos_shift: int, eps: float,
+                         phase: float, norm_phase: float, pos_shift: int, eps: float,
                          atol: float) -> float:
 
     # Get branches
@@ -267,12 +267,15 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                 # Get new phase
                 _phase = _w * phase
 
-                # Check phase is large enough
-                if abs(_phase) > atol:
+                # Get new normalized phase
+                _norm_phase = _w * phase / _ws[0]
+
+                # Check if normalized phase is large enough
+                if abs(_norm_phase) > atol and abs(_phase) > 1e-8:
 
                     # Branch
                     pauli_string[q1] = _p
-                    _branches.append((np.copy(pauli_string), _phase, pos + 1))
+                    _branches.append((np.copy(pauli_string), _phase, _norm_phase, pos + 1))
 
             # Keep going with the largest weight
             pauli_string[q1] = _idxs[0]
@@ -303,8 +306,11 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                 # Get new phase
                 _phase = _w * phase
 
-                # Check phase is large enough
-                if abs(_phase) > atol:
+                # Get new normalized phase
+                _norm_phase = _w * phase / _ws[0]
+
+                # Check if normalized phase is large enough
+                if abs(_norm_phase) > atol and abs(_phase) > 1e-8:
 
                     # Get gates
                     _g2 = _p % 4
@@ -313,7 +319,7 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                     # Branch
                     pauli_string[q1] = _g1
                     pauli_string[q2] = _g2
-                    _branches.append((np.copy(pauli_string), _phase, pos + 1))
+                    _branches.append((np.copy(pauli_string), _phase, _norm_phase, pos + 1))
 
             # Keep going with the largest weight
             _p = _idxs[0]
@@ -348,8 +354,11 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                 # Get new phase
                 _phase = _w * phase
 
-                # Check phase is large enough
-                if abs(_phase) > atol:
+                # Get new normalized phase
+                _norm_phase = _w * phase / _ws[0]
+
+                # Check if normalized phase is large enough
+                if abs(_norm_phase) > atol and abs(_phase) > 1e-8:
 
                     # Get gates
                     _g3 = _p % 4
@@ -360,7 +369,7 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                     pauli_string[q1] = _g1
                     pauli_string[q2] = _g2
                     pauli_string[q3] = _g3
-                    _branches.append((np.copy(pauli_string), _phase, pos + 1))
+                    _branches.append((np.copy(pauli_string), _phase, _norm_phase, pos + 1))
 
             # Keep going with the largest weight
             _p = _idxs[0]
@@ -398,8 +407,11 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                 # Get new phase
                 _phase = _w * phase
 
-                # Check phase is large enough
-                if abs(_phase) > atol:
+                # Get new normalized phase
+                _norm_phase = _w * phase / _ws[0]
+
+                # Check if normalized phase is large enough
+                if abs(_norm_phase) > atol and abs(_phase) > 1e-8:
 
                     # Get gates
                     _g4 = _p % 4
@@ -412,7 +424,7 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                     pauli_string[q2] = _g2
                     pauli_string[q3] = _g3
                     pauli_string[q4] = _g4
-                    _branches.append((np.copy(pauli_string), _phase, pos + 1))
+                    _branches.append((np.copy(pauli_string), _phase, _norm_phase, pos + 1))
 
             # Keep going with the largest weight
             _p = _idxs[0]
@@ -452,8 +464,11 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                 # Get new phase
                 _phase = _w * phase
 
-                # Check phase is large enough
-                if abs(_phase) > atol:
+                # Get new normalized phase
+                _norm_phase = _w * phase / _ws[0]
+
+                # Check if normalized phase is large enough
+                if abs(_norm_phase) > atol and abs(_phase) > 1e-8:
 
                     # Get gates
                     _g5 = _p % 4
@@ -468,7 +483,7 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                     pauli_string[q3] = _g3
                     pauli_string[q4] = _g4
                     pauli_string[q5] = _g5
-                    _branches.append((np.copy(pauli_string), _phase, pos + 1))
+                    _branches.append((np.copy(pauli_string), _phase, _norm_phase, pos + 1))
 
             # Keep going with the largest weight
             _p = _idxs[0]
@@ -484,7 +499,7 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
             pauli_string[q5] = _g5
             phase *= _ws[0]
 
-    return (pauli_string, phase), _branches
+    return (pauli_string, phase, norm_phase), _branches
 
 
 # Pre-process circuit
@@ -556,10 +571,10 @@ def _breadth_first_search(_update, db, branches, max_n_branches, infos, verbose,
         while branches and len(branches) < max_n_branches:
 
             # Get new branches
-            (_new_ps, _new_ph), _new_branches = _update(*branches.pop())
+            (_new_ps, _new_ph, _new_norm_ph), _new_branches = _update(*branches.pop())
 
             # Collect results
-            kwargs['collect'](db, kwargs['transform'](_new_ps), _new_ph)
+            kwargs['collect'](db, kwargs['transform'](_new_ps), _new_ph, _new_norm_ph)
 
             # Update branches
             branches.extend(_new_branches)
@@ -604,10 +619,10 @@ def _depth_first_search(_update, db, branches, parallel, infos, info_init,
         while branches:
 
             # Get new branches
-            (_new_ps, _new_ph), _new_branches = _update(*branches.pop())
+            (_new_ps, _new_ph, _new_norm_ph), _new_branches = _update(*branches.pop())
 
             # Collect results
-            kwargs['collect'](db, kwargs['transform'](_new_ps), _new_ph)
+            kwargs['collect'](db, kwargs['transform'](_new_ps), _new_ph, _new_norm_ph)
 
             # Update branches
             branches.extend(_new_branches)
@@ -947,7 +962,7 @@ def update_pauli_string(circuit: Circuit,
         return ''.join({_X: 'X', _Y: 'Y', _Z: 'Z', _I: 'I'}[op] for op in ps)
 
     # Set default collect
-    def _collect(db, ps, ph):
+    def _collect(db, ps, ph, norm_ph):
 
         # Update final paulis
         db[ps] += ph
@@ -1170,7 +1185,7 @@ def update_pauli_string(circuit: Circuit,
                 }[gate.name]
 
         # Initialize branches
-        branches = [(_pauli_string, phase, 0)]
+        branches = [(_pauli_string, phase, phase, 0)]
 
     else:
 
@@ -1182,7 +1197,7 @@ def update_pauli_string(circuit: Circuit,
             'Z': _Z
         }[g]
                                for g in p],
-                              dtype='int'), phase, 0)
+                              dtype='int'), phase, phase, 0)
                     for p, phase in pauli_string.items()
                     if abs(phase) > atol]
 
