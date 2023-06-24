@@ -1,6 +1,6 @@
 autoray
 cirq
-cotengra @ git+https://github.com/jcmgray/cotengra@master
+cotengra @ git+https://github.com/jcmgray/cotengra
 dask
 docopt
 dill
