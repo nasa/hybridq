@@ -67,14 +67,14 @@ def generate_U(layout: dict[any, list[Coupling]],
 
         # Add single qubit gates
         circ += [
-            next(one_qb_gates).on([q]).set_tags({
+            next(one_qb_gates).on([q]).update_tags({
                 **tags, 'index': index + i
             }) for i, q in enumerate(qubits_order)
         ]
 
         # Add two qubit gates
         circ += [
-            next(two_qb_gates).on(q).set_tags(tags)
+            next(two_qb_gates).on(q).update_tags(tags)
             for q in layer
             if not exclude_qubits.intersection(q)
         ]
