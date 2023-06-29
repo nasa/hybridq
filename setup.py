@@ -80,7 +80,7 @@ setup(
         'Operating System :: Unix',
         'Operating System :: MacOS'
     ],
-    python_requires='>=3.7, <3.11',
+    python_requires='>=3.7, <3.12',
     keywords=['simulator quantum circuits', 'quantum computing'],
     packages=find_packages(exclude=['docs', 'tests']),
     install_requires=install_requires,
