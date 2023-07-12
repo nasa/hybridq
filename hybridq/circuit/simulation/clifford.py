@@ -899,6 +899,7 @@ def update_pauli_string(circuit: Circuit,
 
     # If use_mpi==False, force the non-use of MPI
     if use_mpi is None and _detect_mpi:
+        from warnings import warn
 
         # Warn that MPI is used because detected
         warn("MPI has been detected. Using MPI.")
