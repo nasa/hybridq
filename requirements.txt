@@ -10,7 +10,7 @@ jaxlib
 kahypar
 more_itertools
 networkx
-numba~=0.54
+numba
 numexpr
 numpy
 opt_einsum
