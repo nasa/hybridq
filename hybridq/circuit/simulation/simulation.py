@@ -491,14 +491,14 @@ def _simulate_evolution(circuit: iter[Gate], initial_state: any,
         _psi = aligned.empty(shape=(2,) + initial_state.shape,
                              dtype=float_type,
                              order='C',
-                             alignment=32)
+                             alignment=64)
         # Split in real and imaginary part
         _psi_re = _psi[0]
         _psi_im = _psi[1]
 
         # Check alignment
-        assert (_psi_re.ctypes.data % 32 == 0)
-        assert (_psi_im.ctypes.data % 32 == 0)
+        assert (_psi_re.ctypes.data % 64 == 0)
+        assert (_psi_im.ctypes.data % 64 == 0)
 
         # Get C-pointers
         _psi_re_ptr = _psi_re.ctypes.data_as(ctypes.POINTER(c_float_type))
@@ -536,7 +536,7 @@ def _simulate_evolution(circuit: iter[Gate], initial_state: any,
                     # Align if needed
                     _psi = aligned.asarray(new_psi,
                                            order='C',
-                                           alignment=32,
+                                           alignment=64,
                                            dtype=_psi.dtype)
 
                     # Redefine real and imaginary part
