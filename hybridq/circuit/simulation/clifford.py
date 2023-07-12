@@ -81,7 +81,7 @@ _MATRIX_SET = [
 @numba.njit(fastmath=True, cache=True)
 def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                          phase: float, norm_phase: float, pos_shift: int,
-                         eps: float, atol: float) -> float:
+                         eps: float, atol: float, norm_atol: float) -> float:
 
     # Get branches
     _branches = []
@@ -271,7 +271,7 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                 _norm_phase = _w * phase / _ws[0]
 
                 # Check if normalized phase is large enough
-                if abs(_norm_phase) > atol and abs(_phase) > 1e-8:
+                if abs(_norm_phase) > norm_atol and abs(_phase) > atol:
 
                     # Branch
                     pauli_string[q1] = _p
@@ -311,7 +311,7 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                 _norm_phase = _w * phase / _ws[0]
 
                 # Check if normalized phase is large enough
-                if abs(_norm_phase) > atol and abs(_phase) > 1e-8:
+                if abs(_norm_phase) > norm_atol and abs(_phase) > atol:
 
                     # Get gates
                     _g2 = _p % 4
@@ -360,7 +360,7 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                 _norm_phase = _w * phase / _ws[0]
 
                 # Check if normalized phase is large enough
-                if abs(_norm_phase) > atol and abs(_phase) > 1e-8:
+                if abs(_norm_phase) > norm_atol and abs(_phase) > atol:
 
                     # Get gates
                     _g3 = _p % 4
@@ -414,7 +414,7 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                 _norm_phase = _w * phase / _ws[0]
 
                 # Check if normalized phase is large enough
-                if abs(_norm_phase) > atol and abs(_phase) > 1e-8:
+                if abs(_norm_phase) > norm_atol and abs(_phase) > atol:
 
                     # Get gates
                     _g4 = _p % 4
@@ -472,7 +472,7 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                 _norm_phase = _w * phase / _ws[0]
 
                 # Check if normalized phase is large enough
-                if abs(_norm_phase) > atol and abs(_phase) > 1e-8:
+                if abs(_norm_phase) > norm_atol and abs(_phase) > atol:
 
                     # Get gates
                     _g5 = _p % 4
@@ -1106,10 +1106,10 @@ def update_pauli_string(circuit: Circuit,
 
     # Compress circuit
     circuit = Circuit(
-        utils.to_matrix_gate(c, complex_type=complex_type)
-        for c in tqdm(utils.compress(circuit, max_n_qubits=compress),
-                      disable=not _verbose,
-                      desc=f"Compress ({int(compress)})"))
+        utils.to_matrix_gate(c, complex_type=complex_type) for c in tqdm(
+            utils.compress(circuit, max_n_qubits=compress),
+            disable=not _verbose,
+            desc=f"Compress ({int(compress)})")) if compress else circuit
 
     # Pad missing qubits
     circuit += Circuit(
@@ -1219,7 +1219,8 @@ def update_pauli_string(circuit: Circuit,
                            qubits,
                            params,
                            eps=eps,
-                           atol=branch_atol)
+                           atol=atol,
+                           norm_atol=branch_atol)
 
     # End pre-processing time
     _prep_time = time() - _prep_time
@@ -1484,7 +1485,7 @@ def expectation_value(circuit: Circuit, op: Circuit, initial_state: str,
     def _db_init():
         return [0]
 
-    def _collect(db, ops, ph):
+    def _collect(db, ops, ph, norm_ph):
         # Compute expectation value given pauli string
         if next((False for x in ops if x in 'XY'), True):
             db[0] += ph
