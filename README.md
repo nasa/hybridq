@@ -6,7 +6,7 @@
 [![PyTest](https://github.com/nasa/hybridq/actions/workflows/python-pytest.yml/badge.svg)](https://github.com/nasa/hybridq/actions/workflows/python-pytest.yml)
 [![Tutorials](https://github.com/nasa/hybridq/actions/workflows/python-tutorials.yml/badge.svg)](https://github.com/nasa/hybridq/tree/main/tutorials)<br>
 [![PyPI](https://img.shields.io/pypi/v/hybridq.svg)](https://pypi.org/project/hybridq/#description)
-[![Downloads](https://static.pepy.tech/personalized-badge/hybridq?period=total&units=international_system&left_color=gray&right_color=orange&left_text=downloads)](https://pepy.tech/project/hybridq)
+[![Downloads](https://static.pepy.tech/personalized-badge/hybridq?period=total&units=international_system&left_color=grey&right_color=orange&left_text=downloads)](https://pepy.tech/project/hybridq)
 [![Downloads-week](https://static.pepy.tech/personalized-badge/hybridq?period=week&units=international_system&left_color=grey&right_color=orange&left_text=downloads/week)](https://pepy.tech/project/hybridq)<br>
 [![Documentation](https://img.shields.io/static/v1?label=documentation&message=https://nasa.github.io/hybridq&color=success)](https://nasa.github.io/hybridq)
 [![Cite](https://img.shields.io/static/v1?label=cite&message=IEEE/ACM%20(QCS)&color=success)](https://doi.org/10.1109/QCS54837.2021.00015)
