@@ -11,7 +11,7 @@ ARG BASE
 ARG PYTHON
 
 # Set default if needed
-ENV PYTHON=${PYTHON:-cp37-cp37m}
+ENV PYTHON=${PYTHON:-cp38-cp38}
 
 # Update PATH
 ENV PATH=/opt/python/${PYTHON}/bin/:$PATH

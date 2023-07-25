@@ -19,7 +19,7 @@ DOCKER=${DOCKER:-docker}
 COMPOSER=${COMPOSER:-${DOCKER}-compose}
 
 # Build using the following Python's versions
-PYTHON_VERSIONS=${PYTHON_VERSIONS:-"cp37-cp37m cp38-cp38 cp39-cp39 cp310-cp310"}
+PYTHON_VERSIONS=${PYTHON_VERSIONS:-"cp38-cp38 cp39-cp39 cp310-cp310"}
 
 for VERSION in $PYTHON_VERSIONS; do
   echo "# Building ($VERSION)" >&2

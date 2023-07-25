@@ -1,6 +1,6 @@
 autoray
 cirq
-cotengra @ git+https://github.com/jcmgray/cotengra@master
+cotengra @ git+https://github.com/jcmgray/cotengra
 dask
 docopt
 dill
@@ -10,7 +10,7 @@ jaxlib
 kahypar
 more_itertools
 networkx
-numba~=0.54
+numba
 numexpr
 numpy
 opt_einsum
