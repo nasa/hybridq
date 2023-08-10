@@ -1073,8 +1073,9 @@ def expand_iswap(circuit: Circuit) -> Circuit:
     """
     from copy import deepcopy
 
-    # Get ideal iSWAP
+    # Get ideal iSWAP and its inverse
     _iSWAP = Gate('ISWAP').matrix()
+    _inv_iSWAP = Gate('ISWAP').inv().matrix()
 
     # Initialize circuit
     _circ = Circuit()
@@ -1083,23 +1084,37 @@ def expand_iswap(circuit: Circuit) -> Circuit:
     for gate in circuit:
 
         # Check if gate is close to SWAP
-        if gate.n_qubits == 2 and gate.qubits and np.allclose(
-                gate.matrix(), _iSWAP):
-
+        if gate.n_qubits == 2 and gate.qubits:
             # Get tags
             _tags = gate.tags if gate.provides('tags') else {}
 
-            # Expand iSWAP
-            _ext = [
-                Gate('SWAP', qubits=gate.qubits, tags=_tags),
-                Gate('CZ', qubits=gate.qubits, tags=_tags),
-                Gate('P', qubits=[gate.qubits[0]], tags=_tags),
-                Gate('P', qubits=[gate.qubits[1]], tags=_tags),
-            ]
+            # Check if iswap
+            if np.allclose(gate.matrix(), _iSWAP):
 
-            # Append to circuit
-            _circ.extend(_ext if gate.power == 1 else (
-                g**-1 for g in reversed(_ext)))
+                # Expand iSWAP
+                _ext = [
+                    Gate('SWAP', qubits=gate.qubits, tags=_tags),
+                    Gate('CZ', qubits=gate.qubits, tags=_tags),
+                    Gate('P', qubits=[gate.qubits[0]], tags=_tags),
+                    Gate('P', qubits=[gate.qubits[1]], tags=_tags),
+                ]
+
+                # Append to circuit
+                _circ.extend(_ext)
+
+            # Check if inverse
+            elif np.allclose(gate.matrix(), _inv_iSWAP):
+
+                # Expand iSWAP^-1
+                _ext = [
+                    Gate('P', qubits=[gate.qubits[1]], tags=_tags).inv(),
+                    Gate('P', qubits=[gate.qubits[0]], tags=_tags).inv(),
+                    Gate('CZ', qubits=gate.qubits, tags=_tags).inv(),
+                    Gate('SWAP', qubits=gate.qubits, tags=_tags).inv(),
+                ]
+
+                # Append to circuit
+                _circ.extend(_ext)
 
         # Otherwise, just append
         else:
