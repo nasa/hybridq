@@ -1116,6 +1116,10 @@ def expand_iswap(circuit: Circuit) -> Circuit:
                 # Append to circuit
                 _circ.extend(_ext)
 
+            # Otherwise, just append
+            else:
+                _circ.append(deepcopy(gate))
+
         # Otherwise, just append
         else:
             _circ.append(deepcopy(gate))
