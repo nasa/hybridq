@@ -268,7 +268,7 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                 _phase = _w * phase
 
                 # Get new normalized phase
-                _norm_phase = _w * phase / _ws[0]
+                _norm_phase = _w * norm_phase / _ws[0]
 
                 # Check if normalized phase is large enough
                 if abs(_norm_phase) > norm_atol and abs(_phase) > atol:
@@ -308,7 +308,7 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                 _phase = _w * phase
 
                 # Get new normalized phase
-                _norm_phase = _w * phase / _ws[0]
+                _norm_phase = _w * norm_phase / _ws[0]
 
                 # Check if normalized phase is large enough
                 if abs(_norm_phase) > norm_atol and abs(_phase) > atol:
@@ -357,7 +357,7 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                 _phase = _w * phase
 
                 # Get new normalized phase
-                _norm_phase = _w * phase / _ws[0]
+                _norm_phase = _w * norm_phase / _ws[0]
 
                 # Check if normalized phase is large enough
                 if abs(_norm_phase) > norm_atol and abs(_phase) > atol:
@@ -411,7 +411,7 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                 _phase = _w * phase
 
                 # Get new normalized phase
-                _norm_phase = _w * phase / _ws[0]
+                _norm_phase = _w * norm_phase / _ws[0]
 
                 # Check if normalized phase is large enough
                 if abs(_norm_phase) > norm_atol and abs(_phase) > atol:
@@ -469,7 +469,7 @@ def _update_pauli_string(gates, qubits, params, pauli_string: list[int],
                 _phase = _w * phase
 
                 # Get new normalized phase
-                _norm_phase = _w * phase / _ws[0]
+                _norm_phase = _w * norm_phase / _ws[0]
 
                 # Check if normalized phase is large enough
                 if abs(_norm_phase) > norm_atol and abs(_phase) > atol:
