@@ -202,7 +202,8 @@ def UpdateBranches_(branches,
 
     # Initialize timer
     if max_time is not None:
-        Timer(max_time, set_flag_).start()
+        timer_ = Timer(max_time, set_flag_)
+        timer_.start()
 
     # Convert gates and gate_qubits to numba.typed.List
     gates = numba.typed.List(gates)
@@ -257,6 +258,10 @@ def UpdateBranches_(branches,
                   file=sys.stderr,
                   end='\r',
                   flush=True)
+
+    # Cancel timer
+    if max_time is not None:
+        timer_.cancel()
 
     # Get total time
     total_time_ = time() - it_
@@ -319,9 +324,7 @@ def UpdateBranchesParallel_(branches,
                             atol=1e-8,
                             verbose=False,
                             completed_=None,
-                            info_=None,
-                            merge_branches_=merge_branches_,
-                            merge_info_=merge_info_):
+                            info_=None):
 
     # Create partial function to parallelize
     UB_ = fts.partial(UpdateBranches_,
@@ -352,7 +355,8 @@ def UpdateBranchesParallel_(branches,
 
     # Initialize timer
     if max_time is not None:
-        Timer(max_time, set_flag_).start()
+        timer_ = Timer(max_time, set_flag_)
+        timer_.start()
 
     # Initialize time
     it_ = time()
@@ -432,6 +436,10 @@ def UpdateBranchesParallel_(branches,
         # Last merge of info
         all_info_ = merge_info_(all_info_, info_)
 
+    # Cancel timer
+    if max_time is not None:
+        timer_.cancel()
+
     # Get final info
     all_info_['total_time_s'] = time() - it_
     all_info_['branching_time_s'] = all_info_['total_time_s'] / all_info_[
@@ -484,6 +492,15 @@ def simulate(circuit,
     # Split matrices and qubits
     gates_, gate_qubits_ = zip(*map(
         lambda x: (DecomposeOperator(x[0]), tuple(map(int, x[1]))), circuit))
+
+    # Get number of qubits
+    n_qubits_ = max(mit.flatten(gate_qubits_)) + 1
+
+    # Check that all paulis have the right number of qubits
+    if paulis is not None:
+        if any(map(lambda p: len(p) != n_qubits_, paulis)):
+            raise ValueError("Number of qubits in 'paulis' is not "
+                             "consistent with circuit")
 
     # Initialize branches
     branches_ = list(
@@ -547,3 +564,171 @@ def simulate(circuit,
 
     # Return results
     return all_info_
+
+
+def simulate_mpi(circuit,
+                 paulis=None,
+                 branches=None,
+                 *,
+                 parallel=True,
+                 norm_atol=1e-8,
+                 atol=1e-8,
+                 node_max_time=60,
+                 thread_max_time=1,
+                 verbose=False,
+                 **kwargs):
+
+    from mpi4py import MPI
+
+    mpi_ = MPI.COMM_WORLD
+    mpi_size_ = mpi_.Get_size()
+    mpi_rank_ = mpi_.Get_rank()
+
+    # Define how to print status bar
+    def status_bar_(n_branches, n_completed_branches, n_explored_branches,
+                    elapsed):
+        from datetime import timedelta
+        if n_explored_branches:
+            bt_ = elapsed / n_explored_branches
+            if bt_ < 1e-3:
+                bt_ = f'{bt_*1e6:1.2f}μs/branch'
+            elif bt_ < 1:
+                bt_ = f'{bt_*1e3:1.2f}ms/branch'
+            else:
+                bt_ = f'{bt_:1.2f}s/branch'
+        else:
+            bt_ = 'n/a'
+
+        s_ = f'PB:{n_branches:,}/CB:{n_completed_branches:,} '
+        s_ += f'[{timedelta(seconds=round(elapsed))}, {bt_}]'
+        if len(s_) > 100:
+            s_ = s_[:-3] + '...'
+        s_ += ' ' * (100 - len(s_))
+        return s_
+
+    # Initialize db of all completed branches
+    all_ = defaultdict(float)
+    all_info_ = dict(n_completed_branches=0, n_explored_branches=0)
+
+    if mpi_rank_ == 0:
+        if verbose:
+            print(f"Collecting initial branches ... ",
+                  end='',
+                  file=sys.stderr,
+                  flush=True)
+
+        # Get first shallow batch of branches
+        breadth_first_ = simulate(circuit,
+                                  paulis,
+                                  parallel=False,
+                                  max_n_branches=kwargs.get(
+                                      'breadth_first_max_n_branches',
+                                      10 * mpi_size_),
+                                  max_time=kwargs.get('breadth_first_max_time',
+                                                      10),
+                                  norm_atol=norm_atol,
+                                  atol=atol,
+                                  verbose=False)
+
+        # Split
+        n_rem_branches_ = len(breadth_first_['partial_branches'])
+        branches_ = list(
+            map(list,
+                mit.distribute(mpi_size_, breadth_first_['partial_branches'])))
+
+        # Merge completed branches
+        all_ = merge_branches_(all_, [breadth_first_['branches']])
+
+        # Merge info
+        all_info_ = merge_info_(all_info_, [breadth_first_])
+
+        if verbose:
+            print(f"Done!", file=sys.stderr, flush=True)
+
+    else:
+        branches_ = None
+        n_rem_branches_ = None
+
+    # Scatter branches
+    branches_ = mpi_.scatter(branches_, root=0)
+    n_rem_branches_ = mpi_.bcast(n_rem_branches_, root=0)
+
+    # Get init time
+    it_ = time()
+
+    # While there are available branches ...
+    while n_rem_branches_:
+
+        # Print status bar
+        if verbose and mpi_rank_ == 0:
+            print(status_bar_(n_rem_branches_,
+                              all_info_['n_completed_branches'],
+                              all_info_['n_explored_branches'],
+                              time() - it_),
+                  file=sys.stderr,
+                  end='\r',
+                  flush=True)
+
+        # Indepdendently simulate branches
+        res_ = simulate(circuit,
+                        branches=branches_,
+                        parallel=parallel,
+                        norm_atol=norm_atol,
+                        atol=atol,
+                        max_time=node_max_time,
+                        thread_max_time=thread_max_time,
+                        verbose=False,
+                        **kwargs)
+
+        # Gather all branches
+        res_ = mpi_.gather(res_, root=0)
+
+        # If root node ...
+        if mpi_rank_ == 0:
+
+            # Collect partial branches
+            branches_ = fts.reduce(lambda x, y: x + y,
+                                   (x_['partial_branches'] for x_ in res_))
+
+            # Merge completed branches
+            all_ = merge_branches_(all_, (x_['branches'] for x_ in res_))
+            all_info_ = merge_info_(all_info_, res_)
+
+            # Get number of partial branches
+            n_rem_branches_ = len(branches_)
+
+            # Distribute
+            branches_ = list(map(list, mit.distribute(mpi_size_, branches_)))
+
+        # Scatter branches
+        branches_ = mpi_.scatter(branches_, root=0)
+        n_rem_branches_ = mpi_.bcast(n_rem_branches_, root=0)
+
+    # Get final info
+    if mpi_rank_ == 0:
+        all_info_['branches'] = all_
+        all_info_['total_time_s'] = time() - it_
+        all_info_['branching_time_s'] = all_info_['total_time_s'] / all_info_[
+            'n_explored_branches'] if all_info_[
+                'n_explored_branches'] else np.nan
+
+        # Print some extra infos
+        if verbose:
+            print(f"\nTotal Time: {all_info_['total_time_s']:1.2g}s",
+                  file=sys.stderr,
+                  flush=True)
+            print(
+                f"Number Explored Branches: {all_info_['n_explored_branches']:,}",
+                file=sys.stderr,
+                flush=True)
+            print(
+                f"Number Completed Branches: {all_info_['n_completed_branches']:,}",
+                file=sys.stderr,
+                flush=True)
+            print(
+                f"Branching Time: {all_info_['branching_time_s'] * 1e6:1.2g}μs",
+                file=sys.stderr,
+                flush=True)
+
+    # Return
+    return all_info_ if mpi_rank_ == 0 else None
