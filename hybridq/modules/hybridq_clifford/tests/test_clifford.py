@@ -171,7 +171,9 @@ def test_PauliString(seed=None):
 @pytest.mark.parametrize('n_qubits,n_gates,parallel',
                          [(6, 4, False)] * 5 + [(6, 4, True)] * 5)
 def test_Simulation(n_qubits, n_gates, parallel, verbose=False, seed=None):
-    from hybridq_clifford.simulation import simulate, GetPauliOperator_, ToPauliStringFromState_, merge_branches_
+    from hybridq_clifford.simulation import (simulate, GetPauliOperator_,
+                                             ToPauliStringFromState_,
+                                             merge_branches_)
     from os import cpu_count
 
     # If seed is None, initialize it with a new seed
