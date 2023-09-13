@@ -18,6 +18,7 @@ specific language governing permissions and limitations under the License.
 from collections import defaultdict
 from multiprocessing import Pool
 import more_itertools as mit
+from threading import Timer
 import functools as fts
 import itertools as its
 from time import time
@@ -124,7 +125,7 @@ def UpdateState_(state, sub_state, qubits):
 
 
 @numba.njit
-def UpdateBranch_(branch, gates, gate_qubits, norm_atol=1e-7, atol=1e-7):
+def UpdateBranch_(branch, gates, gate_qubits, norm_atol=1e-8, atol=1e-8):
     # Get current branch
     state_, phase_, norm_phase_, gate_idx_ = branch
 
@@ -167,16 +168,16 @@ def UpdateBranches_(branches,
                     *,
                     max_time=None,
                     max_n_branches=None,
-                    norm_atol=1e-7,
-                    atol=1e-7,
+                    norm_atol=1e-8,
+                    atol=1e-8,
                     verbose=False):
-    from threading import Timer
 
     # Define how to print status bar
-    def status_bar_(n_branches, total_n_branches, elapsed):
+    def status_bar_(n_branches, n_completed_branches, n_explored_branches,
+                    elapsed):
         from datetime import timedelta
-        if n_branches:
-            bt_ = elapsed / n_branches
+        if n_explored_branches:
+            bt_ = elapsed / n_explored_branches
             if bt_ < 1e-3:
                 bt_ = f'{bt_*1e6:1.2f}μs/branch'
             elif bt_ < 1:
@@ -186,7 +187,7 @@ def UpdateBranches_(branches,
         else:
             bt_ = 'n/a'
 
-        s_ = f'NB:{n_branches:,}/TB:{total_n_branches:,} '
+        s_ = f'PB:{n_branches:,}/CB:{n_completed_branches:,} '
         s_ += f'[{timedelta(seconds=round(elapsed))}, {bt_}]'
         if len(s_) > 100:
             s_ = s_[:-3] + '...'
@@ -211,7 +212,7 @@ def UpdateBranches_(branches,
     completed_ = defaultdict(float)
 
     # Initialize number of total branches
-    n_branches_ = 0
+    n_completed_branches_ = 0
 
     # Create core to call
     UB_ = fts.partial(UpdateBranch_,
@@ -223,8 +224,8 @@ def UpdateBranches_(branches,
     # Get initial time
     it_ = time()
 
-    # Initialize counter for progressbar
-    count_ = 0
+    # Initialize number of explored branches
+    n_explored_branches_ = 0
 
     # While there are still some branches ...
     while len(branches) and flags_[0] and (max_n_branches is None or
@@ -235,7 +236,7 @@ def UpdateBranches_(branches,
         # If new branches are leaves, append to completed_
         if new_branches_ and new_branches_[-1][-1] == len(gates):
             # Update number of total branches
-            n_branches_ += len(new_branches_)
+            n_completed_branches_ += len(new_branches_)
 
             # Dump to db
             for br_, ph_, norm_ph_, _ in new_branches_:
@@ -246,11 +247,12 @@ def UpdateBranches_(branches,
             branches += new_branches_
 
         # Increment counter
-        count_ += 1
+        n_explored_branches_ += 1
 
         # Print status
-        if verbose and (count_ % 10_000 == 0):
-            print(status_bar_(len(branches), n_branches_,
+        if verbose and (n_explored_branches_ % 10_000 == 0):
+            print(status_bar_(len(branches), n_completed_branches_,
+                              n_explored_branches_,
                               time() - it_),
                   file=sys.stderr,
                   end='\r',
@@ -259,13 +261,27 @@ def UpdateBranches_(branches,
     # Get total time
     total_time_ = time() - it_
 
-    # Print status
+    # Get branching time
+    branching_time_ = total_time_ / n_explored_branches_ if n_explored_branches_ else np.nan
+
+    # Print some extra infos
     if verbose:
         print(f"\nTotal Time: {total_time_:1.2g}s", file=sys.stderr, flush=True)
+        print(f"Number Explored Branches: {n_explored_branches_:,}",
+              file=sys.stderr,
+              flush=True)
+        print(f"Number Completed Branches: {n_completed_branches_:,}",
+              file=sys.stderr,
+              flush=True)
+        print(f"Branching Time: {branching_time_ * 1e6:1.2g}μs",
+              file=sys.stderr,
+              flush=True)
 
     # Return completed and non-completed branches
-    return completed_, branches, dict(n_branches=n_branches_,
-                                      total_time=total_time_)
+    return completed_, branches, dict(
+        n_completed_branches=n_completed_branches_,
+        n_explored_branches=n_explored_branches_,
+        total_time=total_time_)
 
 
 # Define how to merge branches from threads
@@ -283,7 +299,10 @@ def merge_branches_(all_branches, branches):
 # Define how to merge infos from threads
 def merge_info_(all_info, info):
     # Merge total number of branches
-    all_info['n_branches'] += sum(map(lambda x: x['n_branches'], info))
+    all_info['n_completed_branches'] += sum(
+        map(lambda x: x['n_completed_branches'], info))
+    all_info['n_explored_branches'] += sum(
+        map(lambda x: x['n_explored_branches'], info))
 
     # Return merged info
     return all_info
@@ -294,9 +313,10 @@ def UpdateBranchesParallel_(branches,
                             gate_qubits,
                             *,
                             n_threads=None,
-                            max_time=5,
-                            norm_atol=1e-7,
-                            atol=1e-7,
+                            max_time=None,
+                            thread_max_time=5,
+                            norm_atol=1e-8,
+                            atol=1e-8,
                             verbose=False,
                             completed_=None,
                             info_=None,
@@ -309,7 +329,7 @@ def UpdateBranchesParallel_(branches,
                       gate_qubits=gate_qubits,
                       norm_atol=norm_atol,
                       atol=atol,
-                      max_time=max_time)
+                      max_time=thread_max_time)
 
     # Get number of threads
     n_threads = len(os.sched_getaffinity(
@@ -317,12 +337,22 @@ def UpdateBranchesParallel_(branches,
 
     # Initialize db of all completed branches
     all_ = defaultdict(float)
-    all_info_ = dict(n_branches=0)
+    all_info_ = dict(n_completed_branches=0, n_explored_branches=0)
 
     # Initialize branches
     branches_ = [branches]
     completed_ = [] if None else [completed_]
     info_ = [] if None else [info_]
+
+    # Initialize stop flag
+    flags_ = [1]
+
+    def set_flag_():
+        flags_[0] = 0
+
+    # Initialize timer
+    if max_time is not None:
+        Timer(max_time, set_flag_).start()
 
     # Initialize time
     it_ = time()
@@ -331,11 +361,12 @@ def UpdateBranchesParallel_(branches,
     n_rem_branches_ = sum(map(len, branches_))
 
     # Define how to print status bar
-    def status_bar_(n_branches, total_n_branches, elapsed):
+    def status_bar_(n_branches, n_completed_branches, n_explored_branches,
+                    elapsed):
         from psutil import cpu_percent, getloadavg, virtual_memory
         from datetime import timedelta
-        if total_n_branches:
-            bt_ = elapsed / total_n_branches
+        if n_explored_branches:
+            bt_ = elapsed / n_explored_branches
             if bt_ < 1e-3:
                 bt_ = f'{bt_*1e6:1.2f}μs/branch'
             elif bt_ < 1:
@@ -345,7 +376,7 @@ def UpdateBranchesParallel_(branches,
         else:
             bt_ = 'n/a'
 
-        s_ = f'NB:{n_branches:,}/TB:{total_n_branches:,} '
+        s_ = f'PB:{n_branches:,}/CB:{n_completed_branches:,} '
         s_ += f'CPU:{cpu_percent()}%, LAVG:{getloadavg()[0]:1.2f}, '
         s_ += f'MEM:{virtual_memory()[2]:1.1f}% '
         s_ += f'[{timedelta(seconds=round(elapsed))}, {bt_}]'
@@ -364,11 +395,13 @@ def UpdateBranchesParallel_(branches,
     with Pool(n_threads) as pool_:
 
         # While there are still branches ...
-        while n_rem_branches_:
+        while n_rem_branches_ and flags_[0]:
 
             # Print status bar
             if verbose:
-                print(status_bar_(n_rem_branches_, all_info_['n_branches'],
+                print(status_bar_(n_rem_branches_,
+                                  all_info_['n_completed_branches'],
+                                  all_info_['n_explored_branches'],
                                   time() - it_),
                       file=sys.stderr,
                       end='\r',
@@ -402,32 +435,44 @@ def UpdateBranchesParallel_(branches,
     # Get final info
     all_info_['total_time_s'] = time() - it_
     all_info_['branching_time_s'] = all_info_['total_time_s'] / all_info_[
-        'n_branches']
+        'n_explored_branches'] if all_info_['n_explored_branches'] else np.nan
 
     # Print some extra infos
     if verbose:
         print(f"\nTotal Time: {all_info_['total_time_s']:1.2g}s",
               file=sys.stderr,
               flush=True)
-        print(f"Total Number Branches: {all_info_['n_branches']:1.2g}s",
+        print(f"Number Explored Branches: {all_info_['n_explored_branches']:,}",
               file=sys.stderr,
               flush=True)
+        print(
+            f"Number Completed Branches: {all_info_['n_completed_branches']:,}",
+            file=sys.stderr,
+            flush=True)
         print(f"Branching Time: {all_info_['branching_time_s'] * 1e6:1.2g}μs",
               file=sys.stderr,
               flush=True)
 
     # Return results
-    return all_, all_info_
+    return all_, list(mit.flatten(branches_)), all_info_
 
 
 def simulate(circuit,
-             paulis,
+             paulis=None,
+             branches=None,
              *,
              parallel=True,
-             norm_atol=1e-7,
-             atol=1e-7,
+             norm_atol=1e-8,
+             atol=1e-8,
+             max_time=None,
+             thread_max_time=1,
              verbose=False,
              **kwargs):
+
+    # Provide either 'paulis' or 'branches', but not both
+    if not ((paulis is not None) ^ (branches is not None)):
+        raise ValueError("Provide either 'paulis' or 'branches', but not both")
+
     # Convert parallel to number of threads
     parallel = (len(os.sched_getaffinity(os.getpid())) if parallel else
                 0) if isinstance(parallel, bool) else int(parallel)
@@ -443,34 +488,42 @@ def simulate(circuit,
     # Initialize branches
     branches_ = list(
         map(lambda x: (StateFromPauliString_(x[0]), x[1], x[1], 0),
-            paulis.items()))
+            paulis.items())) if paulis is not None else branches
 
     # Run in parallel if needed ...
     if parallel:
 
         # Get first shallow batch of branches
-        completed_, branches_, info_ = UpdateBranches_(branches_,
-                                                       gates_,
-                                                       gate_qubits_,
-                                                       depth_first=False,
-                                                       max_n_branches=10 *
-                                                       parallel,
-                                                       max_time=10,
-                                                       norm_atol=norm_atol,
-                                                       atol=atol,
-                                                       verbose=False)
+        completed_, branches_, info_ = UpdateBranches_(
+            branches_,
+            gates_,
+            gate_qubits_,
+            depth_first=False,
+            max_n_branches=kwargs.get('breadth_first_max_n_branches',
+                                      10 * parallel),
+            max_time=kwargs.get('breadth_first_max_time', 10),
+            norm_atol=norm_atol,
+            atol=atol,
+            verbose=False)
 
         # Get all branches
-        all_, all_info_ = UpdateBranchesParallel_(branches=branches_,
-                                                  gates=gates_,
-                                                  gate_qubits=gate_qubits_,
-                                                  completed_=completed_,
-                                                  info_=info_,
-                                                  norm_atol=norm_atol,
-                                                  atol=atol,
-                                                  n_threads=parallel,
-                                                  verbose=verbose,
-                                                  **kwargs)
+        all_, branches_, all_info_ = UpdateBranchesParallel_(
+            branches=branches_,
+            gates=gates_,
+            gate_qubits=gate_qubits_,
+            completed_=completed_,
+            info_=info_,
+            norm_atol=norm_atol,
+            atol=atol,
+            max_time=max_time,
+            thread_max_time=thread_max_time,
+            n_threads=parallel,
+            verbose=verbose,
+            **kwargs)
+
+        # All branches should have been explored
+        if max_time is None:
+            assert (not len(branches_))
 
     # Otherwise, run sequentially
     else:
@@ -480,11 +533,17 @@ def simulate(circuit,
                                                      gate_qubits_,
                                                      norm_atol=norm_atol,
                                                      atol=atol,
+                                                     max_time=max_time,
                                                      verbose=verbose,
                                                      **kwargs)
 
         # All branches should have been explored
-        assert (not len(branches_))
+        if max_time is None:
+            assert (not len(branches_))
+
+    # Append results to all_info_
+    all_info_['branches'] = all_
+    all_info_['partial_branches'] = branches_
 
     # Return results
-    return all_, all_info_
+    return all_info_
