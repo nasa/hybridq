@@ -171,7 +171,7 @@ def test_PauliString(seed=None):
 @pytest.mark.parametrize('n_qubits,n_gates,parallel',
                          [(6, 4, False)] * 5 + [(6, 4, True)] * 5)
 def test_Simulation(n_qubits, n_gates, parallel, verbose=False, seed=None):
-    from hybridq_clifford.simulation import simulate, GetPauliOperator_, ToPauliStringFromState_
+    from hybridq_clifford.simulation import simulate, GetPauliOperator_, ToPauliStringFromState_, merge_branches_
     from os import cpu_count
 
     # If seed is None, initialize it with a new seed
@@ -193,11 +193,21 @@ def test_Simulation(n_qubits, n_gates, parallel, verbose=False, seed=None):
     # Get a random initial pauli string
     paulis_ = ''.join(rng_.choice(list('XYZ'), size=n_qubits))
 
-    # Get all branches
-    all_, all_info_ = simulate(circuit_,
-                               paulis_,
-                               verbose=verbose,
-                               parallel=parallel)
+    # Get partial branches
+    res1_ = simulate(circuit_,
+                     paulis_,
+                     verbose=verbose,
+                     parallel=parallel,
+                     max_time=2)
+
+    # Get remaining branches
+    res2_ = simulate(circuit_,
+                     branches=res1_['partial_branches'],
+                     verbose=verbose,
+                     parallel=parallel)
+
+    # Merge branches
+    all_ = merge_branches_(res1_['branches'], [res2_['branches']])
 
     # Reconstruct density matrix for clifford
     RhoClifford_ = sum(
@@ -223,7 +233,7 @@ def test_Clifford(n_qubits):
     # Check that gates are really clifford
     assert (len(
         simulate(list(zip(r_pi_2_, its.repeat([0]))) + [(cz_, [0, 1])],
-                 'XY')[0]) == 1)
+                 'XY')['branches']) == 1)
 
     # Check multiplication matrices for paulis
     assert (all(
@@ -251,7 +261,7 @@ def test_Clifford(n_qubits):
     circuit_ = get_clifford_rqc_(n_qubits=n_qubits, n_cycles=30)
 
     # Simulate circuit using clifford expansion
-    stabs_ = simulate(circuit_, paulis_, parallel=False)[0]
+    stabs_ = simulate(circuit_, paulis_, parallel=False)['branches']
 
     # Convert stabilizers
     stabs_ = dict(
