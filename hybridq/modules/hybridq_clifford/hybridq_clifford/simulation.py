@@ -99,7 +99,7 @@ def GenerateLinearSystem(n: int, dtype: np.dtype = 'complex64'):
 
 
 # Get operator decomposition
-def DecomposeOperator(gate: np.array):
+def DecomposeOperator(gate: np.array, atol: float = 1e-8):
 
     # Gate must be a quadratic matrix of size 2^n
     if gate.ndim != 2 or gate.shape[0] != gate.shape[1] or int(
@@ -116,11 +116,20 @@ def DecomposeOperator(gate: np.array):
     TPS_ = fts.partial(ToPauliString, n=n_)
     GPO_ = fts.partial(GetPauliOperator, dtype=GetComplexType(gate.dtype))
 
-    # Return decomposition
-    return np.real_if_close(LS_ @ np.array(
+    # Get decomposition
+    gate_ = np.real_if_close(LS_ @ np.array(
         list(
             map(lambda op: (gate @ op @ gate.conj().T).ravel(),
                 map(GPO_, map(TPS_, range(4**n_)))))).T).T
+
+    # Find values which are above the given threshold
+    pos_ = list(map(lambda x: np.where(np.abs(x) > atol)[0], gate_))
+
+    # Extract
+    dec_ = list(map(lambda g, p: g[p], gate_, pos_))
+
+    # Return
+    return dec_, pos_
 
 
 @numba.njit
@@ -146,10 +155,13 @@ def UpdateBranch_(branch, gates, gate_qubits, norm_atol=1e-8, atol=1e-8):
     state_, phase_, norm_phase_, gate_idx_ = branch
 
     # Get qubits and phases associated with gate
-    qs_, phases_ = gate_qubits[gate_idx_], gates[gate_idx_]
+    qs_, (phases_, new_states_) = gate_qubits[gate_idx_], gates[gate_idx_]
 
-    # Get new phases
-    ph_ = phases_[GetSubState_(state_, qs_)]
+    # Get substate
+    ss_ = GetSubState_(state_, qs_)
+
+    # Get relevant phases and new states
+    ns_, ph_ = new_states_[ss_], phases_[ss_]
 
     # Get absolute value of phases
     abs_ph_ = np.abs(ph_)
@@ -162,7 +174,7 @@ def UpdateBranch_(branch, gates, gate_qubits, norm_atol=1e-8, atol=1e-8):
                    (norm_phase_ * abs_ph_ > norm_atol))[0]
 
     # Get new states
-    new_states_ = [UpdateState_(state_.copy(), p_, qs_) for p_ in ps_]
+    new_states_ = [UpdateState_(state_.copy(), ns_[p_], qs_) for p_ in ps_]
 
     # Get new phases
     new_phases_ = ph_[ps_] * phase_
@@ -492,6 +504,7 @@ def simulate(circuit: list[tuple[U, qubits]],
              parallel: bool | int = True,
              norm_atol: float = 1e-8,
              atol: float = 1e-8,
+             dec_atol: float = 1e-8,
              max_time: int = None,
              thread_max_time: int = 1,
              verbose: bool = False,
@@ -511,7 +524,8 @@ def simulate(circuit: list[tuple[U, qubits]],
 
     # Split matrices and qubits
     gates_, gate_qubits_ = zip(*map(
-        lambda x: (DecomposeOperator(x[0]), tuple(map(int, x[1]))), circuit))
+        lambda x: (DecomposeOperator(x[0], atol=dec_atol), tuple(map(int, x[1]))
+                  ), circuit))
 
     # Get number of qubits
     n_qubits_ = max(mit.flatten(gate_qubits_)) + 1
@@ -593,6 +607,7 @@ def simulate_mpi(circuit: list[tuple[U, qubits]],
                  parallel: bool | int = True,
                  norm_atol: float = 1e-8,
                  atol: float = 1e-8,
+                 dec_atol: float = 1e-8,
                  node_max_time: int = 60,
                  thread_max_time: int = 1,
                  verbose: bool = False,
@@ -648,6 +663,7 @@ def simulate_mpi(circuit: list[tuple[U, qubits]],
                                                       10),
                                   norm_atol=norm_atol,
                                   atol=atol,
+                                  dec_atol=dec_atol,
                                   verbose=False)
 
         # Split
@@ -695,6 +711,7 @@ def simulate_mpi(circuit: list[tuple[U, qubits]],
                         parallel=parallel,
                         norm_atol=norm_atol,
                         atol=atol,
+                        dec_atol=dec_atol,
                         max_time=node_max_time,
                         thread_max_time=thread_max_time,
                         verbose=False,
