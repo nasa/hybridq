@@ -15,7 +15,7 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 
-from collections import defaultdict
+from __future__ import annotations
 from multiprocessing import Pool
 import more_itertools as mit
 from threading import Timer
@@ -27,42 +27,20 @@ import numba
 import sys
 import os
 
-__all__ = ['DecomposeOperator', 'FromPauliString', 'ToPauliString', 'simulate']
+__all__ = ['simulate']
 
 # Initialize Pauli matrices
 Paulis_ = dict(I=np.eye(2),
                X=np.array([[0, 1], [1, 0]]),
                Y=np.array([[0, -1j], [1j, 0]]),
                Z=np.array([[1, 0], [0, -1]]))
+Paulis_.update((i_, Paulis_[x_]) for i_, x_ in enumerate('IXYZ'))
 
 
-@fts.lru_cache
-def GetPauliOperator_(op, dtype='complex64'):
-    return fts.reduce(np.kron, map(lambda g: Paulis_[g].astype(dtype), op))
-
-
-@fts.lru_cache
-def GenerateLinearSystem_(n_qubits, dtype='complex64'):
-    return np.reshape(
-        np.array(
-            list(
-                map(
-                    fts.partial(GetPauliOperator_, dtype=dtype),
-                    map(fts.partial(ToPauliString, n_paulis=n_qubits),
-                        range(4**n_qubits))))),
-        (4**n_qubits, 4**n_qubits)).conj() / 2**n_qubits
-
-
-def ToPauliString(x, n_paulis):
-    return ''.join(map(lambda i: 'IXYZ'[(x // 4**i) % 4], range(n_paulis)))
-
-
-def FromPauliString(pstr):
-    return sum(4**i_ * dict(I=0, X=1, Y=2, Z=3)[p_]
-               for i_, p_ in enumerate(pstr.upper()))
-
-
-def GetComplexType_(dtype):
+def GetComplexType(dtype: np.dtype) -> np.dtype:
+    """
+    Convert `dtype` to a complex `dtype`.
+    """
     dtype = np.dtype(dtype)
     if np.iscomplexobj(dtype.type(1)):
         return dtype
@@ -70,8 +48,58 @@ def GetComplexType_(dtype):
         return (np.ones(1, dtype=dtype) + 1j * np.ones(1, dtype=dtype)).dtype
 
 
+def ToPauliString(x: int, n: int) -> str:
+    """
+    Convert an integer to a Pauli string.
+    """
+    return ''.join(map(lambda i: 'IXYZ'[(x // 4**i) % 4], range(n)))
+
+
+def FromPauliString(op: str) -> int:
+    """
+    Convert a Pauli string to an `int`.
+    """
+    return sum(4**i_ * dict(I=0, X=1, Y=2, Z=3)[p_]
+               for i_, p_ in enumerate(op.upper()))
+
+
+@fts.lru_cache
+def GetPauliOperator(op: iter[int] | str, dtype='complex64') -> np.array:
+    """
+    Given a Pauli string, return its matrix representation.
+    """
+    return fts.reduce(np.kron, map(lambda g: Paulis_[g].astype(dtype), op))
+
+
+def StateFromPauliString(op: str) -> list[int]:
+    """
+    Convert a Pauli string to a state.
+    """
+    return np.fromiter((map(FromPauliString, map(''.join, mit.chunked(op, 4)))),
+                       dtype='uint8')
+
+
+def PauliStringFromState(state: list[int], n: int) -> str:
+    """
+    Convert a state to a Pauli string.
+    """
+    return ''.join(map(fts.partial(ToPauliString, n=4), state))[:n]
+
+
+@fts.lru_cache
+def GenerateLinearSystem(n: int, dtype: np.dtype = 'complex64'):
+    """
+    Generate Pauli's linear system of `n` qubits.
+    """
+    GPO_ = fts.partial(GetPauliOperator, dtype=dtype)
+    TPS_ = fts.partial(ToPauliString, n=n)
+    return np.reshape(
+        list(map(lambda x: GPO_(TPS_(x)).conj() / 2**n, range(4**n))),
+        (4**n, 4**n))
+
+
 # Get operator decomposition
-def DecomposeOperator(gate):
+def DecomposeOperator(gate: np.array):
 
     # Gate must be a quadratic matrix of size 2^n
     if gate.ndim != 2 or gate.shape[0] != gate.shape[1] or int(
@@ -82,29 +110,17 @@ def DecomposeOperator(gate):
     n_ = int(np.log2(gate.shape[0]))
 
     # Generate linear system
-    LS_ = GenerateLinearSystem_(n_qubits=n_, dtype=GetComplexType_(gate.dtype))
+    LS_ = GenerateLinearSystem(n=n_, dtype=GetComplexType(gate.dtype))
+
+    # Specialize functions
+    TPS_ = fts.partial(ToPauliString, n=n_)
+    GPO_ = fts.partial(GetPauliOperator, dtype=GetComplexType(gate.dtype))
 
     # Return decomposition
-    return np.real_if_close((LS_ @ np.array(
+    return np.real_if_close(LS_ @ np.array(
         list(
-            map(
-                lambda op: (gate @ op @ gate.conj().T).ravel(),
-                map(
-                    fts.partial(GetPauliOperator_,
-                                dtype=GetComplexType_(gate.dtype)),
-                    map(fts.partial(ToPauliString, n_paulis=n_), range(
-                        4**n_)))))).T)).T
-
-
-def StateFromPauliString_(pstr):
-    return np.fromiter(
-        (map(FromPauliString, map(''.join, mit.chunked(pstr, 4)))),
-        dtype='uint8')
-
-
-def ToPauliStringFromState_(state, n_paulis):
-    return ''.join(map(fts.partial(ToPauliString, n_paulis=4),
-                       state))[:n_paulis]
+            map(lambda op: (gate @ op @ gate.conj().T).ravel(),
+                map(GPO_, map(TPS_, range(4**n_)))))).T).T
 
 
 @numba.njit
@@ -161,6 +177,35 @@ def UpdateBranch_(branch, gates, gate_qubits, norm_atol=1e-8, atol=1e-8):
     return list(zip(new_states_, new_phases_, new_norm_phases_, new_gate_idxs_))
 
 
+def InitCompletedBranches_():
+    from collections import defaultdict
+    return defaultdict(float)
+
+
+def MergeBranchesToCompleted_(completed, new_branches):
+    for br_, ph_, norm_ph_, _ in new_branches:
+        completed[tuple(br_)] += ph_
+    return completed
+
+
+def MergeCompletedBranches_(completed, new_completed):
+    for k_, v_ in mit.flatten(map(lambda x: x.items(), new_completed)):
+        completed[k_] += v_
+    return completed
+
+
+def InitInfo_():
+    return dict(n_completed_branches=0, n_explored_branches=0)
+
+
+def MergeInfo_(info, new_info):
+    info['n_completed_branches'] += sum(
+        map(lambda x: x['n_completed_branches'], new_info))
+    info['n_explored_branches'] += sum(
+        map(lambda x: x['n_explored_branches'], new_info))
+    return info
+
+
 def UpdateBranches_(branches,
                     gates,
                     gate_qubits,
@@ -210,7 +255,7 @@ def UpdateBranches_(branches,
     gate_qubits = numba.typed.List(map(numba.typed.List, gate_qubits))
 
     # Initialize completed branches
-    completed_ = defaultdict(float)
+    completed_ = InitCompletedBranches_()
 
     # Initialize number of total branches
     n_completed_branches_ = 0
@@ -239,9 +284,8 @@ def UpdateBranches_(branches,
             # Update number of total branches
             n_completed_branches_ += len(new_branches_)
 
-            # Dump to db
-            for br_, ph_, norm_ph_, _ in new_branches_:
-                completed_[tuple(br_)] += ph_
+            # Merge
+            completed_ = MergeBranchesToCompleted_(completed_, new_branches_)
 
         # Otherwise, add them to branches
         else:
@@ -289,30 +333,6 @@ def UpdateBranches_(branches,
         total_time=total_time_)
 
 
-# Define how to merge branches from threads
-def merge_branches_(all_branches, branches):
-    # For all partial completed branches ...
-    for x_ in branches:
-        # Update db of completed branches
-        for k_, v_ in x_.items():
-            all_branches[k_] += v_
-
-    # Return merged data
-    return all_branches
-
-
-# Define how to merge infos from threads
-def merge_info_(all_info, info):
-    # Merge total number of branches
-    all_info['n_completed_branches'] += sum(
-        map(lambda x: x['n_completed_branches'], info))
-    all_info['n_explored_branches'] += sum(
-        map(lambda x: x['n_explored_branches'], info))
-
-    # Return merged info
-    return all_info
-
-
 def UpdateBranchesParallel_(branches,
                             gates,
                             gate_qubits,
@@ -339,13 +359,13 @@ def UpdateBranchesParallel_(branches,
         os.getpid())) if n_threads is None else int(n_threads)
 
     # Initialize db of all completed branches
-    all_ = defaultdict(float)
-    all_info_ = dict(n_completed_branches=0, n_explored_branches=0)
+    all_ = InitCompletedBranches_()
+    all_info_ = InitInfo_()
 
     # Initialize branches
     branches_ = [branches]
-    completed_ = [] if None else [completed_]
-    info_ = [] if None else [info_]
+    completed_ = [] if completed_ is None else [completed_]
+    info_ = [] if info_ is None else [info_]
 
     # Initialize stop flag
     flags_ = [1]
@@ -419,10 +439,10 @@ def UpdateBranchesParallel_(branches,
                                              mit.flatten(branches_)))))
 
             # Merge info
-            all_info_ = merge_info_(all_info_, info_)
+            all_info_ = MergeInfo_(all_info_, info_)
 
             # Merge completed branches
-            all_ = merge_branches_(all_, completed_)
+            all_ = MergeCompletedBranches_(all_, completed_)
 
             # Wait till threads are complete
             completed_, branches_, info_ = zip(*map(lambda x: x.get(), h_))
@@ -431,10 +451,10 @@ def UpdateBranchesParallel_(branches,
             n_rem_branches_ = sum(map(len, branches_))
 
         # Last merge of completed branches
-        all_ = merge_branches_(all_, completed_)
+        all_ = MergeCompletedBranches_(all_, completed_)
 
         # Last merge of info
-        all_info_ = merge_info_(all_info_, info_)
+        all_info_ = MergeInfo_(all_info_, info_)
 
     # Cancel timer
     if max_time is not None:
@@ -465,16 +485,16 @@ def UpdateBranchesParallel_(branches,
     return all_, list(mit.flatten(branches_)), all_info_
 
 
-def simulate(circuit,
-             paulis=None,
+def simulate(circuit: list[tuple[U, qubits]],
+             paulis: str | dict[str, float] = None,
              branches=None,
              *,
-             parallel=True,
-             norm_atol=1e-8,
-             atol=1e-8,
-             max_time=None,
-             thread_max_time=1,
-             verbose=False,
+             parallel: bool | int = True,
+             norm_atol: float = 1e-8,
+             atol: float = 1e-8,
+             max_time: int = None,
+             thread_max_time: int = 1,
+             verbose: bool = False,
              **kwargs):
 
     # Provide either 'paulis' or 'branches', but not both
@@ -498,13 +518,13 @@ def simulate(circuit,
 
     # Check that all paulis have the right number of qubits
     if paulis is not None:
-        if any(map(lambda p: len(p) != n_qubits_, paulis)):
+        if any(map(lambda p: len(p) < n_qubits_, paulis)):
             raise ValueError("Number of qubits in 'paulis' is not "
                              "consistent with circuit")
 
     # Initialize branches
     branches_ = list(
-        map(lambda x: (StateFromPauliString_(x[0]), x[1], x[1], 0),
+        map(lambda x: (StateFromPauliString(x[0]), x[1], x[1], 0),
             paulis.items())) if paulis is not None else branches
 
     # Run in parallel if needed ...
@@ -566,16 +586,16 @@ def simulate(circuit,
     return all_info_
 
 
-def simulate_mpi(circuit,
-                 paulis=None,
+def simulate_mpi(circuit: list[tuple[U, qubits]],
+                 paulis: str | dict[str, float] = None,
                  branches=None,
                  *,
-                 parallel=True,
-                 norm_atol=1e-8,
-                 atol=1e-8,
-                 node_max_time=60,
-                 thread_max_time=1,
-                 verbose=False,
+                 parallel: bool | int = True,
+                 norm_atol: float = 1e-8,
+                 atol: float = 1e-8,
+                 node_max_time: int = 60,
+                 thread_max_time: int = 1,
+                 verbose: bool = False,
                  **kwargs):
 
     from mpi4py import MPI
@@ -607,7 +627,7 @@ def simulate_mpi(circuit,
         return s_
 
     # Initialize db of all completed branches
-    all_ = defaultdict(float)
+    all_ = InitCompletedBranches_()
     all_info_ = dict(n_completed_branches=0, n_explored_branches=0)
 
     if mpi_rank_ == 0:
@@ -637,10 +657,10 @@ def simulate_mpi(circuit,
                 mit.distribute(mpi_size_, breadth_first_['partial_branches'])))
 
         # Merge completed branches
-        all_ = merge_branches_(all_, [breadth_first_['branches']])
+        all_ = MergeCompletedBranches_(all_, [breadth_first_['branches']])
 
         # Merge info
-        all_info_ = merge_info_(all_info_, [breadth_first_])
+        all_info_ = MergeInfo_(all_info_, [breadth_first_])
 
         if verbose:
             print(f"Done!", file=sys.stderr, flush=True)
@@ -691,8 +711,9 @@ def simulate_mpi(circuit,
                                    (x_['partial_branches'] for x_ in res_))
 
             # Merge completed branches
-            all_ = merge_branches_(all_, (x_['branches'] for x_ in res_))
-            all_info_ = merge_info_(all_info_, res_)
+            all_ = MergeCompletedBranches_(all_,
+                                           (x_['branches'] for x_ in res_))
+            all_info_ = MergeInfo_(all_info_, res_)
 
             # Get number of partial branches
             n_rem_branches_ = len(branches_)
