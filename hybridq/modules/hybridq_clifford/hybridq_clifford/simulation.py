@@ -23,6 +23,8 @@ import numpy as np
 import sys
 import os
 
+from .core import (Branch, StateFromPauli, PauliFromState, UpdateBranches)
+
 __all__ = []
 
 # Initialize Pauli matrices
@@ -111,3 +113,66 @@ def DecomposeOperator(gate: np.array,
 
     # Return
     return dec_, pos_
+
+
+def simulate(circuit: list[tuple[U, qubits]],
+             paulis: str | dict[str, float] = None,
+             branches=None,
+             *,
+             parallel: bool | int = True,
+             norm_atol: float = 1e-8,
+             atol: float = 1e-8,
+             dec_atol: float = 1e-8,
+             verbose: bool = False,
+             **kwargs):
+
+    # Provide either 'paulis' or 'branches', but not both
+    if not ((paulis is not None) ^ (branches is not None)):
+        raise ValueError("Provide either 'paulis' or 'branches', but not both")
+
+    # Convert parallel to number of threads
+    n_threads_ = 1 if not parallel else 0 if isinstance(parallel,
+                                                        bool) else int(parallel)
+
+    # Convert paulis
+    if isinstance(paulis, str):
+        paulis = {paulis: 1}
+
+    # Split matrices and qubits
+    gates_, gate_qubits_ = zip(*map(
+        lambda x: (DecomposeOperator(x[0], atol=dec_atol), tuple(map(int, x[1]))
+                  ), circuit))
+
+    # Get number of qubits
+    n_qubits_ = max(mit.flatten(gate_qubits_)) + 1
+
+    # Check that all paulis have the right number of qubits
+    if paulis is not None:
+        if any(map(lambda p: len(p) < n_qubits_, paulis)):
+            raise ValueError("Number of qubits in 'paulis' is not "
+                             "consistent with circuit")
+
+    # Initialize branches
+    branches_ = [
+        Branch(StateFromPauli(p_), ph_, ph_, 0) for p_, ph_ in paulis.items()
+    ]
+
+    # Decompose circuit
+    phases_, positions_, qubits_ = zip(
+        *map(lambda x: (*DecomposeOperator(x[0]), x[1]), circuit))
+
+    # Simulate using clifford expansion
+    partial_branches_, branches_, info_ = UpdateBranches(branches_,
+                                                         phases_,
+                                                         positions_,
+                                                         qubits_,
+                                                         atol=atol,
+                                                         norm_atol=norm_atol,
+                                                         n_threads=n_threads_,
+                                                         verbose=verbose)
+
+    # Partial branches should be empty
+    assert (not len(partial_branches_))
+
+    # Return results
+    return branches_, info_
