@@ -25,7 +25,7 @@ class MyInstall(DistutilsInstall):
 
     def run(self):
         env_ = environ.copy()
-        env_['OUTPUT_DIR'] = '../hybridq_clifford'
+        env_['OUTPUT_DIR'] = '../build/lib/hybridq_clifford'
         subprocess.run('make -C src/'.split(), env=env_)
         DistutilsInstall.run(self)
 
@@ -66,10 +66,9 @@ setup(
         'Programming Language :: Python :: 3.8', 'Operating System :: Unix',
         'Operating System :: MacOS'
     ],
-    python_requires='>=3.8',
+    python_requires='>=3.7',
     keywords=['clifford'],
     packages=find_packages(exclude=['docs', 'tests', 'tutorials']),
-    package_data={'hybridq-clifford': ['*.so']},
     include_package_data=True,
     install_requires=install_requires,
     cmdclass={'install': MyInstall},
