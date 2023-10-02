@@ -123,7 +123,7 @@ def get_clifford_rqc_(n_qubits, n_cycles, seed=None):
 
 
 def test_Pauli():
-    from hybridq_clifford.core import (PauliFromState, StateFromPauli)
+    from hybridq_clifford.simulation import (PauliFromState, StateFromPauli)
 
     for _ in range(100):
 
@@ -142,8 +142,8 @@ def test_Pauli():
 
 @pytest.mark.parametrize('n_qubits,n_gates', [(6, 6)] * 5)
 def test_Simulation(n_qubits, n_gates, *, n_threads=0, verbose=False):
-    from hybridq_clifford.simulation import (simulate, GetPauliOperator)
-    from hybridq_clifford.core import (PauliFromState, StateFromPauli)
+    from hybridq_clifford.simulation import (simulate, GetPauliOperator,
+                                             PauliFromState, StateFromPauli)
 
     # Get random gate
     def rg_():

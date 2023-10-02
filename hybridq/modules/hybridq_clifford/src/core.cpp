@@ -41,7 +41,7 @@ PYBIND11_MAKE_OPAQUE(hqc::SVector1D);
 PYBIND11_MAKE_OPAQUE(hqc::SFVector1D);
 PYBIND11_MAKE_OPAQUE(hqc::branches_type);
 
-PYBIND11_MODULE(core, m) {
+PYBIND11_MODULE(hybridq_clifford_core, m) {
   m.doc() =
       "Simulation of quantum circuits using the "
       "Clifford-expansion technique.";

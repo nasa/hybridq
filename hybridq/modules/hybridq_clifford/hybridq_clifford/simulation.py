@@ -23,7 +23,8 @@ import numpy as np
 import sys
 import os
 
-from .core import (Branch, StateFromPauli, PauliFromState, UpdateBranches)
+from hybridq_clifford_core import (Branch, StateFromPauli, PauliFromState,
+                                   UpdateBranches)
 
 __all__ = []
 
