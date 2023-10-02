@@ -15,10 +15,14 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 
+from scipy.stats import unitary_group
 import itertools as its
 import functools as fts
 import numpy as np
 import pytest
+
+# Get random unitaries
+random_unitary = unitary_group.rvs
 
 
 # Exand gate to the right number of qubits
@@ -78,22 +82,6 @@ cz_ = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]],
                dtype=complex)
 
 
-def get_clifford_rqc_(n_qubits, n_cycles, seed=None):
-    # Initialize random number generator
-    rng_ = np.random.default_rng(seed)
-
-    # Single layer
-    get_layer_ = lambda: its.chain(
-        (map(lambda x: (r_pi_2_[x[1]], [x[0]]),
-             zip(range(n_qubits), rng_.integers(4, size=n_qubits)))), (map(
-                 lambda qs: (cz_, qs),
-                 filter(lambda x: x[0] < x[1],
-                        its.product(range(n_qubits), range(n_qubits))))))
-
-    # Return circuit
-    return list(fts.reduce(its.chain, [get_layer_() for _ in range(n_cycles)]))
-
-
 # Simple class to mimic a stabilizer
 class Stab_:
 
@@ -118,124 +106,88 @@ class Stab_:
             self.phase, other.phase)
 
 
-def test_PauliString(seed=None):
-    from hybridq_clifford.simulation import (ToPauliString, FromPauliString,
-                                             PauliStringFromState,
-                                             StateFromPauliString, GetSubState_,
-                                             UpdateState_)
-    from numba.typed import List as NumbaList
-
-    # If seed is None, initialize it with a new seed
-    seed = np.random.randint(2**32) if seed is None else seed
-
-    # Get new rng
+def get_clifford_rqc_(n_qubits, n_cycles, seed=None):
+    # Initialize random number generator
     rng_ = np.random.default_rng(seed)
 
-    assert (all(
-        map(lambda p: ToPauliString(FromPauliString(p), len(p)) == p,
-            map(''.join, rng_.choice(list('IXYZ'), size=(100, 20))))))
-    assert (all(
-        map(lambda x: FromPauliString(ToPauliString(x, 20)) == x,
-            rng_.integers(4**20, size=100))))
+    # Single layer
+    get_layer_ = lambda: its.chain(
+        (map(lambda x: (r_pi_2_[x[1]], [x[0]]),
+             zip(range(n_qubits), rng_.integers(4, size=n_qubits)))), (map(
+                 lambda qs: (cz_, qs),
+                 filter(lambda x: x[0] < x[1],
+                        its.product(range(n_qubits), range(n_qubits))))))
 
-    assert (all(
-        map(
-            lambda x: PauliStringFromState(StateFromPauliString(x), n=len(x)) ==
-            x, map(''.join, rng_.choice(list('IXYZ'), size=(1000, 50))))))
-    assert (np.all(
-        list(
-            map(
-                lambda x: StateFromPauliString(
-                    PauliStringFromState(x, 4 * len(x))) == x,
-                rng_.integers(2**8, size=(1000, 10))))))
-
-    assert (all(
-        ToPauliString(GetSubState_(StateFromPauliString(x), q), len(q)) ==
-        ''.join(x[q] for q in q) for x, q in zip(
-            map(''.join, rng_.choice(list('IXYZ'), size=(1000, 50))), (
-                rng_.choice(50, size=11, replace=False) for _ in range(1000)))))
-    assert (all(
-        PauliStringFromState(
-            UpdateState_(StateFromPauliString(x), FromPauliString(y), q), len(
-                x)) == ''.join(y[q.index(i_)] if i_ in q else x[i_]
-                               for i_ in range(len(x)))
-        for x, y, q in
-        zip(map(''.join, rng_.choice(list('IXYZ'), size=(
-            1000, 50))), map(''.join, rng_.choice(list('IXYZ'), size=(
-                1000, 11))), (map(lambda x: NumbaList(x), (
-                    rng_.choice(50, size=11, replace=False)
-                    for _ in range(1000)))))))
+    # Return circuit
+    return list(fts.reduce(its.chain, [get_layer_() for _ in range(n_cycles)]))
 
 
-@pytest.mark.parametrize('n_qubits,n_gates,parallel',
-                         [(6, 4, False)] * 5 + [(6, 4, True)] * 5)
-def test_Simulation(n_qubits, n_gates, parallel, verbose=False, seed=None):
-    from hybridq_clifford.simulation import (simulate, GetPauliOperator,
-                                             PauliStringFromState,
-                                             MergeCompletedBranches_)
-    from os import cpu_count
+def test_Pauli():
+    from hybridq_clifford.core import (PauliFromState, StateFromPauli)
 
-    # If seed is None, initialize it with a new seed
-    seed = np.random.randint(2**32) if seed is None else seed
+    for _ in range(100):
 
-    # Get new rng
-    rng_ = np.random.default_rng(seed)
+        # Check Pauli -> State -> Pauli
+        assert (all(
+            PauliFromState(StateFromPauli(x_)) == x_
+            for x_ in (''.join(x_)
+                       for x_ in np.random.choice(list('IXYZ'), size=(100,
+                                                                      100)))))
 
-    # Generate random gate with a given number of qubits
-    def random_gate_(n):
-        gate_ = rng_.normal(size=(2**n,
-                                  2**n)) + 1j * rng_.normal(size=(2**n, 2**n))
-        return gate_ / np.linalg.norm(gate_.ravel())
+        # Check State -> Pauli -> State
+        assert (all(
+            StateFromPauli(PauliFromState(x_)) == x_
+            for x_ in np.random.randint(2, size=(100, 100))))
 
-    # Generate random circuit
-    circuit_ = [(random_gate_(n_), rng_.choice(n_qubits, size=n_,
-                                               replace=False))
-                for n_ in rng_.integers(1, 4, size=n_gates)]
 
-    # Get a random initial pauli string
-    paulis_ = ''.join(rng_.choice(list('XYZ'), size=n_qubits))
+@pytest.mark.parametrize('n_qubits,n_gates', [(6, 6)] * 5)
+def test_Simulation(n_qubits, n_gates, *, n_threads=0, verbose=False):
+    from hybridq_clifford.simulation import (simulate, GetPauliOperator)
+    from hybridq_clifford.core import (PauliFromState, StateFromPauli)
 
-    # Get partial branches
-    res1_ = simulate(circuit_,
-                     paulis_,
-                     verbose=verbose,
-                     parallel=parallel,
-                     max_time=2)
+    # Get random gate
+    def rg_():
+        return random_unitary(2**2), np.random.choice(n_qubits,
+                                                      size=2,
+                                                      replace=False)
 
-    # Get remaining branches
-    res2_ = simulate(circuit_,
-                     branches=res1_['partial_branches'],
-                     verbose=verbose,
-                     parallel=parallel)
+    # Get random circuit
+    circ_ = [rg_() for _ in range(n_gates)]
 
-    # Merge branches
-    all_ = MergeCompletedBranches_(res1_['branches'], [res2_['branches']])
+    # Get random initial state
+    initial_state_ = ''.join(np.random.choice(list('IXYZ'), size=n_qubits))
 
-    # Reconstruct density matrix for clifford
-    RhoClifford_ = sum(
-        map(
-            lambda x: x[1] * GetPauliOperator(
-                PauliStringFromState(x[0], n_qubits)), all_.items()))
+    # Simulate using clifford expansion
+    branches_, info_ = simulate(circuit=circ_,
+                                paulis=initial_state_,
+                                parallel=n_threads,
+                                verbose=verbose)
 
-    # Reconstruct density matrix from exact
-    RhoExact_ = fts.reduce(
-        lambda x, y: y @ x,
-        map(fts.partial(expand_gate_, n_qubits=n_qubits), circuit_))
-    RhoExact_ = RhoExact_ @ GetPauliOperator(paulis_) @ RhoExact_.conj().T
+    # Get final density matrix
+    rho_exp_ = sum(
+        map(lambda x: x[1] * GetPauliOperator(PauliFromState(x[0])),
+            branches_.items()))
+
+    # Simulate using state vector
+    rho_sv_ = GetPauliOperator(initial_state_)
+    for c_ in circ_:
+        U_ = expand_gate_(c_, n_qubits)
+        rho_sv_ = U_ @ rho_sv_ @ U_.conj().T
 
     # Check
-    np.testing.assert_allclose(RhoClifford_, RhoExact_, atol=1e-4)
+    np.testing.assert_allclose(rho_exp_, rho_sv_, atol=1e-4)
 
 
 @pytest.mark.parametrize('n_qubits', [8] * 5)
 def test_Clifford(n_qubits):
-    from hybridq_clifford.simulation import simulate, PauliStringFromState, Paulis_
+    from hybridq_clifford.simulation import (simulate, Paulis_, PauliFromState
+                                            )  #, PauliStringFromState, Paulis_
     from hybridq_clifford.utils import diag_z_, trace_, mat_p_, mat_s_, mul_
 
     # Check that gates are really clifford
     assert (len(
         simulate(list(zip(r_pi_2_, its.repeat([0]))) + [(cz_, [0, 1])],
-                 'XY')['branches']) == 1)
+                 'XY')[0]))
 
     # Check multiplication matrices for paulis
     assert (all(
@@ -263,12 +215,10 @@ def test_Clifford(n_qubits):
     circuit_ = get_clifford_rqc_(n_qubits=n_qubits, n_cycles=30)
 
     # Simulate circuit using clifford expansion
-    stabs_ = simulate(circuit_, paulis_, parallel=False)['branches']
+    stabs_ = simulate(circuit_, paulis_, parallel=False)[0]
 
     # Convert stabilizers
-    stabs_ = dict(
-        map(lambda x: (PauliStringFromState(x[0], n_qubits), x[1]),
-            stabs_.items()))
+    stabs_ = dict(map(lambda x: (PauliFromState(x[0]), x[1]), stabs_.items()))
 
     # Convert phases and stabilizers
     phases_, rho_ = map(
