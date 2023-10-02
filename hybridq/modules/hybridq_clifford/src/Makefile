@@ -13,14 +13,18 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+# Get output folder
+OUTPUT_DIR ?= .
+
 # Define default compiler
 CXX ?= g++
 
 # Define default flags
-CFLAGS ?= -std=c++17 -Ofast -Wall -Wpedantic -Wfatal-errors -shared -fPIC $(shell python -m pybind11 --includes)
+CFLAGS ?= -std=c++17 -Ofast -Wall -Wpedantic -Wfatal-errors \
+					-shared -fPIC $(shell python -m pybind11 --includes)
 
 # Get name of the library
-OUTPUT := core$(shell python3-config --extension-suffix)
+OUTPUT := $(OUTPUT_DIR)/core$(shell python3-config --extension-suffix)
 
 # Compile
 $(OUTPUT): core.cpp *.hpp *.cpp
