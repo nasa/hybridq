@@ -15,7 +15,6 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 
-from distutils.command.install import install as DistutilsInstall
 from setuptools import find_packages, setup
 from distutils.core import Extension
 from os import path
