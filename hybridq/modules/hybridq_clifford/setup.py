@@ -15,8 +15,20 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 
-from os import path
+from distutils.command.install import install as DistutilsInstall
 from setuptools import setup, find_packages
+from os import path, environ
+import subprocess
+
+
+class MyInstall(DistutilsInstall):
+
+    def run(self):
+        env_ = environ.copy()
+        env_['OUTPUT_DIR'] = '../hybridq_clifford'
+        subprocess.run('make -C src/'.split(), env=env_)
+        DistutilsInstall.run(self)
+
 
 # Locate right path
 here = path.abspath(path.dirname(__file__))
@@ -57,7 +69,10 @@ setup(
     python_requires='>=3.8',
     keywords=['clifford'],
     packages=find_packages(exclude=['docs', 'tests', 'tutorials']),
+    package_data={'hybridq-clifford': ['*.so']},
+    include_package_data=True,
     install_requires=install_requires,
+    cmdclass={'install': MyInstall},
     project_urls={
         'Bug Reports': 'https://github.com/nasa/hybridq/issues',
         'Source': 'https://github.com/nasa/hybridq/modules/hybridq_clifford',
