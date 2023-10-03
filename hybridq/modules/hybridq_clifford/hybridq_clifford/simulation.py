@@ -24,7 +24,8 @@ import sys
 import os
 
 from hybridq_clifford_core import (Branch, StateFromPauli, PauliFromState,
-                                   UpdateBranches)
+                                   UpdateBranches, CountPaulis, GetPauli,
+                                   SetPauli, SetPauliFromChar)
 
 __all__ = []
 
