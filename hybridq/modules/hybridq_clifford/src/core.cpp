@@ -89,13 +89,13 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
   //
   py::bind_map<hqc::branches_type>(m, "BranchesType", "BranchesType");
   //
-  m.def("GetPauli", &hqc::GetPauli, py::arg("state"), py::arg("pos"),
-        py::pos_only(), "Get Pauli in position `pos` from `state`.");
-  m.def("SetPauli", &hqc::SetPauli, py::arg("state"), py::arg("pos"),
-        py::arg("op"), py::pos_only(),
+  m.def("GetPauli", &hqc::GetPauli, py::arg("state"), py::pos_only(),
+        py::arg("pos"), "Get Pauli in position `pos` from `state`.");
+  m.def("SetPauli", &hqc::SetPauli, py::arg("state"), py::pos_only(),
+        py::arg("pos"), py::arg("op"),
         "Set Pauli `op` in position `pos` for `state`.");
   m.def("SetPauliFromChar", &hqc::SetPauliFromChar, py::arg("state"),
-        py::arg("pos"), py::arg("op"), py::pos_only(),
+        py::pos_only(), py::arg("pos"), py::arg("op"),
         "Set Pauli `op` in position `pos` for `state`.");
   m.def("CountPaulis", &hqc::CountPaulis, py::arg("state"), py::pos_only(),
         "Count number of Pauli's in `state`.");
