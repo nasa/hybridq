@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 
 #pragma once
 
+#include <ostream>
+
 namespace hybridq_clifford {
 
 struct Info {
