@@ -27,6 +27,7 @@ specific language governing permissions and limitations under the License.
 #include <sstream>
 
 #include "defs.hpp"
+#include "utils.hpp"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -35,50 +36,6 @@ namespace hybridq_clifford {
 
 // Get stderr
 auto stderr_ = py::module_::import("sys").attr("stderr");
-
-auto StateFromPauli(const std::string &paulis) {
-  state_type state_(2 * std::size(paulis));
-  for (std::size_t i_ = 0; i_ < std::size(paulis); ++i_)
-    switch (std::toupper(paulis[i_])) {
-      case 'I':
-        state_[2 * i_ + 0] = 0;
-        state_[2 * i_ + 1] = 0;
-        break;
-      case 'X':
-        state_[2 * i_ + 0] = 1;
-        state_[2 * i_ + 1] = 0;
-        break;
-      case 'Y':
-        state_[2 * i_ + 0] = 0;
-        state_[2 * i_ + 1] = 1;
-        break;
-      case 'Z':
-        state_[2 * i_ + 0] = 1;
-        state_[2 * i_ + 1] = 1;
-        break;
-    }
-  return state_;
-}
-
-auto PauliFromState(const state_type &state) {
-  std::string paulis_;
-  for (std::size_t i_ = 0, end_ = std::size(state) / 2; i_ < end_; ++i_)
-    switch (state[2 * i_ + 0] + 2 * state[2 * i_ + 1]) {
-      case 0:
-        paulis_ += 'I';
-        break;
-      case 1:
-        paulis_ += 'X';
-        break;
-      case 2:
-        paulis_ += 'Y';
-        break;
-      case 3:
-        paulis_ += 'Z';
-        break;
-    }
-  return paulis_;
-}
 
 auto UpdateBranch(const branch_type &branch,
                   const std::vector<phases_type> &phases,

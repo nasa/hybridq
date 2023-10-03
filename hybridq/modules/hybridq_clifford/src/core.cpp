@@ -26,6 +26,7 @@ specific language governing permissions and limitations under the License.
 #include <sstream>
 
 #include "simulation.hpp"
+#include "utils.hpp"
 
 namespace py = pybind11;
 namespace hqc = hybridq_clifford;
@@ -88,6 +89,16 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
   //
   py::bind_map<hqc::branches_type>(m, "BranchesType", "BranchesType");
   //
+  m.def("GetPauli", &hqc::GetPauli, py::arg("state"), py::arg("pos"),
+        py::pos_only(), "Get Pauli in position `pos` from `state`.");
+  m.def("SetPauli", &hqc::SetPauli, py::arg("state"), py::arg("pos"),
+        py::arg("op"), py::pos_only(),
+        "Set Pauli `op` in position `pos` for `state`.");
+  m.def("SetPauliFromChar", &hqc::SetPauliFromChar, py::arg("state"),
+        py::arg("pos"), py::arg("op"), py::pos_only(),
+        "Set Pauli `op` in position `pos` for `state`.");
+  m.def("CountPaulis", &hqc::CountPaulis, py::arg("state"), py::pos_only(),
+        "Count number of Pauli's in `state`.");
   m.def("StateFromPauli", &hqc::StateFromPauli, py::arg("paulis"),
         py::pos_only(), "Return `State` from a Pauli string.");
   m.def("PauliFromState", &hqc::PauliFromState, py::arg("state"),
