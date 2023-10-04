@@ -73,6 +73,13 @@ auto PauliFromState(const state_type &state) {
   return paulis_;
 }
 
+auto VectorFromState(const state_type &state) {
+  IVector1D vstate(std::size(state) / 2);
+  for (std::size_t i_ = 0, end_ = std::size(vstate); i_ < end_; ++i_)
+    vstate[i_] = GetPauli(state, i_);
+  return vstate;
+}
+
 auto CountPaulis(const state_type &state) {
   std::size_t I_ = 0;
   std::size_t X_ = 0;

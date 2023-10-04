@@ -103,6 +103,8 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
         py::pos_only(), "Return `State` from a Pauli string.");
   m.def("PauliFromState", &hqc::PauliFromState, py::arg("state"),
         py::pos_only(), "Return Pauli string from `State`.");
+  m.def("VectorFromState", &hqc::VectorFromState, py::arg("state"),
+        py::pos_only(), "Return `IVector1D` from `State`.");
   m.def("UpdateBranches", &hqc::UpdateBranches, py::arg("branches"),
         py::arg("phases"), py::arg("positions"), py::arg("qubits"),
         py::kw_only(), py::arg("atol") = hqc::float_type{1e-8},
