@@ -336,6 +336,10 @@ auto UpdateBranches(
   // Get end time
   auto tic_3_ = std::chrono::system_clock::now();
 
+  if (verbose)
+    py::print("\nCollecting results ... ", "end"_a = "", "flush"_a = true,
+              "file"_a = stderr_);
+
   {
     // Collect results
     std::vector<completed_branches_type> partial_completed_;
@@ -345,6 +349,8 @@ auto UpdateBranches(
     // Merge results
     merge_completed_branches(completed_brs_, partial_completed_);
   }
+
+  if (verbose) py::print("Done!", "flush"_a = true, "file"_a = stderr_);
 
   // Get end time
   auto tic_4_ = std::chrono::system_clock::now();
@@ -376,8 +382,14 @@ auto UpdateBranches(
     infos_[0]->runtime_s = 1e-3 * rn_time_;
   }
 
+  if (verbose)
+    py::print("Merging partial branches ... ", "end"_a = "", "flush"_a = true,
+              "file"_a = stderr_);
+
   // Merge branches
   branches = MergeBranches_(v_branches_);
+
+  if (verbose) py::print("Done!", "flush"_a = true, "file"_a = stderr_);
 
   // Print stats
   if (verbose)
@@ -385,7 +397,8 @@ auto UpdateBranches(
               "file"_a = stderr_);
 
   // Return results
-  return std::tuple{branches, completed_brs_, infos_[0]};
+  return std::tuple{std::move(branches), std::move(completed_brs_),
+                    std::move(infos_[0])};
 }
 
 }  // namespace hybridq_clifford
