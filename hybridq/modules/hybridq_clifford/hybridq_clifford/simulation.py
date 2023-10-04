@@ -140,20 +140,6 @@ def simulate(circuit: list[tuple[U, qubits]],
     if isinstance(paulis, str):
         paulis = {paulis: 1}
 
-    # Split matrices and qubits
-    gates_, gate_qubits_ = zip(*map(
-        lambda x: (DecomposeOperator(x[0], atol=dec_atol), tuple(map(int, x[1]))
-                  ), circuit))
-
-    # Get number of qubits
-    n_qubits_ = max(mit.flatten(gate_qubits_)) + 1
-
-    # Check that all paulis have the right number of qubits
-    if paulis is not None:
-        if any(map(lambda p: len(p) < n_qubits_, paulis)):
-            raise ValueError("Number of qubits in 'paulis' is not "
-                             "consistent with circuit")
-
     # Initialize branches
     branches_ = [
         Branch(StateFromPauli(p_), ph_, ph_, 0) for p_, ph_ in paulis.items()
@@ -162,6 +148,15 @@ def simulate(circuit: list[tuple[U, qubits]],
     # Decompose circuit
     phases_, positions_, qubits_ = zip(
         *map(lambda x: (*DecomposeOperator(x[0]), x[1]), circuit))
+
+    # Get number of qubits
+    n_qubits_ = max(mit.flatten(qubits_)) + 1
+
+    # Check that all paulis have the right number of qubits
+    if paulis is not None:
+        if any(map(lambda p: len(p) < n_qubits_, paulis)):
+            raise ValueError("Number of qubits in 'paulis' is not "
+                             "consistent with circuit")
 
     # Simulate using clifford expansion
     partial_branches_, branches_, info_ = UpdateBranches(branches_,
