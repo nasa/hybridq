@@ -125,7 +125,7 @@ def get_clifford_rqc_(n_qubits, n_cycles, seed=None):
 def test_Pauli():
     from hybridq_clifford.simulation import (PauliFromState, StateFromPauli,
                                              CountPaulis, GetPauli, SetPauli,
-                                             SetPauliFromChar)
+                                             SetPauliFromChar, VectorFromState)
 
     for _ in range(100):
 
@@ -156,20 +156,24 @@ def test_Pauli():
                 ''.join(x_)
                 for x_ in np.random.choice(list('IXYZ'), size=(100, 100))))))
 
-        # Get random string
-        x_ = ''.join(np.random.choice(list('IXYZ'), size=100))
+        for _ in range(100):
+            # Get random string
+            x_ = ''.join(np.random.choice(list('IXYZ'), size=100))
 
-        # Check SetPauliFromChar
-        s_ = StateFromPauli('I' * 100)
-        for i_, c_ in enumerate(x_):
-            SetPauliFromChar(s_, i_, c_)
-        assert (PauliFromState(s_) == x_)
+            # Check SetPauliFromChar
+            s_ = StateFromPauli('I' * 100)
+            for i_, c_ in enumerate(x_):
+                SetPauliFromChar(s_, i_, c_)
+            assert (PauliFromState(s_) == x_)
 
-        # Check SetPauli
-        s_ = StateFromPauli('I' * 100)
-        for i_, c_ in enumerate(x_):
-            SetPauli(s_, i_, 'IXYZ'.index(c_))
-        assert (PauliFromState(s_) == x_)
+            # Check SetPauli
+            s_ = StateFromPauli('I' * 100)
+            for i_, c_ in enumerate(x_):
+                SetPauli(s_, i_, 'IXYZ'.index(c_))
+            assert (PauliFromState(s_) == x_)
+
+            # Check VectorFromState
+            assert (list(VectorFromState(s_)) == list(map('IXYZ'.index, x_)))
 
 
 @pytest.mark.parametrize('n_qubits,n_gates', [(6, 6)] * 5)
