@@ -373,7 +373,7 @@ auto UpdateBranches(
     infos_[0]->merging_time_ms = mrg_time_;
     infos_[0]->branching_time_us =
         static_cast<float>(br_time_) / infos_[0]->n_explored_branches;
-    infos_[0]->runtime_s = 1e-6 * rn_time_;
+    infos_[0]->runtime_s = 1e-3 * rn_time_;
   }
 
   // Merge branches
