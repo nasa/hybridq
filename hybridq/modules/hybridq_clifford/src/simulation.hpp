@@ -41,7 +41,8 @@ auto UpdateBranch(const branch_type &branch,
                   const std::vector<phases_type> &phases,
                   const std::vector<positions_type> &positions,
                   const std::vector<qubits_type> &qubits,
-                  const float atol = 1e-8, const float norm_atol = 1e-8) {
+                  const float_type atol = 1e-8,
+                  const float_type norm_atol = 1e-8) {
   /*
    * @assumption: phases[0] is always the largest phase.
    */
@@ -99,18 +100,21 @@ auto UpdateBranch(const branch_type &branch,
   return branches_;
 }
 
-template <bool depth_first>
+template <bool depth_first, typename completed_branches_type,
+          typename UpdateCompletedBranches>
 auto UpdateBranches_(std::list<branch_type> &branches,
                      const std::vector<phases_type> &phases,
                      const std::vector<positions_type> &positions,
-                     const std::vector<qubits_type> &qubits, const float atol,
-                     const float norm_atol, std::shared_ptr<info_type> info_,
-                     std::shared_ptr<bool> stop_) {
+                     const std::vector<qubits_type> &qubits,
+                     const float_type atol, const float_type norm_atol,
+                     std::shared_ptr<info_type> info_,
+                     std::shared_ptr<bool> stop_,
+                     UpdateCompletedBranches &&update_completed_branches) {
   // Get number of gates
   const std::size_t n_gates_ = std::size(phases);
 
   // Initialize completed branches
-  branches_type completed_branches_;
+  completed_branches_type completed_branches_;
 
   // While there are branches
   while (std::size(branches) && !*stop_) {
@@ -132,8 +136,7 @@ auto UpdateBranches_(std::list<branch_type> &branches,
 
     // Append to completed if all gates have been explored
     if (new_branches_.back().gate_idx == n_gates_)
-      for (auto &&b_ : new_branches_)
-        completed_branches_[std::move(b_.state)] += b_.phase;
+      update_completed_branches(completed_branches_, new_branches_);
 
     // Otherwise, append them to branches
     else
@@ -149,24 +152,25 @@ auto UpdateBranches_(std::list<branch_type> &branches,
   return completed_branches_;
 }
 
-const auto &UpdateBranchesBreadthFirst = UpdateBranches_<false>;
-const auto &UpdateBranchesDepthFirst = UpdateBranches_<true>;
-
+template <typename completed_branches_type, typename UpdateCompletedBranches>
 auto ExpandBranches_(std::list<branch_type> &branches,
                      const std::vector<phases_type> &phases,
                      const std::vector<positions_type> &positions,
                      const std::vector<qubits_type> &qubits,
                      const std::size_t max_time_ms,
-                     const std::size_t min_n_branches, const float atol,
-                     const float norm_atol) {
+                     const std::size_t min_n_branches, const float_type atol,
+                     const float_type norm_atol,
+                     UpdateCompletedBranches &&update_completed_branches) {
   // Initialize stop signal and info
   auto stop_ = std::shared_ptr<bool>(new bool{false});
   auto info_ = std::shared_ptr<info_type>(new info_type{});
 
   // Initialize core to call
   auto update_brs_ = [&]() {
-    return UpdateBranchesBreadthFirst(branches, phases, positions, qubits, atol,
-                                      norm_atol, info_, stop_);
+    // Breadth-First
+    return UpdateBranches_<false, completed_branches_type>(
+        branches, phases, positions, qubits, atol, norm_atol, info_, stop_,
+        update_completed_branches);
   };
 
   // Initialize job
@@ -248,12 +252,17 @@ auto PrintInfo_(const std::vector<std::shared_ptr<info_type>> &infos,
   py::print(msg_, "end"_a = "\r", "flush"_a = true, "file"_a = stderr_);
 }
 
-auto UpdateBranches(std::list<branch_type> &branches,
-                    const std::vector<phases_type> &phases,
-                    const std::vector<positions_type> &positions,
-                    const std::vector<qubits_type> &qubits,
-                    const float atol = 1e-8, const float norm_atol = 1e-8,
-                    unsigned int n_threads = 0, const bool verbose = false) {
+template <typename completed_branches_type,
+          typename InitializeCompletedBranches, typename MergeCompletedBranches,
+          typename UpdateCompletedBranches>
+auto UpdateBranches(
+    std::list<branch_type> &branches, const std::vector<phases_type> &phases,
+    const std::vector<positions_type> &positions,
+    const std::vector<qubits_type> &qubits, const float_type atol,
+    const float_type norm_atol, unsigned int n_threads, const bool verbose,
+    InitializeCompletedBranches &&initialize_completed_branches_,
+    MergeCompletedBranches &&merge_completed_branches,
+    UpdateCompletedBranches &&update_completed_branches) {
   // Get max number of threads
   n_threads = n_threads ? n_threads : std::thread::hardware_concurrency();
 
@@ -273,9 +282,11 @@ auto UpdateBranches(std::list<branch_type> &branches,
     py::print("Expading branches ... ", "end"_a = "", "flush"_a = true,
               "file"_a = stderr_);
   auto completed_brs_ =
-      n_threads == 1 ? branches_type{}
-                     : ExpandBranches_(branches, phases, positions, qubits, 100,
-                                       n_threads * 10, atol, norm_atol);
+      n_threads == 1
+          ? completed_branches_type{}
+          : ExpandBranches_<completed_branches_type>(
+                branches, phases, positions, qubits, 100, n_threads * 10, atol,
+                norm_atol, update_completed_branches);
   if (verbose) py::print("Done!", "flush"_a = true, "file"_a = stderr_);
 
   // Split branches
@@ -289,8 +300,10 @@ auto UpdateBranches(std::list<branch_type> &branches,
 
   // Initialize core to call
   auto update_brs_ = [&](std::size_t idx) {
-    return UpdateBranchesDepthFirst(v_branches_[idx], phases, positions, qubits,
-                                    atol, norm_atol, infos_[idx], stop_);
+    // Depth-First
+    return UpdateBranches_<true, completed_branches_type>(
+        v_branches_[idx], phases, positions, qubits, atol, norm_atol,
+        infos_[idx], stop_, update_completed_branches);
   };
 
   // Initialize threads
@@ -323,15 +336,15 @@ auto UpdateBranches(std::list<branch_type> &branches,
   // Get end time
   auto tic_3_ = std::chrono::system_clock::now();
 
-  // Get results
-  if (n_threads == 1)
-    completed_brs_ = threads_[0].get();
-  else
-    for (auto &th_ : threads_) {
-      auto res_ = th_.get();
-      for (auto w_ = std::begin(res_), end_ = std::end(res_); w_ != end_; ++w_)
-        completed_brs_[w_->first] += w_->second;
-    }
+  {
+    // Collect results
+    std::vector<completed_branches_type> partial_completed_;
+    for (auto &th_ : threads_)
+      partial_completed_.emplace_back(std::move(th_.get()));
+
+    // Merge results
+    merge_completed_branches(completed_brs_, partial_completed_);
+  }
 
   // Get end time
   auto tic_4_ = std::chrono::system_clock::now();

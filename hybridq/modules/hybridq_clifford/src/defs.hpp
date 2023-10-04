@@ -108,6 +108,5 @@ struct Branch {
   }
 };
 using branch_type = Branch;
-using branches_type = std::unordered_map<state_type, float_type>;
 
 }  // namespace hybridq_clifford

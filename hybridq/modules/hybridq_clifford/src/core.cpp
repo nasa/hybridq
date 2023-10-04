@@ -31,6 +31,44 @@ specific language governing permissions and limitations under the License.
 namespace py = pybind11;
 namespace hqc = hybridq_clifford;
 
+using completed_branches_type =
+    std::unordered_map<hqc::state_type, hqc::float_type>;
+auto UpdateBranches_(std::list<hqc::branch_type> &branches,
+                     const std::vector<hqc::phases_type> &phases,
+                     const std::vector<hqc::positions_type> &positions,
+                     const std::vector<hqc::qubits_type> &qubits,
+                     const hqc::float_type atol = 1e-8,
+                     const hqc::float_type norm_atol = 1e-8,
+                     unsigned int n_threads = 0, const bool verbose = false) {
+  // Return dataset for completed branches
+  auto initialize_completed_branches_ = []() {
+    return completed_branches_type{};
+  };
+
+  // Merge branches from threads to the dataset of completed branches
+  auto merge_completed_branches_ = [](auto &&completed_brs,
+                                      auto &&partial_completed) {
+    for (auto &partial_ : partial_completed)
+      if (std::size(completed_brs))
+        for (auto w_ = std::begin(partial_), end_ = std::end(partial_);
+             w_ != end_; ++w_)
+          completed_brs[w_->first] += w_->second;
+      else
+        completed_brs = std::move(partial_);
+  };
+
+  // Update dataset of completed branches using explored branches
+  auto update_completed_branches_ = [](auto &&completed_brs, auto &&new_brs) {
+    for (auto &&b_ : new_brs) completed_brs[std::move(b_.state)] += b_.phase;
+  };
+
+  // Call hqc::UpdateBranches for the actual simulation
+  return hqc::UpdateBranches<completed_branches_type>(
+      branches, phases, positions, qubits, atol, norm_atol, n_threads, verbose,
+      initialize_completed_branches_, merge_completed_branches_,
+      update_completed_branches_);
+};
+
 PYBIND11_MAKE_OPAQUE(hqc::state_type);
 PYBIND11_MAKE_OPAQUE(hqc::IVector1D);
 PYBIND11_MAKE_OPAQUE(hqc::IVector2D);
@@ -40,7 +78,7 @@ PYBIND11_MAKE_OPAQUE(hqc::FVector2D);
 PYBIND11_MAKE_OPAQUE(hqc::FVector3D);
 PYBIND11_MAKE_OPAQUE(hqc::SVector1D);
 PYBIND11_MAKE_OPAQUE(hqc::SFVector1D);
-PYBIND11_MAKE_OPAQUE(hqc::branches_type);
+PYBIND11_MAKE_OPAQUE(completed_branches_type);
 
 PYBIND11_MODULE(hybridq_clifford_core, m) {
   m.doc() =
@@ -87,7 +125,7 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
   py::implicitly_convertible<py::array, hqc::SVector1D>();
   // py::implicitly_convertible<py::array, hqc::SFVector1D>();
   //
-  py::bind_map<hqc::branches_type>(m, "BranchesType", "BranchesType");
+  py::bind_map<completed_branches_type>(m, "BranchesType", "BranchesType");
   //
   m.def("GetPauli", &hqc::GetPauli, py::arg("state"), py::pos_only(),
         py::arg("pos"), "Get Pauli in position `pos` from `state`.");
@@ -105,7 +143,7 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
         py::pos_only(), "Return Pauli string from `State`.");
   m.def("VectorFromState", &hqc::VectorFromState, py::arg("state"),
         py::pos_only(), "Return `IVector1D` from `State`.");
-  m.def("UpdateBranches", &hqc::UpdateBranches, py::arg("branches"),
+  m.def("UpdateBranches", &UpdateBranches_, py::arg("branches"),
         py::arg("phases"), py::arg("positions"), py::arg("qubits"),
         py::kw_only(), py::arg("atol") = hqc::float_type{1e-8},
         py::arg("norm_atol") = hqc::float_type{1e-8}, py::arg("n_threads") = 0,
