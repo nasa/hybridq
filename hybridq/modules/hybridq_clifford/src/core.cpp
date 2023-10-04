@@ -52,7 +52,7 @@ auto UpdateBranches_(std::list<hqc::branch_type> &branches,
       if (std::size(completed_brs))
         for (auto w_ = std::begin(partial_), end_ = std::end(partial_);
              w_ != end_; ++w_)
-          completed_brs[w_->first] += w_->second;
+          completed_brs[std::move(w_->first)] += w_->second;
       else
         completed_brs = std::move(partial_);
   };
