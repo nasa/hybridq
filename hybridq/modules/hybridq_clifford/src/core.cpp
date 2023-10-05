@@ -63,7 +63,7 @@ auto UpdateBranches_(std::list<hqc::branch_type> &branches,
   };
 
   // Call hqc::UpdateBranches for the actual simulation
-  return hqc::UpdateBranches<completed_branches_type>(
+  return hqc::UpdateBranches(
       branches, phases, positions, qubits, atol, norm_atol, n_threads, verbose,
       initialize_completed_branches_, merge_completed_branches_,
       update_completed_branches_);
