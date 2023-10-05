@@ -48,13 +48,13 @@ auto UpdateBranches_(std::list<hqc::branch_type> &branches,
   // Merge branches from threads to the dataset of completed branches
   auto merge_completed_branches_ = [](auto &&completed_brs,
                                       auto &&partial_completed) {
-    for (auto &partial_ : partial_completed)
-      if (std::size(completed_brs))
-        for (auto w_ = std::begin(partial_), end_ = std::end(partial_);
-             w_ != end_; ++w_)
-          completed_brs[std::move(w_->first)] += w_->second;
-      else
-        completed_brs = std::move(partial_);
+    if (std::size(completed_brs))
+      for (auto w_ = std::begin(partial_completed),
+                end_ = std::end(partial_completed);
+           w_ != end_; ++w_)
+        completed_brs[std::move(w_->first)] += w_->second;
+    else
+      completed_brs = std::move(partial_completed);
   };
 
   // Update dataset of completed branches using explored branches

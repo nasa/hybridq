@@ -209,7 +209,7 @@ auto MergeBranches_(std::vector<std::list<branch_type>> &v_branches) {
 
 template <typename Time>
 auto PrintInfo_(const std::vector<std::shared_ptr<info_type>> &infos,
-                Time &&initial_time) {
+                Time &&initial_time, std::size_t n_running_threads) {
   // Get stderr
   auto stderr_ = py::module_::import("sys").attr("stderr");
 
@@ -232,7 +232,7 @@ auto PrintInfo_(const std::vector<std::shared_ptr<info_type>> &infos,
   // Build message
   std::stringstream ss_;
   ss_ << std::setprecision(2);
-  ss_ << "NT=" << std::size(infos);
+  ss_ << "NT=" << n_running_threads << "/" << std::size(infos);
   ss_ << ", EB=" << n_explored_branches_;
   ss_ << ", RB=" << n_remaining_branches_;
   ss_ << ", CB=" << n_completed_branches_;
@@ -263,10 +263,6 @@ auto UpdateBranches(
     InitializeCompletedBranches &&initialize_completed_branches_,
     MergeCompletedBranches &&merge_completed_branches_,
     UpdateCompletedBranches &&update_completed_branches_) {
-  // Get type for completed branches
-  using completed_branches_type = std::remove_cv_t<
-      std::remove_reference_t<decltype(initialize_completed_branches_())>>;
-
   // Get stderr
   auto stderr_ = py::module_::import("sys").attr("stderr");
 
@@ -328,6 +324,13 @@ auto UpdateBranches(
           return true;
       return false;
     };
+    auto n_running_threads_ = [&threads_]() {
+      std::size_t n_{0};
+      for (const auto &th_ : threads_)
+        n_ +=
+            th_.wait_for(std::chrono::seconds(0)) != std::future_status::ready;
+      return n_;
+    };
     // auto any_thread_stopped_ = [&threads_]() {
     //   for (const auto &th_ : threads_)
     //     if (th_.wait_for(std::chrono::nanoseconds(0)) ==
@@ -335,7 +338,8 @@ auto UpdateBranches(
     //       return true;
     //   return false;
     // };
-    while (any_thread_running_()) PrintInfo_(infos_, tic_2_);
+    while (any_thread_running_())
+      PrintInfo_(infos_, tic_2_, n_running_threads_());
 
     // Otherwise, wait until ready
   } else
@@ -344,21 +348,16 @@ auto UpdateBranches(
   // Get end time
   auto tic_3_ = std::chrono::system_clock::now();
 
-  if (verbose)
-    py::print("\nCollecting results ... ", "end"_a = "", "flush"_a = true,
-              "file"_a = stderr_);
-
-  {
-    // Collect results
-    std::vector<completed_branches_type> partial_completed_;
-    for (auto &th_ : threads_)
-      partial_completed_.emplace_back(std::move(th_.get()));
-
-    // Merge results
-    merge_completed_branches_(completed_brs_, partial_completed_);
+  // Collect results
+  for (std::size_t i_ = 0, end_ = std::size(threads_); i_ < end_; ++i_) {
+    if (verbose)
+      py::print("Collecting results (", i_, "/", end_, ") ...", "sep"_a = "",
+                "end"_a = "\r", "flush"_a = true, "file"_a = stderr_);
+    merge_completed_branches_(completed_brs_, threads_[i_].get());
   }
-
-  if (verbose) py::print("Done!", "flush"_a = true, "file"_a = stderr_);
+  if (verbose)
+    py::print("Collecting results ... Done!", "flush"_a = true,
+              "file"_a = stderr_);
 
   // Get end time
   auto tic_4_ = std::chrono::system_clock::now();
