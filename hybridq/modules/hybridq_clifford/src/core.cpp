@@ -39,6 +39,7 @@ auto UpdateBranches_(std::list<hqc::branch_type> &branches,
                      const std::vector<hqc::qubits_type> &qubits,
                      const hqc::float_type atol = 1e-8,
                      const hqc::float_type norm_atol = 1e-8,
+                     const hqc::float_type merge_atol = 1e-8,
                      unsigned int n_threads = 0, const bool verbose = false) {
   // Return dataset for completed branches
   auto initialize_completed_branches_ = []() {
@@ -46,20 +47,26 @@ auto UpdateBranches_(std::list<hqc::branch_type> &branches,
   };
 
   // Merge branches from threads to the dataset of completed branches
-  auto merge_completed_branches_ = [](auto &&completed_brs,
-                                      auto &&partial_completed) {
-    if (std::size(completed_brs))
+  auto merge_completed_branches_ = [merge_atol](auto &&completed_brs,
+                                                auto &&partial_completed) {
+    if (std::size(completed_brs)) {
       for (auto w_ = std::begin(partial_completed),
                 end_ = std::end(partial_completed);
            w_ != end_; ++w_)
-        completed_brs[std::move(w_->first)] += w_->second;
-    else
+        if (const auto x_ = (completed_brs[w_->first] += w_->second);
+            std::abs(x_) < merge_atol)
+          completed_brs.erase(w_->first);
+    } else
       completed_brs = std::move(partial_completed);
   };
 
   // Update dataset of completed branches using explored branches
-  auto update_completed_branches_ = [](auto &&completed_brs, auto &&new_brs) {
-    for (auto &&b_ : new_brs) completed_brs[std::move(b_.state)] += b_.phase;
+  auto update_completed_branches_ = [merge_atol](auto &&completed_brs,
+                                                 auto &&new_brs) {
+    for (auto &&b_ : new_brs)
+      if (const auto x_ = (completed_brs[b_.state] += b_.phase);
+          std::abs(x_) < merge_atol)
+        completed_brs.erase(b_.state);
   };
 
   // Call hqc::UpdateBranches for the actual simulation
@@ -146,7 +153,8 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
   m.def("UpdateBranches", &UpdateBranches_, py::arg("branches"),
         py::arg("phases"), py::arg("positions"), py::arg("qubits"),
         py::kw_only(), py::arg("atol") = hqc::float_type{1e-8},
-        py::arg("norm_atol") = hqc::float_type{1e-8}, py::arg("n_threads") = 0,
+        py::arg("norm_atol") = hqc::float_type{1e-8},
+        py::arg("merge_atol") = hqc::float_type{1e-8}, py::arg("n_threads") = 0,
         py::arg("verbose") = false, "Update branches.");
   //
   py::class_<hqc::branch_type>(m, "Branch")
@@ -167,12 +175,16 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
   py::class_<hqc::info_type, std::shared_ptr<hqc::info_type>>(m, "Info")
       .def(py::init())
       .def_readonly("n_explored_branches", &hqc::info_type::n_explored_branches)
-      .def_readonly("n_completed_branches",
-                    &hqc::info_type::n_completed_branches)
       .def_readonly("n_remaining_branches",
                     &hqc::info_type::n_remaining_branches)
+      .def_readonly("n_completed_branches",
+                    &hqc::info_type::n_completed_branches)
+      .def_readonly("n_total_branches", &hqc::info_type::n_total_branches)
+      .def_readonly("n_threads", &hqc::info_type::n_threads)
       .def_readonly("runtime_s", &hqc::info_type::runtime_s)
       .def_readonly("branching_time_us", &hqc::info_type::branching_time_us)
+      .def_readonly("merging_time_ms", &hqc::info_type::merging_time_ms)
+      .def_readonly("expanding_time_ms", &hqc::info_type::expanding_time_ms)
       .def("__repr__", [](const hqc::info_type &info) {
         std::stringstream ss_;
         ss_ << info;

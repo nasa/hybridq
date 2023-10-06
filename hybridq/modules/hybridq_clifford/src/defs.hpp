@@ -25,6 +25,7 @@ struct Info {
   std::size_t n_explored_branches{0};
   std::size_t n_remaining_branches{0};
   std::size_t n_completed_branches{0};
+  std::size_t n_total_branches{0};
   std::size_t n_threads{std::numeric_limits<std::size_t>::max()};
   float runtime_s{std::numeric_limits<float>::infinity()};
   float branching_time_us{std::numeric_limits<float>::infinity()};
@@ -44,6 +45,7 @@ struct Info {
         << std::endl;
     out << "Number Remaining Branches: " << info.n_remaining_branches
         << std::endl;
+    out << "Number Total Branches: " << info.n_total_branches << std::endl;
     out << "Number of threads: " << info.n_threads << std::endl;
     out << "Expanding Time (ms): " << info.expanding_time_ms << std::endl;
     out << "Merging Time (ms): " << info.merging_time_ms << std::endl;

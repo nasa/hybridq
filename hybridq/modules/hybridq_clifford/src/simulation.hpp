@@ -132,8 +132,10 @@ auto UpdateBranches_(
         UpdateBranch(branch_, phases, positions, qubits, atol, norm_atol);
 
     // Append to completed if all gates have been explored
-    if (new_branches_.back().gate_idx == n_gates_)
+    if (new_branches_.back().gate_idx == n_gates_) {
+      info_->n_completed_branches += std::size(new_branches_);
       update_completed_branches_(completed_branches_, new_branches_);
+    }
 
     // Otherwise, append them to branches
     else
@@ -142,7 +144,6 @@ auto UpdateBranches_(
     // Update infos
     info_->n_explored_branches += 1;
     info_->n_remaining_branches = std::size(branches);
-    info_->n_completed_branches = std::size(completed_branches_);
   }
 
   // Return both partial and completed branches
@@ -184,7 +185,7 @@ auto ExpandBranches_(
   *stop_ = true;
 
   // Return completed branches
-  return th_.get();
+  return std::tuple{std::move(th_.get()), info_};
 }
 
 auto SplitBranches_(std::list<branch_type> &branches, std::size_t n_buckets) {
@@ -284,8 +285,9 @@ auto UpdateBranches(
   if (verbose)
     py::print("Expading branches ... ", "end"_a = "", "flush"_a = true,
               "file"_a = stderr_);
-  auto completed_brs_ =
-      n_threads == 1 ? initialize_completed_branches_()
+  auto [completed_brs_, init_info_] =
+      n_threads == 1 ? std::tuple{initialize_completed_branches_(),
+                                  std::shared_ptr<info_type>(new info_type{})}
                      : ExpandBranches_(branches, phases, positions, qubits, 100,
                                        n_threads * 10, atol, norm_atol,
                                        initialize_completed_branches_,
@@ -351,9 +353,18 @@ auto UpdateBranches(
   // Collect results
   for (std::size_t i_ = 0, end_ = std::size(threads_); i_ < end_; ++i_) {
     if (verbose)
-      py::print("Collecting results (", i_, "/", end_, ") ...", "sep"_a = "",
-                "end"_a = "\r", "flush"_a = true, "file"_a = stderr_);
-    merge_completed_branches_(completed_brs_, threads_[i_].get());
+      py::print(i_ ? "" : "\n", "Collecting results (", i_, "/", end_, ") ...",
+                "sep"_a = "", "end"_a = "\r", "flush"_a = true,
+                "file"_a = stderr_);
+
+    // Get results
+    auto &&partial_completed_ = threads_[i_].get();
+
+    // Merge
+    merge_completed_branches_(completed_brs_, partial_completed_);
+
+    // Clean partial (no longer needed)
+    partial_completed_.clear();
   }
   if (verbose)
     py::print("Collecting results ... Done!", "flush"_a = true,
@@ -361,6 +372,15 @@ auto UpdateBranches(
 
   // Get end time
   auto tic_4_ = std::chrono::system_clock::now();
+
+  if (verbose)
+    py::print("Merging partial branches ... ", "end"_a = "", "flush"_a = true,
+              "file"_a = stderr_);
+
+  // Merge branches
+  branches = MergeBranches_(v_branches_);
+
+  if (verbose) py::print("Done!", "flush"_a = true, "file"_a = stderr_);
 
   // Merge infos
   {
@@ -376,36 +396,28 @@ auto UpdateBranches(
     auto rn_time_ =
         std::chrono::duration_cast<std::chrono::milliseconds>(tic_4_ - tic_1_)
             .count();
-    infos_[0]->n_threads = n_threads;
-    for (std::size_t i_ = 1; i_ < n_threads; ++i_) {
-      infos_[0]->n_explored_branches += infos_[i_]->n_explored_branches;
-      infos_[0]->n_completed_branches += infos_[i_]->n_completed_branches;
-      infos_[0]->n_remaining_branches += infos_[i_]->n_remaining_branches;
+    init_info_->n_total_branches = std::size(completed_brs_);
+    init_info_->n_threads = n_threads;
+    init_info_->n_remaining_branches = std::size(branches);
+    for (std::size_t i_ = 0; i_ < n_threads; ++i_) {
+      init_info_->n_explored_branches += infos_[i_]->n_explored_branches;
+      init_info_->n_completed_branches += infos_[i_]->n_completed_branches;
     }
-    infos_[0]->expanding_time_ms = exp_time_;
-    infos_[0]->merging_time_ms = mrg_time_;
-    infos_[0]->branching_time_us =
-        static_cast<float>(br_time_) / infos_[0]->n_explored_branches;
-    infos_[0]->runtime_s = 1e-3 * rn_time_;
+    init_info_->expanding_time_ms = exp_time_;
+    init_info_->merging_time_ms = mrg_time_;
+    init_info_->branching_time_us =
+        static_cast<float>(br_time_) / init_info_->n_explored_branches;
+    init_info_->runtime_s = 1e-3 * rn_time_;
   }
-
-  if (verbose)
-    py::print("Merging partial branches ... ", "end"_a = "", "flush"_a = true,
-              "file"_a = stderr_);
-
-  // Merge branches
-  branches = MergeBranches_(v_branches_);
-
-  if (verbose) py::print("Done!", "flush"_a = true, "file"_a = stderr_);
 
   // Print stats
   if (verbose)
-    py::print("\n", *infos_[0], "sep"_a = "", "flush"_a = true,
+    py::print("\n", *init_info_, "sep"_a = "", "flush"_a = true,
               "file"_a = stderr_);
 
   // Return results
   return std::tuple{std::move(branches), std::move(completed_brs_),
-                    std::move(infos_[0])};
+                    std::move(init_info_)};
 }
 
 }  // namespace hybridq_clifford
