@@ -25,6 +25,7 @@ specific language governing permissions and limitations under the License.
 #include <iomanip>
 #include <limits>
 #include <sstream>
+#include <thread>
 
 #include "defs.hpp"
 #include "utils.hpp"
@@ -214,6 +215,9 @@ auto PrintInfo_(const std::vector<std::shared_ptr<info_type>> &infos,
   // Get stderr
   auto stderr_ = py::module_::import("sys").attr("stderr");
 
+  // Get used memory
+  const auto [total_mem_, free_mem_] = GetMemory();
+
   const auto dt_ = std::chrono::duration_cast<std::chrono::microseconds>(
                        std::chrono::system_clock::now() - initial_time)
                        .count();
@@ -239,7 +243,10 @@ auto PrintInfo_(const std::vector<std::shared_ptr<info_type>> &infos,
   ss_ << ", CB=" << n_completed_branches_;
   ss_ << " (ET=" << std::setfill('0') << std::setw(2) << hrs_ << ":";
   ss_ << std::setw(2) << min_ << ":" << std::setw(2) << sec_;
-  ss_ << ", BT=" << (static_cast<float>(dt_) / n_explored_branches_) << "μs)";
+  ss_ << ", BT=" << (static_cast<float>(dt_) / n_explored_branches_) << "μs";
+  if (total_mem_ > 0)
+    ss_ << ", FM=" << std::setw(2) << (free_mem_ / total_mem_ * 100) << "%";
+  ss_ << ")";
 
   // Cut message if needed
   auto msg_ = ss_.str();
@@ -319,13 +326,7 @@ auto UpdateBranches(
 
   // Print info
   if (verbose) {
-    // Define checks
-    auto any_thread_running_ = [&threads_]() {
-      for (const auto &th_ : threads_)
-        if (th_.wait_for(std::chrono::seconds(1)) != std::future_status::ready)
-          return true;
-      return false;
-    };
+    // Get number of running threads
     auto n_running_threads_ = [&threads_]() {
       std::size_t n_{0};
       for (const auto &th_ : threads_)
@@ -333,15 +334,12 @@ auto UpdateBranches(
             th_.wait_for(std::chrono::seconds(0)) != std::future_status::ready;
       return n_;
     };
-    // auto any_thread_stopped_ = [&threads_]() {
-    //   for (const auto &th_ : threads_)
-    //     if (th_.wait_for(std::chrono::nanoseconds(0)) ==
-    //         std::future_status::ready)
-    //       return true;
-    //   return false;
-    // };
-    while (any_thread_running_())
-      PrintInfo_(infos_, tic_2_, n_running_threads_());
+
+    std::size_t nr_;
+    while ((nr_ = n_running_threads_())) {
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+      PrintInfo_(infos_, tic_2_, nr_);
+    }
 
     // Otherwise, wait until ready
   } else

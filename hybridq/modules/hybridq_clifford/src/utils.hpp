@@ -20,6 +20,8 @@ specific language governing permissions and limitations under the License.
 namespace py = pybind11;
 using namespace pybind11::literals;
 
+#include <fstream>
+
 #include "defs.hpp"
 
 namespace hybridq_clifford {
@@ -101,6 +103,28 @@ auto CountPaulis(const state_type &state) {
         break;
     }
   return std::tuple{I_, X_, Y_, Z_};
+}
+
+auto GetMemory() {
+  // Get element from meminfo line
+  static constexpr auto get_ = [](std::string str) {
+    str = str.substr(str.find_first_of(' '));
+    str = str.substr(str.find_first_not_of(' '));
+    str = str.substr(0, str.find_first_of(' '));
+    return std::stof(str) / (1uL << 20);
+  };
+
+  float total_mem_{0}, free_mem_{0};
+  std::string line_;
+
+  if (auto meminfo = std::ifstream("/proc/meminfo"); meminfo.good()) {
+    while (std::getline(meminfo, line_))
+      if (line_.find("MemTotal:") != std::string::npos)
+        total_mem_ = get_(line_);
+      else if (line_.find("MemFree:") != std::string::npos)
+        free_mem_ = get_(line_);
+  }
+  return std::tuple{total_mem_, free_mem_};
 }
 
 }  // namespace hybridq_clifford
