@@ -172,7 +172,7 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
         return "Branch" + ss.str();
       });
   //
-  py::class_<hqc::info_type, std::shared_ptr<hqc::info_type>>(m, "Info")
+  py::class_<hqc::info_type>(m, "Info")
       .def(py::init())
       .def_readonly("n_explored_branches", &hqc::info_type::n_explored_branches)
       .def_readonly("n_remaining_branches",
