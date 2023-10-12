@@ -132,7 +132,8 @@ auto UpdateBranches_(std::list<branch_type> &branches,
     // Append to completed if all gates have been explored
     if (new_branches_.back().gate_idx == n_gates_) {
       info_.n_completed_branches += std::size(new_branches_);
-      update_completed_branches_(completed_branches_, new_branches_);
+      for (auto &&br_ : new_branches_)
+        update_completed_branches_(completed_branches_, br_);
     }
 
     // Otherwise, append them to branches
@@ -254,7 +255,7 @@ auto PrintInfo_(const std::vector<info_type> &infos, Time &&initial_time,
   py::print(msg_, "end"_a = "\r", "flush"_a = true, "file"_a = stderr_);
 }
 
-template <typename InitializeCompletedBranches, typename MergeCompletedBranches,
+template <typename InitializeCompletedBranches,
           typename UpdateCompletedBranches>
 auto UpdateBranches(
     std::list<branch_type> &branches, const std::vector<phases_type> &phases,
@@ -262,12 +263,7 @@ auto UpdateBranches(
     const std::vector<qubits_type> &qubits, const float_type atol,
     const float_type norm_atol, unsigned int n_threads, const bool verbose,
     InitializeCompletedBranches &&initialize_completed_branches_,
-    MergeCompletedBranches &&merge_completed_branches_,
     UpdateCompletedBranches &&update_completed_branches_) {
-  // Get type of completed branches
-  using completed_branches_type = std::remove_reference_t<
-      std::remove_cv_t<decltype(initialize_completed_branches_())>>;
-
   // Get stderr
   auto stderr_ = py::module_::import("sys").attr("stderr");
 
@@ -281,7 +277,7 @@ auto UpdateBranches(
   std::vector<info_type> infos_(n_threads);
 
   // Initialize completed branches
-  std::vector<completed_branches_type> completed_branches_(n_threads);
+  auto completed_branches_ = initialize_completed_branches_();
 
   // Get expanding time
   auto tic_1_ = std::chrono::system_clock::now();
@@ -293,7 +289,7 @@ auto UpdateBranches(
   //
   if (n_threads > 1)
     ExpandBranches_(branches, phases, positions, qubits, 100, n_threads * 10,
-                    atol, norm_atol, infos_[0], completed_branches_[0],
+                    atol, norm_atol, infos_[0], completed_branches_,
                     update_completed_branches_);
   //
   if (verbose) py::print("Done!", "flush"_a = true, "file"_a = stderr_);
@@ -310,10 +306,9 @@ auto UpdateBranches(
   // Initialize core to call
   auto update_brs_ = [&](std::size_t idx) {
     // Depth-First
-    return UpdateBranches_<true>(v_branches_[idx], phases, positions, qubits,
-                                 atol, norm_atol, infos_[idx], stop_,
-                                 completed_branches_[idx],
-                                 update_completed_branches_);
+    return UpdateBranches_<true>(
+        v_branches_[idx], phases, positions, qubits, atol, norm_atol,
+        infos_[idx], stop_, completed_branches_, update_completed_branches_);
   };
 
   // Initialize threads
@@ -345,32 +340,15 @@ auto UpdateBranches(
   // Get end time
   auto tic_3_ = std::chrono::system_clock::now();
 
-  // Collect results
-  for (std::size_t i_ = 1, end_ = std::size(threads_); i_ < end_; ++i_) {
-    if (verbose)
-      py::print(i_ ? "" : "\n", "Collecting results (", i_, "/", end_, ") ...",
-                "sep"_a = "", "end"_a = "\r", "flush"_a = true,
-                "file"_a = stderr_);
-
-    // Merge
-    merge_completed_branches_(completed_branches_[0], completed_branches_[i_]);
-
-    // Clean partial (no longer needed)
-    completed_branches_[i_].clear();
-  }
   if (verbose)
-    py::print("Collecting results ... Done!", "flush"_a = true,
-              "file"_a = stderr_);
-
-  // Get end time
-  auto tic_4_ = std::chrono::system_clock::now();
-
-  if (verbose)
-    py::print("Merging partial branches ... ", "end"_a = "", "flush"_a = true,
+    py::print("\nMerging partial branches ... ", "end"_a = "", "flush"_a = true,
               "file"_a = stderr_);
 
   // Merge branches
   branches = MergeBranches_(v_branches_);
+
+  // Get end time
+  auto tic_4_ = std::chrono::system_clock::now();
 
   if (verbose) py::print("Done!", "flush"_a = true, "file"_a = stderr_);
 
@@ -388,7 +366,9 @@ auto UpdateBranches(
     auto rn_time_ =
         std::chrono::duration_cast<std::chrono::milliseconds>(tic_4_ - tic_1_)
             .count();
-    infos_[0].n_total_branches = std::size(completed_branches_[0]);
+    infos_[0].n_total_branches = 0;
+    for (const auto &x_ : completed_branches_)
+      infos_[0].n_total_branches += std::size(x_);
     infos_[0].n_threads = n_threads;
     infos_[0].n_remaining_branches = std::size(branches);
     for (std::size_t i_ = 1; i_ < n_threads; ++i_) {
@@ -408,7 +388,7 @@ auto UpdateBranches(
               "file"_a = stderr_);
 
   // Return results
-  return std::tuple{std::move(branches), std::move(completed_branches_[0]),
+  return std::tuple{std::move(branches), std::move(completed_branches_),
                     std::move(infos_[0])};
 }
 

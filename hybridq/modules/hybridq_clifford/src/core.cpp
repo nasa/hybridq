@@ -40,40 +40,49 @@ auto UpdateBranches_(std::list<hqc::branch_type> &branches,
                      const hqc::float_type atol = 1e-8,
                      const hqc::float_type norm_atol = 1e-8,
                      const hqc::float_type merge_atol = 1e-8,
-                     unsigned int n_threads = 0, const bool verbose = false) {
+                     unsigned int n_threads = 0,
+                     const std::size_t log2_n_buckets = 12,
+                     const bool verbose = false) {
+  // Initialize number of buckets
+  const std::size_t n_buckets = std::size_t{1} << log2_n_buckets;
+
   // Return dataset for completed branches
-  auto initialize_completed_branches_ = []() {
-    return completed_branches_type{};
+  auto initialize_completed_branches_ = [n_buckets]() {
+    return std::vector<completed_branches_type>(n_buckets);
   };
 
-  // Merge branches from threads to the dataset of completed branches
-  auto merge_completed_branches_ = [merge_atol](auto &&completed_brs,
-                                                auto &&partial_completed) {
-    if (std::size(completed_brs)) {
-      for (auto w_ = std::begin(partial_completed),
-                end_ = std::end(partial_completed);
-           w_ != end_; ++w_)
-        if (const auto x_ = (completed_brs[w_->first] += w_->second);
-            std::abs(x_) < merge_atol)
-          completed_brs.erase(w_->first);
-    } else
-      completed_brs = std::move(partial_completed);
+  // Get hash of a given state
+  auto hash_ = [log2_n_buckets](auto &&state) {
+    std::size_t n_ = 0;
+    for (std::size_t i_ = 0, end_ = std::min(log2_n_buckets, std::size(state));
+         i_ < end_; ++i_)
+      n_ |= (state[i_] << i_);
+    return n_;
   };
 
   // Update dataset of completed branches using explored branches
-  auto update_completed_branches_ = [merge_atol](auto &&completed_brs,
-                                                 auto &&new_brs) {
-    for (auto &&b_ : new_brs)
-      if (const auto x_ = (completed_brs[b_.state] += b_.phase);
-          std::abs(x_) < merge_atol)
-        completed_brs.erase(b_.state);
-  };
+  auto update_completed_branches_ =
+      [&hash_, n_buckets, merge_atol](auto &&completed_brs, auto &&new_branch) {
+        // Initialize mutex
+        static std::vector<std::mutex> g_i_mutex_(n_buckets);
+
+        // Get hash of the new state
+        const auto n_ = hash_(new_branch.state);
+
+        // Lock database and update
+        {
+          const std::lock_guard<std::mutex> lock(g_i_mutex_[n_]);
+          if (const auto x_ =
+                  (completed_brs[n_][new_branch.state] += new_branch.phase);
+              std::abs(x_) < merge_atol)
+            completed_brs[n_].erase(new_branch.state);
+        }
+      };
 
   // Call hqc::UpdateBranches for the actual simulation
   return hqc::UpdateBranches(
       branches, phases, positions, qubits, atol, norm_atol, n_threads, verbose,
-      initialize_completed_branches_, merge_completed_branches_,
-      update_completed_branches_);
+      initialize_completed_branches_, update_completed_branches_);
 };
 
 PYBIND11_MAKE_OPAQUE(hqc::state_type);
@@ -86,6 +95,7 @@ PYBIND11_MAKE_OPAQUE(hqc::FVector3D);
 PYBIND11_MAKE_OPAQUE(hqc::SVector1D);
 PYBIND11_MAKE_OPAQUE(hqc::SFVector1D);
 PYBIND11_MAKE_OPAQUE(completed_branches_type);
+PYBIND11_MAKE_OPAQUE(std::vector<completed_branches_type>);
 
 PYBIND11_MODULE(hybridq_clifford_core, m) {
   m.doc() =
@@ -133,6 +143,8 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
   // py::implicitly_convertible<py::array, hqc::SFVector1D>();
   //
   py::bind_map<completed_branches_type>(m, "BranchesType", "BranchesType");
+  py::bind_vector<std::vector<completed_branches_type>>(m, "VBranchesType",
+                                                        "VBranchesType");
   //
   m.def("GetPauli", &hqc::GetPauli, py::arg("state"), py::pos_only(),
         py::arg("pos"), "Get Pauli in position `pos` from `state`.");
@@ -155,7 +167,8 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
         py::kw_only(), py::arg("atol") = hqc::float_type{1e-8},
         py::arg("norm_atol") = hqc::float_type{1e-8},
         py::arg("merge_atol") = hqc::float_type{1e-8}, py::arg("n_threads") = 0,
-        py::arg("verbose") = false, "Update branches.");
+        py::arg("log2_n_buckets") = 12, py::arg("verbose") = false,
+        "Update branches.");
   //
   py::class_<hqc::branch_type>(m, "Branch")
       .def(py::init([](const hqc::state_type &state, hqc::phase_type phase,
