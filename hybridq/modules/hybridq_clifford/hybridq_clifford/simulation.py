@@ -125,8 +125,8 @@ def simulate(circuit: list[tuple[U, qubits]],
              norm_atol: float = 1e-8,
              atol: float = 1e-8,
              dec_atol: float = 1e-8,
-             verbose: bool = False,
-             **kwargs):
+             log2_n_buckets: int = 12,
+             verbose: bool = False):
 
     # Provide either 'paulis' or 'branches', but not both
     if not ((paulis is not None) ^ (branches is not None)):
@@ -159,14 +159,16 @@ def simulate(circuit: list[tuple[U, qubits]],
                              "consistent with circuit")
 
     # Simulate using clifford expansion
-    partial_branches_, branches_, info_ = UpdateBranches(branches_,
-                                                         phases_,
-                                                         positions_,
-                                                         qubits_,
-                                                         atol=atol,
-                                                         norm_atol=norm_atol,
-                                                         n_threads=n_threads_,
-                                                         verbose=verbose)
+    partial_branches_, branches_, info_ = UpdateBranches(
+        branches_,
+        phases_,
+        positions_,
+        qubits_,
+        atol=atol,
+        norm_atol=norm_atol,
+        n_threads=n_threads_,
+        log2_n_buckets=log2_n_buckets,
+        verbose=verbose)
 
     # Partial branches should be empty
     assert (not len(partial_branches_))
