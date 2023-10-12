@@ -176,10 +176,11 @@ def test_Pauli():
             assert (list(VectorFromState(s_)) == list(map('IXYZ'.index, x_)))
 
 
-@pytest.mark.parametrize('n_qubits,n_gates', [(6, 6)] * 5)
-def test_Simulation(n_qubits, n_gates, *, n_threads=0, verbose=False):
+@pytest.mark.parametrize('n_qubits,n_gates,parallel',
+                         [(6, 6, False)] * 3 + [(6, 6, True)] * 3)
+def test_Simulation(n_qubits, n_gates, parallel, *, verbose=False):
     from hybridq_clifford.simulation import (simulate, GetPauliOperator,
-                                             PauliFromState, StateFromPauli)
+                                             PauliFromState)
 
     # Get random gate
     def rg_():
@@ -196,13 +197,22 @@ def test_Simulation(n_qubits, n_gates, *, n_threads=0, verbose=False):
     # Simulate using clifford expansion
     branches_, info_ = simulate(circuit=circ_,
                                 paulis=initial_state_,
-                                parallel=n_threads,
+                                parallel=parallel,
                                 verbose=verbose)
+
+    # Check all branches are correctly split among the different buckets
+    ps_ = [set(map(PauliFromState, br_.keys())) for br_ in branches_]
+    assert all(
+        len(set(ps_[i_]).intersection(ps_[j_])) == 0
+        for i_ in range(len(ps_))
+        for j_ in range(len(ps_))
+        if i_ != j_)
 
     # Get final density matrix
     rho_exp_ = sum(
-        map(lambda x: x[1] * GetPauliOperator(PauliFromState(x[0])),
-            branches_.items()))
+        sum(
+            map(lambda x: x[1] * GetPauliOperator(PauliFromState(x[0])),
+                br_.items())) for br_ in branches_)
 
     # Simulate using state vector
     rho_sv_ = GetPauliOperator(initial_state_)
@@ -216,8 +226,7 @@ def test_Simulation(n_qubits, n_gates, *, n_threads=0, verbose=False):
 
 @pytest.mark.parametrize('n_qubits', [8] * 5)
 def test_Clifford(n_qubits):
-    from hybridq_clifford.simulation import (simulate, Paulis_, PauliFromState
-                                            )  #, PauliStringFromState, Paulis_
+    from hybridq_clifford.simulation import (simulate, Paulis_, PauliFromState)
     from hybridq_clifford.utils import diag_z_, trace_, mat_p_, mat_s_, mul_
 
     # Check that gates are really clifford
@@ -254,7 +263,8 @@ def test_Clifford(n_qubits):
     stabs_ = simulate(circuit_, paulis_, parallel=False)[0]
 
     # Convert stabilizers
-    stabs_ = dict(map(lambda x: (PauliFromState(x[0]), x[1]), stabs_.items()))
+    stabs_ = dict(
+        (PauliFromState(x_[0]), x_[1]) for s_ in stabs_ for x_ in s_.items())
 
     # Convert phases and stabilizers
     phases_, rho_ = map(
