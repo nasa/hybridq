@@ -64,12 +64,16 @@ auto UpdateBranch(const branch_type &branch,
   const auto &positions_ = positions[branch.gate_idx][ss_];
 
   // Get largest phase
+#if 1
+  const auto max_ph_ = std::abs(phases_[0]);
+#else
   const auto max_ph_ = [&phases_]() {
     phase_type max_ph_{0};
     for (const auto &ph_ : phases_)
       if (auto aph_ = std::abs(ph_); max_ph_ < aph_) max_ph_ = aph_;
     return max_ph_;
   }();
+#endif
 
   // Get new branches
   for (std::size_t i_ = 0, end_ = std::size(phases_); i_ < end_; ++i_) {
@@ -93,6 +97,10 @@ auto UpdateBranch(const branch_type &branch,
       }
     }
   }
+
+  // Sort branches
+  branches_.sort(
+      [](auto &&x, auto &&y) { return std::abs(x.phase) < std::abs(y.phase); });
 
   // Return the new branches
   return branches_;
@@ -194,6 +202,13 @@ auto SplitBranches_(std::list<branch_type> &branches, std::size_t n_buckets) {
       branches.pop_front();
     }
   }
+
+  // Sort branches
+  for (auto &br_ : v_branches_)
+    br_.sort([](auto &&x, auto &&y) {
+      return std::abs(x.phase) < std::abs(y.phase);
+    });
+
   return v_branches_;
 }
 
@@ -256,14 +271,14 @@ auto PrintInfo_(const std::vector<info_type> &infos, Time &&initial_time,
 }
 
 template <typename InitializeCompletedBranches,
-          typename UpdateCompletedBranches>
+          typename UpdateCompletedBranches, typename VectorInfo>
 auto UpdateBranches(
     std::list<branch_type> &branches, const std::vector<phases_type> &phases,
     const std::vector<positions_type> &positions,
     const std::vector<qubits_type> &qubits, const float_type atol,
     const float_type norm_atol, unsigned int n_threads, const bool verbose,
     InitializeCompletedBranches &&initialize_completed_branches_,
-    UpdateCompletedBranches &&update_completed_branches_) {
+    UpdateCompletedBranches &&update_completed_branches_, VectorInfo &&infos_) {
   // Get stderr
   auto stderr_ = py::module_::import("sys").attr("stderr");
 
@@ -272,9 +287,6 @@ auto UpdateBranches(
 
   // Initialize stop signal
   int stop_ = false;
-
-  // Initialize infos
-  std::vector<info_type> infos_(n_threads);
 
   // Initialize completed branches
   auto completed_branches_ = initialize_completed_branches_();
@@ -383,13 +395,40 @@ auto UpdateBranches(
   }
 
   // Print stats
-  if (verbose)
-    py::print("\n", infos_[0], "sep"_a = "", "flush"_a = true,
+  if (verbose) {
+    std::stringstream ss_;
+    ss_ << infos_[0];
+    py::print("\n", ss_.str(), "sep"_a = "", "flush"_a = true,
               "file"_a = stderr_);
+  }
 
   // Return results
   return std::tuple{std::move(branches), std::move(completed_branches_),
-                    std::move(infos_[0])};
+                    infos_[0].py_dict()};
+}
+
+template <typename InitializeCompletedBranches,
+          typename UpdateCompletedBranches>
+auto UpdateBranches(
+    std::list<branch_type> &branches, const std::vector<phases_type> &phases,
+    const std::vector<positions_type> &positions,
+    const std::vector<qubits_type> &qubits, const float_type atol,
+    const float_type norm_atol, unsigned int n_threads, const bool verbose,
+    InitializeCompletedBranches &&initialize_completed_branches_,
+    UpdateCompletedBranches &&update_completed_branches_) {
+  // Get max number of threads
+  const auto n_threads_ =
+      n_threads ? n_threads : std::thread::hardware_concurrency();
+
+  // Initialize infos
+  std::vector<info_type> infos_(n_threads_);
+
+  // Call main function
+  return UpdateBranches(
+      branches, phases, positions, qubits, atol, norm_atol, n_threads, verbose,
+      std::forward<InitializeCompletedBranches>(initialize_completed_branches_),
+      std::forward<UpdateCompletedBranches>(update_completed_branches_),
+      infos_);
 }
 
 }  // namespace hybridq_clifford

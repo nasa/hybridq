@@ -184,23 +184,4 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
         b << ss;
         return "Branch" + ss.str();
       });
-  //
-  py::class_<hqc::info_type>(m, "Info")
-      .def(py::init())
-      .def_readonly("n_explored_branches", &hqc::info_type::n_explored_branches)
-      .def_readonly("n_remaining_branches",
-                    &hqc::info_type::n_remaining_branches)
-      .def_readonly("n_completed_branches",
-                    &hqc::info_type::n_completed_branches)
-      .def_readonly("n_total_branches", &hqc::info_type::n_total_branches)
-      .def_readonly("n_threads", &hqc::info_type::n_threads)
-      .def_readonly("runtime_s", &hqc::info_type::runtime_s)
-      .def_readonly("branching_time_us", &hqc::info_type::branching_time_us)
-      .def_readonly("merging_time_ms", &hqc::info_type::merging_time_ms)
-      .def_readonly("expanding_time_ms", &hqc::info_type::expanding_time_ms)
-      .def("__repr__", [](const hqc::info_type &info) {
-        std::stringstream ss_;
-        ss_ << info;
-        return ss_.str();
-      });
 }

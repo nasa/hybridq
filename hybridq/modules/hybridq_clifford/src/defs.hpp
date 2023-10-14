@@ -17,7 +17,11 @@ specific language governing permissions and limitations under the License.
 
 #pragma once
 
+#include <pybind11/pybind11.h>
+
 #include <ostream>
+
+namespace py = pybind11;
 
 namespace hybridq_clifford {
 
@@ -32,26 +36,36 @@ struct Info {
   float merging_time_ms{std::numeric_limits<float>::infinity()};
   float expanding_time_ms{std::numeric_limits<float>::infinity()};
 
+  auto py_dict() const {
+    py::dict info_;
+    info_["n_explored_branches"] = n_explored_branches;
+    info_["n_remaining_branches"] = n_remaining_branches;
+    info_["n_completed_branches"] = n_completed_branches;
+    info_["n_total_branches"] = n_total_branches;
+    info_["n_threads"] = n_threads;
+    info_["runtime_s"] = runtime_s;
+    info_["branching_time_us"] = branching_time_us;
+    info_["merging_time_ms"] = merging_time_ms;
+    info_["expanding_time_ms"] = expanding_time_ms;
+    return info_;
+  }
+
   // Print to ostream
   std::ostream &operator<<(std::ostream &out) const {
-    out << *this;
+    out << "Number Explored Branches: " << n_explored_branches << std::endl;
+    out << "Number Completed Branches: " << n_completed_branches << std::endl;
+    out << "Number Remaining Branches: " << n_remaining_branches << std::endl;
+    out << "Number Total Branches: " << n_total_branches << std::endl;
+    out << "Number of threads: " << n_threads << std::endl;
+    out << "Expanding Time (ms): " << expanding_time_ms << std::endl;
+    out << "Merging Time (ms): " << merging_time_ms << std::endl;
+    out << "Runtime (s): " << runtime_s << std::endl;
+    out << "Branching Time (μs): " << branching_time_us << std::endl;
     return out;
   }
   //
   friend std::ostream &operator<<(std::ostream &out, const Info &info) {
-    out << "Number Explored Branches: " << info.n_explored_branches
-        << std::endl;
-    out << "Number Completed Branches: " << info.n_completed_branches
-        << std::endl;
-    out << "Number Remaining Branches: " << info.n_remaining_branches
-        << std::endl;
-    out << "Number Total Branches: " << info.n_total_branches << std::endl;
-    out << "Number of threads: " << info.n_threads << std::endl;
-    out << "Expanding Time (ms): " << info.expanding_time_ms << std::endl;
-    out << "Merging Time (ms): " << info.merging_time_ms << std::endl;
-    out << "Runtime (s): " << info.runtime_s << std::endl;
-    out << "Branching Time (μs): " << info.branching_time_us << std::endl;
-    return out;
+    return info.operator<<(out);
   }
 };
 using info_type = Info;
