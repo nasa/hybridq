@@ -367,7 +367,7 @@ auto UpdateBranches(
   // Merge infos
   {
     auto exp_time_ =
-        std::chrono::duration_cast<std::chrono::microseconds>(tic_2_ - tic_1_)
+        std::chrono::duration_cast<std::chrono::milliseconds>(tic_2_ - tic_1_)
             .count();
     auto br_time_ =
         std::chrono::duration_cast<std::chrono::microseconds>(tic_3_ - tic_2_)
