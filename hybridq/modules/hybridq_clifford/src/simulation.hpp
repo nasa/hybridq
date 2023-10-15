@@ -218,14 +218,14 @@ auto MergeBranches_(std::vector<std::list<branch_type>> &v_branches) {
   return branches_;
 }
 
-template <typename Time>
+template <typename Time, typename Memory>
 auto PrintInfo_(const std::vector<info_type> &infos, Time &&initial_time,
-                std::size_t n_running_threads) {
+                std::size_t n_running_threads, Memory &&memory) {
   // Get stderr
   auto stderr_ = py::module_::import("sys").attr("stderr");
 
   // Get used memory
-  const auto [total_mem_, free_mem_] = GetMemory();
+  const auto [total_mem_, free_mem_] = memory;
 
   const auto dt_ = std::chrono::duration_cast<std::chrono::microseconds>(
                        std::chrono::system_clock::now() - initial_time)
@@ -329,6 +329,7 @@ auto UpdateBranches(
     threads_.push_back(std::async(update_brs_, i_));
 
   // Print info
+  float peak_memory_perc_{0};
   if (verbose) {
     // Get number of running threads
     auto n_running_threads_ = [&threads_]() {
@@ -340,9 +341,13 @@ auto UpdateBranches(
     };
 
     std::size_t nr_;
+    decltype(GetMemory()) memory_;
     while ((nr_ = n_running_threads_())) {
       std::this_thread::sleep_for(std::chrono::seconds(1));
-      PrintInfo_(infos_, tic_2_, nr_);
+      PrintInfo_(infos_, tic_2_, nr_, memory_ = GetMemory());
+      if (auto used_mem_perc_ = 1 - std::get<1>(memory_) / std::get<0>(memory_);
+          used_mem_perc_ > peak_memory_perc_)
+        peak_memory_perc_ = used_mem_perc_;
     }
   }
 
@@ -402,9 +407,16 @@ auto UpdateBranches(
               "file"_a = stderr_);
   }
 
+  // Convert to py:dict
+  auto py_infos_ = infos_[0].py_dict();
+
+  // Update infos
+  py_infos_["total_memory_kb"] = std::get<0>(GetMemory());
+  py_infos_["peak_used_memory_perc"] = peak_memory_perc_;
+
   // Return results
   return std::tuple{std::move(branches), std::move(completed_branches_),
-                    infos_[0].py_dict()};
+                    py_infos_};
 }
 
 template <typename InitializeCompletedBranches,
