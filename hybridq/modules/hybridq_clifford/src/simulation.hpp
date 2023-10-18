@@ -369,7 +369,7 @@ auto UpdateBranches(
 
   if (verbose) py::print("Done!", "flush"_a = true, "file"_a = stderr_);
 
-  // Merge infos
+  // Get timing
   {
     auto exp_time_ =
         std::chrono::duration_cast<std::chrono::milliseconds>(tic_2_ - tic_1_)
@@ -383,6 +383,50 @@ auto UpdateBranches(
     auto rn_time_ =
         std::chrono::duration_cast<std::chrono::milliseconds>(tic_4_ - tic_1_)
             .count();
+    infos_[0].expanding_time_ms = exp_time_;
+    infos_[0].merging_time_ms = mrg_time_;
+    infos_[0].branching_time_us =
+        static_cast<float>(br_time_) / infos_[0].n_explored_branches;
+    infos_[0].runtime_s = 1e-3 * rn_time_;
+  }
+
+  // Return results
+  return std::tuple{std::move(branches), std::move(completed_branches_), infos_,
+                    std::get<0>(GetMemory()), peak_memory_perc_};
+}
+
+template <typename InitializeCompletedBranches,
+          typename UpdateCompletedBranches>
+auto UpdateBranches(
+    std::list<branch_type> &branches, const std::vector<phases_type> &phases,
+    const std::vector<positions_type> &positions,
+    const std::vector<qubits_type> &qubits, const float_type atol,
+    const float_type norm_atol, unsigned int n_threads, const bool verbose,
+    InitializeCompletedBranches &&initialize_completed_branches_,
+    UpdateCompletedBranches &&update_completed_branches_) {
+  // Get stderr
+  auto stderr_ = py::module_::import("sys").attr("stderr");
+
+  // Get max number of threads
+  const auto n_threads_ =
+      n_threads ? n_threads : std::thread::hardware_concurrency();
+
+  // Initialize infos
+  std::vector<info_type> infos_(n_threads_);
+
+  // Call main function
+  auto &&[branches_, completed_branches_, _, total_memory_kb_,
+          peak_used_memory_perc_] =
+      UpdateBranches(
+          branches, phases, positions, qubits, atol, norm_atol, n_threads,
+          verbose,
+          std::forward<InitializeCompletedBranches>(
+              initialize_completed_branches_),
+          std::forward<UpdateCompletedBranches>(update_completed_branches_),
+          infos_);
+
+  // Merge infos
+  {
     infos_[0].n_total_branches = 0;
     for (const auto &x_ : completed_branches_)
       infos_[0].n_total_branches += std::size(x_);
@@ -392,11 +436,6 @@ auto UpdateBranches(
       infos_[0].n_explored_branches += infos_[i_].n_explored_branches;
       infos_[0].n_completed_branches += infos_[i_].n_completed_branches;
     }
-    infos_[0].expanding_time_ms = exp_time_;
-    infos_[0].merging_time_ms = mrg_time_;
-    infos_[0].branching_time_us =
-        static_cast<float>(br_time_) / infos_[0].n_explored_branches;
-    infos_[0].runtime_s = 1e-3 * rn_time_;
   }
 
   // Print stats
@@ -411,36 +450,12 @@ auto UpdateBranches(
   auto py_infos_ = infos_[0].py_dict();
 
   // Update infos
-  py_infos_["total_memory_kb"] = std::get<0>(GetMemory());
-  py_infos_["peak_used_memory_perc"] = peak_memory_perc_;
+  py_infos_["total_memory_kb"] = total_memory_kb_;
+  py_infos_["peak_used_memory_perc"] = peak_used_memory_perc_;
 
   // Return results
-  return std::tuple{std::move(branches), std::move(completed_branches_),
+  return std::tuple{std::move(branches_), std::move(completed_branches_),
                     py_infos_};
-}
-
-template <typename InitializeCompletedBranches,
-          typename UpdateCompletedBranches>
-auto UpdateBranches(
-    std::list<branch_type> &branches, const std::vector<phases_type> &phases,
-    const std::vector<positions_type> &positions,
-    const std::vector<qubits_type> &qubits, const float_type atol,
-    const float_type norm_atol, unsigned int n_threads, const bool verbose,
-    InitializeCompletedBranches &&initialize_completed_branches_,
-    UpdateCompletedBranches &&update_completed_branches_) {
-  // Get max number of threads
-  const auto n_threads_ =
-      n_threads ? n_threads : std::thread::hardware_concurrency();
-
-  // Initialize infos
-  std::vector<info_type> infos_(n_threads_);
-
-  // Call main function
-  return UpdateBranches(
-      branches, phases, positions, qubits, atol, norm_atol, n_threads, verbose,
-      std::forward<InitializeCompletedBranches>(initialize_completed_branches_),
-      std::forward<UpdateCompletedBranches>(update_completed_branches_),
-      infos_);
 }
 
 }  // namespace hybridq_clifford
