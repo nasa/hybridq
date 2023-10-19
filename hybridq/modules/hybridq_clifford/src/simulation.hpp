@@ -64,16 +64,7 @@ auto UpdateBranch(const branch_type &branch,
   const auto &positions_ = positions[branch.gate_idx][ss_];
 
   // Get largest phase
-#if 1
   const auto max_ph_ = std::abs(phases_[0]);
-#else
-  const auto max_ph_ = [&phases_]() {
-    phase_type max_ph_{0};
-    for (const auto &ph_ : phases_)
-      if (auto aph_ = std::abs(ph_); max_ph_ < aph_) max_ph_ = aph_;
-    return max_ph_;
-  }();
-#endif
 
   // Get new branches
   for (std::size_t i_ = 0, end_ = std::size(phases_); i_ < end_; ++i_) {
@@ -106,52 +97,101 @@ auto UpdateBranch(const branch_type &branch,
   return branches_;
 }
 
-template <bool depth_first, typename CompletedBranchesType,
-          typename UpdateCompletedBranches>
-auto UpdateBranches_(std::list<branch_type> &branches,
+template <bool depth_first, bool exhaustive = true,
+          typename CompletedBranchesType, typename UpdateCompletedBranches>
+void UpdateBranches_(std::size_t idx,
+                     std::vector<std::list<branch_type>> &branches,
                      const std::vector<phases_type> &phases,
                      const std::vector<positions_type> &positions,
                      const std::vector<qubits_type> &qubits,
                      const float_type atol, const float_type norm_atol,
                      info_type &info_, int &stop_,
                      CompletedBranchesType &&completed_branches_,
-                     UpdateCompletedBranches &&update_completed_branches_) {
+                     UpdateCompletedBranches &&update_completed_branches_,
+                     std::vector<std::mutex> &g_i_mutex_) {
   // Get number of gates
   const std::size_t n_gates_ = std::size(phases);
 
-  // While there are branches
-  while (std::size(branches) && !stop_) {
-    // Get branch
-    auto branch_ = [&branches]() {
-      if constexpr (depth_first)
-        return branches.back();
-      else
-        return branches.front();
-    }();
-    if constexpr (depth_first)
-      branches.pop_back();
-    else
-      branches.pop_front();
+  // Get number of remaning branches
+  auto get_n_branches_ = [&branches]() {
+    std::size_t c_ = 0;
+    for (const auto &br_ : branches) c_ += std::size(br_);
+    return c_;
+  };
 
-    // Pop last branch and update it
-    auto new_branches_ =
-        UpdateBranch(branch_, phases, positions, qubits, atol, norm_atol);
+  // Get the idx with the largest number of branches
+  auto idx_largest_n_branches_ = [&branches]() {
+    std::size_t c_ = 0, idx_ = 0;
+    for (std::size_t i_ = 0, end_ = std::size(branches); i_ < end_; ++i_)
+      if (c_ < std::size(branches[i_])) {
+        c_ = std::size(branches[i_]);
+        idx_ = i_;
+      }
+    return idx_;
+  };
 
-    // Append to completed if all gates have been explored
-    if (new_branches_.back().gate_idx == n_gates_) {
-      info_.n_completed_branches += std::size(new_branches_);
-      for (auto &&br_ : new_branches_)
-        update_completed_branches_(completed_branches_, br_);
+  // Select local branches
+  auto &branches_ = branches[idx];
+  auto &this_mutex_ = g_i_mutex_[idx];
+
+  // Initialize temporary branch
+  branch_type branch_;
+
+  // While there are global branches
+  do {
+    // if local branches is empty, rebalance
+    if (!std::size(branches_)) {
+      // Get bucket with largest number of branches
+      const auto from_idx_ = idx_largest_n_branches_();
+      auto &from_branches_ = branches[from_idx_];
+
+      // Lock and update
+      const std::lock_guard<std::mutex> lock_1_(this_mutex_);
+      const std::lock_guard<std::mutex> lock_2_(g_i_mutex_[from_idx_]);
+
+      // Splice half of the branches
+      branches_.splice(
+          std::begin(branches_), from_branches_, std::begin(from_branches_),
+          std::next(std::begin(from_branches_), std::size(from_branches_) / 2));
     }
 
-    // Otherwise, append them to branches
-    else
-      branches.splice(std::end(branches), new_branches_);
+    // While there are local branches
+    while (std::size(branches_) && !stop_) {
+      // Lock and update
+      {
+        const std::lock_guard<std::mutex> lock_(this_mutex_);
+        if constexpr (depth_first) {
+          branch_ = std::move(branches_.back());
+          branches_.pop_back();
+        } else {
+          branch_ = std::move(branches_.front());
+          branches_.pop_front();
+        }
+      }
 
-    // Update infos
-    info_.n_explored_branches += 1;
-    info_.n_remaining_branches = std::size(branches);
-  }
+      // Pop last branch and update it
+      auto new_branches_ =
+          UpdateBranch(branch_, phases, positions, qubits, atol, norm_atol);
+
+      // Append to completed if all gates have been explored
+      if (new_branches_.back().gate_idx == n_gates_) {
+        info_.n_completed_branches += std::size(new_branches_);
+        for (auto &&br_ : new_branches_)
+          update_completed_branches_(completed_branches_, br_);
+      }
+
+      // Otherwise, lock append them to branches
+      else {
+        const std::lock_guard<std::mutex> lock_(this_mutex_);
+        branches_.splice(std::end(branches_), new_branches_);
+      }
+
+      // Update infos
+      info_.n_explored_branches += 1;
+      info_.n_remaining_branches = std::size(branches_);
+    }
+
+  } while (exhaustive && get_n_branches_());
 }
 
 template <typename CompletedBranchesType, typename UpdateCompletedBranches>
@@ -167,12 +207,19 @@ auto ExpandBranches_(std::list<branch_type> &branches,
   // Initialize stop signal and info
   int stop_ = false;
 
+  // Move branches to a temporary vector
+  std::vector<std::list<branch_type>> branches_(1);
+  branches_[0].splice(std::end(branches_[0]), branches);
+
+  // Initialize temporary mutex
+  std::vector<std::mutex> g_i_mutex_(1);
+
   // Initialize core to call
   auto update_brs_ = [&]() {
     // Breadth-First
-    return UpdateBranches_<false>(branches, phases, positions, qubits, atol,
-                                  norm_atol, info_, stop_, completed_branches_,
-                                  update_completed_branches_);
+    return UpdateBranches_<false, false>(
+        0, branches_, phases, positions, qubits, atol, norm_atol, info_, stop_,
+        completed_branches_, update_completed_branches_, g_i_mutex_);
   };
 
   // Initialize job
@@ -181,7 +228,7 @@ auto ExpandBranches_(std::list<branch_type> &branches,
   // Expand
   while (th_.wait_for(std::chrono::milliseconds(max_time_ms)) !=
              std::future_status::ready &&
-         std::size(branches) < min_n_branches)
+         std::size(branches_[0]) < min_n_branches)
     ;
 
   // Flag to stop
@@ -189,6 +236,9 @@ auto ExpandBranches_(std::list<branch_type> &branches,
 
   // Release
   th_.get();
+
+  // Move back to the original branches
+  branches.splice(std::end(branches), branches_[0]);
 }
 
 auto SplitBranches_(std::list<branch_type> &branches, std::size_t n_buckets) {
@@ -300,7 +350,7 @@ auto UpdateBranches(
               "file"_a = stderr_);
   //
   if (n_threads > 1)
-    ExpandBranches_(branches, phases, positions, qubits, 100, n_threads * 10,
+    ExpandBranches_(branches, phases, positions, qubits, 1000, n_threads * 100,
                     atol, norm_atol, infos_[0], completed_branches_,
                     update_completed_branches_);
   //
@@ -308,6 +358,9 @@ auto UpdateBranches(
 
   // Split branches
   auto v_branches_ = SplitBranches_(branches, n_threads);
+
+  // Initialize mutex
+  std::vector<std::mutex> g_i_mutex_(n_threads);
 
   // Branches should be empty
   assert(!std::size(branches));
@@ -318,9 +371,10 @@ auto UpdateBranches(
   // Initialize core to call
   auto update_brs_ = [&](std::size_t idx) {
     // Depth-First
-    return UpdateBranches_<true>(
-        v_branches_[idx], phases, positions, qubits, atol, norm_atol,
-        infos_[idx], stop_, completed_branches_, update_completed_branches_);
+    return UpdateBranches_<true>(idx, v_branches_, phases, positions, qubits,
+                                 atol, norm_atol, infos_[idx], stop_,
+                                 completed_branches_,
+                                 update_completed_branches_, g_i_mutex_);
   };
 
   // Initialize threads
