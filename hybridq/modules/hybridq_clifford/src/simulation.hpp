@@ -113,25 +113,31 @@ void UpdateBranches_(std::size_t idx,
   const std::size_t n_gates_ = std::size(phases);
 
   // Get number of remaning branches
-  auto get_n_branches_ = [&branches]() {
+  auto get_n_branches_ = [&branches, &g_i_mutex_]() {
     std::size_t c_ = 0;
-    for (const auto &br_ : branches) c_ += std::size(br_);
+    for (std::size_t i_ = 0, end_ = std::size(branches); i_ < end_; ++i_) {
+      const std::lock_guard<std::mutex> lock_(g_i_mutex_[i_]);
+      c_ += std::size(branches[i_]);
+    }
     return c_;
   };
 
   // Get the idx with the largest number of branches
-  auto idx_largest_n_branches_ = [&branches]() {
-    std::size_t c_ = 0, idx_ = 0;
-    for (std::size_t i_ = 0, end_ = std::size(branches); i_ < end_; ++i_)
-      if (c_ < std::size(branches[i_])) {
-        c_ = std::size(branches[i_]);
+  auto idx_largest_n_branches_ = [&branches, &g_i_mutex_]() {
+    std::size_t c_ = 0;
+    std::optional<std::size_t> idx_;
+    for (std::size_t i_ = 0, end_ = std::size(branches); i_ < end_; ++i_) {
+      const std::lock_guard<std::mutex> lock_(g_i_mutex_[i_]);
+      if (const auto s_ = std::size(branches[i_]); s_ > 1 && c_ < s_) {
+        c_ = s_;
         idx_ = i_;
       }
+    }
     return idx_;
   };
 
   // Select local branches
-  auto &branches_ = branches[idx];
+  auto &this_branches_ = branches[idx];
   auto &this_mutex_ = g_i_mutex_[idx];
 
   // Initialize temporary branch
@@ -140,32 +146,38 @@ void UpdateBranches_(std::size_t idx,
   // While there are global branches
   do {
     // if local branches is empty, rebalance
-    if (!std::size(branches_)) {
-      // Get bucket with largest number of branches
-      const auto from_idx_ = idx_largest_n_branches_();
-      auto &from_branches_ = branches[from_idx_];
+    if (!std::size(this_branches_) && !stop_) {
+      // Sleep for a bit ...
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-      // Lock and update
-      const std::lock_guard<std::mutex> lock_1_(this_mutex_);
-      const std::lock_guard<std::mutex> lock_2_(g_i_mutex_[from_idx_]);
+      // Get bucket with largest number of branches, lock and update
+      if (const auto from_idx_ = idx_largest_n_branches_(); from_idx_) {
+        const std::lock_guard<std::mutex> lock_1_(this_mutex_);
+        const std::lock_guard<std::mutex> lock_2_(
+            g_i_mutex_[from_idx_.value()]);
 
-      // Splice half of the branches
-      branches_.splice(
-          std::begin(branches_), from_branches_, std::begin(from_branches_),
-          std::next(std::begin(from_branches_), std::size(from_branches_) / 2));
+        // Get branch
+        auto &from_branches_ = branches[from_idx_.value()];
+
+        // Splice half of the branches
+        this_branches_.splice(std::begin(this_branches_), from_branches_,
+                              std::begin(from_branches_),
+                              std::next(std::begin(from_branches_),
+                                        std::size(from_branches_) / 2));
+      }
     }
 
     // While there are local branches
-    while (std::size(branches_) && !stop_) {
+    while (std::size(this_branches_) && !stop_) {
       // Lock and update
       {
         const std::lock_guard<std::mutex> lock_(this_mutex_);
         if constexpr (depth_first) {
-          branch_ = std::move(branches_.back());
-          branches_.pop_back();
+          branch_ = std::move(this_branches_.back());
+          this_branches_.pop_back();
         } else {
-          branch_ = std::move(branches_.front());
-          branches_.pop_front();
+          branch_ = std::move(this_branches_.front());
+          this_branches_.pop_front();
         }
       }
 
@@ -183,12 +195,12 @@ void UpdateBranches_(std::size_t idx,
       // Otherwise, lock append them to branches
       else {
         const std::lock_guard<std::mutex> lock_(this_mutex_);
-        branches_.splice(std::end(branches_), new_branches_);
+        this_branches_.splice(std::end(this_branches_), new_branches_);
       }
 
       // Update infos
       info_.n_explored_branches += 1;
-      info_.n_remaining_branches = std::size(branches_);
+      info_.n_remaining_branches = std::size(this_branches_);
     }
 
   } while (exhaustive && get_n_branches_());
@@ -271,6 +283,17 @@ auto MergeBranches_(std::vector<std::list<branch_type>> &v_branches) {
 template <typename Time, typename Memory>
 auto PrintInfo_(const std::vector<info_type> &infos, Time &&initial_time,
                 std::size_t n_running_threads, Memory &&memory) {
+  // Conver number ot human readable
+  static constexpr auto to_str_ = [](auto &&x) {
+    std::string x_ = std::to_string(x), tmp_;
+    for (std::size_t i_ = 0, end_ = std::size(x_); i_ < end_; ++i_) {
+      tmp_ += x_[end_ - i_ - 1];
+      if (const auto j_ = i_ + 1; j_ != end_ && (j_ % 3) == 0) tmp_ += '\'';
+    }
+    std::reverse(std::begin(tmp_), std::end(tmp_));
+    return tmp_;
+  };
+
   // Get stderr
   auto stderr_ = py::module_::import("sys").attr("stderr");
 
@@ -296,10 +319,10 @@ auto PrintInfo_(const std::vector<info_type> &infos, Time &&initial_time,
   // Build message
   std::stringstream ss_;
   ss_ << std::setprecision(2);
-  ss_ << "NT=" << n_running_threads << "/" << std::size(infos);
-  ss_ << ", EB=" << n_explored_branches_;
-  ss_ << ", RB=" << n_remaining_branches_;
-  ss_ << ", CB=" << n_completed_branches_;
+  ss_ << "NT=" << to_str_(n_running_threads) << "/" << std::size(infos);
+  ss_ << ", EB=" << to_str_(n_explored_branches_);
+  ss_ << ", RB=" << to_str_(n_remaining_branches_);
+  ss_ << ", CB=" << to_str_(n_completed_branches_);
   ss_ << " (ET=" << std::setfill('0') << std::setw(2) << hrs_ << ":";
   ss_ << std::setw(2) << min_ << ":" << std::setw(2) << sec_;
   ss_ << ", BT=" << (static_cast<float>(dt_) / n_explored_branches_) << "μs";
