@@ -1,4 +1,6 @@
+more_itertools
 numba
 numpy
+psutil
 pybind11
-more_itertools
+tqdm

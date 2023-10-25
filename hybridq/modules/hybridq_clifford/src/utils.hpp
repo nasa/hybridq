@@ -17,25 +17,23 @@ specific language governing permissions and limitations under the License.
 
 #pragma once
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 #include <fstream>
-
-#include "defs.hpp"
 
 namespace hybridq_clifford {
 
-inline auto GetPauli(const state_type &state, std::size_t pos) {
+template <typename State>
+inline auto GetPauli(State &&state, std::size_t pos) {
   return state[2 * pos + 0] + 2 * state[2 * pos + 1];
 }
 
-inline auto SetPauli(state_type &state, std::size_t pos, std::size_t op) {
+template <typename State>
+inline auto SetPauli(State &&state, std::size_t pos, std::size_t op) {
   state[2 * pos + 0] = op & 0b01;
   state[2 * pos + 1] = op & 0b10;
 }
 
-inline auto SetPauliFromChar(state_type &state, std::size_t pos, char op) {
+template <typename State>
+inline auto SetPauliFromChar(State &&state, std::size_t pos, char op) {
   switch (op) {
     case 'I':
       return SetPauli(state, pos, 0);
@@ -48,14 +46,16 @@ inline auto SetPauliFromChar(state_type &state, std::size_t pos, char op) {
   }
 }
 
+template <typename State>
 auto StateFromPauli(const std::string &paulis) {
-  state_type state_(2 * std::size(paulis));
+  State state_(2 * std::size(paulis));
   for (std::size_t i_ = 0; i_ < std::size(paulis); ++i_)
     SetPauliFromChar(state_, i_, std::toupper(paulis[i_]));
   return state_;
 }
 
-auto PauliFromState(const state_type &state) {
+template <typename State>
+auto PauliFromState(State &&state) {
   std::string paulis_;
   for (std::size_t i_ = 0, end_ = std::size(state) / 2; i_ < end_; ++i_)
     switch (GetPauli(state, i_)) {
@@ -75,14 +75,8 @@ auto PauliFromState(const state_type &state) {
   return paulis_;
 }
 
-auto VectorFromState(const state_type &state) {
-  IVector1D vstate(std::size(state) / 2);
-  for (std::size_t i_ = 0, end_ = std::size(vstate); i_ < end_; ++i_)
-    vstate[i_] = GetPauli(state, i_);
-  return vstate;
-}
-
-auto CountPaulis(const state_type &state) {
+template <typename State>
+auto CountPaulis(State &&state) {
   std::size_t I_ = 0;
   std::size_t X_ = 0;
   std::size_t Y_ = 0;

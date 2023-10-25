@@ -16,16 +16,16 @@ specific language governing permissions and limitations under the License.
 """
 
 from __future__ import annotations
+from datetime import timedelta
 import more_itertools as mit
+from tqdm.auto import tqdm
 import functools as fts
 import itertools as its
 import numpy as np
+import psutil
+import time
 import sys
 import os
-
-from hybridq_clifford_core import (Branch, StateFromPauli, PauliFromState,
-                                   UpdateBranches, CountPaulis, GetPauli,
-                                   SetPauli, SetPauliFromChar, VectorFromState)
 
 __all__ = []
 
@@ -126,7 +126,18 @@ def simulate(circuit: list[tuple[U, qubits]],
              atol: float = 1e-8,
              dec_atol: float = 1e-8,
              log2_n_buckets: int = 12,
-             verbose: bool = False):
+             verbose: bool = False,
+             core_: str = None,
+             **kwargs):
+    import importlib
+
+    # Load core
+    core_ = importlib.import_module(
+        'hybridq_clifford_core' if core_ is None else core_)
+
+    # Load object
+    Branch, StateFromPauli, Simulator = map(
+        lambda x: getattr(core_, x), ['Branch', 'StateFromPauli', 'Simulator'])
 
     # Provide either 'paulis' or 'branches', but not both
     if not ((paulis is not None) ^ (branches is not None)):
@@ -147,7 +158,8 @@ def simulate(circuit: list[tuple[U, qubits]],
 
     # Decompose circuit
     phases_, positions_, qubits_ = zip(
-        *map(lambda x: (*DecomposeOperator(x[0]), x[1]), circuit))
+        *map(lambda x: (*DecomposeOperator(x[0]), x[1]),
+             tqdm(circuit, disable=not verbose, desc="Decomposing")))
 
     # Get number of qubits
     n_qubits_ = max(mit.flatten(qubits_)) + 1
@@ -158,20 +170,89 @@ def simulate(circuit: list[tuple[U, qubits]],
             raise ValueError("Number of qubits in 'paulis' is not "
                              "consistent with circuit")
 
-    # Simulate using clifford expansion
-    partial_branches_, branches_, info_ = UpdateBranches(
-        branches_,
-        phases_,
-        positions_,
-        qubits_,
-        atol=atol,
-        norm_atol=norm_atol,
-        n_threads=n_threads_,
-        log2_n_buckets=log2_n_buckets,
-        verbose=verbose)
+    # Get simulator
+    sim_ = Simulator(phases_,
+                     positions_,
+                     qubits_,
+                     atol=atol,
+                     norm_atol=norm_atol,
+                     n_threads=n_threads_,
+                     log2_n_buckets=log2_n_buckets,
+                     verbose=verbose,
+                     **kwargs)
+
+    # Get initial time
+    init_time_ = time.time()
+
+    def print_info_(mem_used_gb, *, end='\r', n=150):
+        # Get time
+        time_ = time.time()
+
+        # Collect info
+        n_explored_branches_ = sum(x_.n_explored_branches for x_ in sim_.infos)
+        n_remaining_branches_ = sum(
+            x_.n_remaining_branches for x_ in sim_.infos)
+        n_completed_branches_ = sum(
+            x_.n_completed_branches for x_ in sim_.infos)
+        branching_time_ = (time_ - init_time_) / n_explored_branches_ * 1e6
+
+        # Build message
+        msg_ = f"NT={sim_.n_threads}, "
+        msg_ += f"EB={n_explored_branches_:,}, "
+        msg_ += f"RB={n_remaining_branches_:,}, "
+        msg_ += f"CB={n_completed_branches_:,} "
+        msg_ += f"(BT={branching_time_:1.1f}μs, "
+        msg_ += f"ET={timedelta(seconds=round(time_ - init_time_))}, "
+        msg_ += f"LV={psutil.cpu_percent(interval=None)}%, "
+        msg_ += f"FM={psutil.virtual_memory().available / psutil.virtual_memory().total * 100:1.2f}%, "
+        msg_ += f"UM={mem_used_gb:1.2f}GB)"
+
+        # Pad message
+        if len(msg_) > n:
+            msg_ = msg_[:n - 3] + '...'
+        else:
+            msg_ += ' ' * (n - len(msg_))
+
+        # Dump message
+        print(msg_, end=end, flush=True, file=sys.stderr)
+
+    def get_mem_gb_():
+        return psutil.Process(os.getpid()).memory_info().rss / 2**30
+
+    # Initialize memory peak
+    mem_peak_gb_ = 0
+
+    # Start simulation
+    sim_.start(branches_)
+    while (not sim_.ready(1000)):
+        # Update memory used
+        mem_used_gb_ = get_mem_gb_()
+
+        # Save peak
+        if mem_used_gb_ > mem_peak_gb_:
+            mem_peak_gb_ = mem_used_gb_
+
+        # Print info
+        if verbose:
+            print_info_(mem_used_gb_)
+
+    # Cleanup output
+    if verbose:
+        print_info_(get_mem_gb_(), end='\n')
+
+    # Join to get results
+    sim_info_, partial_branches_, *rest_ = sim_.join()
 
     # Partial branches should be empty
     assert (not len(partial_branches_))
 
+    # Convert to dict
+    sim_info_ = sim_info_.dict()
+
+    # Update output
+    sim_info_['mem_peak_gb'] = mem_peak_gb_
+    sim_info_['n_branches/us'] = sim_info_['n_explored_branches'] / (
+        sim_info_['runtime_ms'] * 1e3)
+
     # Return results
-    return branches_, info_
+    return sim_info_, *rest_
