@@ -85,6 +85,9 @@ def DecomposeOperator(gate: np.array,
             np.log2(gate.shape[0])) != np.log2(gate.shape[0]):
         raise ValueError("'gate' is not a valid")
 
+    # Convert gate
+    gate = np.asarray(gate, dtype=GetComplexType(dtype))
+
     # Get number of qubits
     n_ = int(np.log2(gate.shape[0]))
 
