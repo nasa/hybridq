@@ -273,7 +273,7 @@ auto UpdateAllBranches(ListBranches &&branches, VectorPhases &&phases,
   // Update number of threads
   info_.n_threads = n_threads;
 
-  if (n_threads > 1)
+  if (expand_branches_only || n_threads > 1)
     ExpandBranches<Vector>(branches, phases, positions, qubits, 1000,
                            n_threads * 100, atol, norm_atol,
                            update_completed_branches_);

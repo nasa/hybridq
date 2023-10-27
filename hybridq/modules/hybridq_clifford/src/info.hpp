@@ -23,29 +23,57 @@ namespace hybridq_clifford {
 
 namespace py = pybind11;
 
+template <typename T, bool>
+struct Inf_ {};
+
+template <typename T>
+struct Inf_<T, false> {
+  static constexpr auto value = std::numeric_limits<T>::max();
+};
+
+template <typename T>
+struct Inf_<T, true> {
+  static constexpr auto value = std::numeric_limits<T>::infinity();
+};
+
+template <typename T, typename T_ = std::decay_t<T>>
+struct Inf {
+  static constexpr auto value =
+      Inf_<T_, std::numeric_limits<T_>::has_infinity>::value;
+};
+
+template <typename T>
+static constexpr auto inf = Inf<T>::value;
+
+template <typename T>
+auto isinf(T &&t) {
+  return t == inf<T>;
+}
+
 struct Info {
   std::size_t n_explored_branches{0};
-  std::size_t n_remaining_branches{0};
   std::size_t n_completed_branches{0};
-  std::size_t n_threads{std::numeric_limits<std::size_t>::max()};
-  std::size_t runtime_ms{std::numeric_limits<std::size_t>::max()};
-  std::size_t branching_time_ms{std::numeric_limits<std::size_t>::max()};
-  std::size_t expanding_time_ms{std::numeric_limits<std::size_t>::max()};
+  std::size_t n_remaining_branches{inf<std::size_t>};
+  std::size_t n_total_branches{inf<std::size_t>};
+  std::size_t n_threads{inf<std::size_t>};
+  std::size_t runtime_ms{inf<std::size_t>};
+  std::size_t branching_time_ms{inf<std::size_t>};
+  std::size_t expanding_time_ms{inf<std::size_t>};
 
   auto dict() const {
     py::dict out_;
-    out_["n_explored_branches"] = n_explored_branches;
-    out_["n_remaining_branches"] = n_remaining_branches;
-    out_["n_completed_branches"] = n_completed_branches;
-    if (n_threads != std::numeric_limits<decltype(n_threads)>::max())
-      out_["n_threads"] = n_threads;
-    if (runtime_ms != std::numeric_limits<decltype(runtime_ms)>::max())
-      out_["runtime_ms"] = runtime_ms;
-    if (branching_time_ms !=
-        std::numeric_limits<decltype(branching_time_ms)>::max())
+    if (!isinf(n_explored_branches))
+      out_["n_explored_branches"] = n_explored_branches;
+    if (!isinf(n_completed_branches))
+      out_["n_completed_branches"] = n_completed_branches;
+    if (!isinf(n_remaining_branches))
+      out_["n_remaining_branches"] = n_remaining_branches;
+    if (!isinf(n_total_branches)) out_["n_total_branches"] = n_total_branches;
+    if (!isinf(n_threads)) out_["n_threads"] = n_threads;
+    if (!isinf(runtime_ms)) out_["runtime_ms"] = runtime_ms;
+    if (!isinf(branching_time_ms))
       out_["branching_time_ms"] = branching_time_ms;
-    if (expanding_time_ms !=
-        std::numeric_limits<decltype(expanding_time_ms)>::max())
+    if (!isinf(expanding_time_ms))
       out_["expanding_time_ms"] = expanding_time_ms;
     return out_;
   }

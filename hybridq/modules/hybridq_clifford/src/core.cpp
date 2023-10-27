@@ -132,11 +132,14 @@ auto UpdateBranches_(
   ginfo_.n_explored_branches = 0;
   ginfo_.n_completed_branches = 0;
   ginfo_.n_remaining_branches = 0;
-  for (auto &i_ : infos_) {
+  ginfo_.n_total_branches = 0;
+  for (const auto &i_ : infos_) {
     ginfo_.n_explored_branches += i_.n_explored_branches;
     ginfo_.n_completed_branches += i_.n_completed_branches;
     ginfo_.n_remaining_branches += i_.n_remaining_branches;
   }
+  for (const auto &br_ : completed_branches_)
+    ginfo_.n_total_branches += std::size(br_);
 
   // Return info
   return ginfo_;

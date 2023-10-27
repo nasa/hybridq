@@ -129,6 +129,7 @@ def simulate(circuit: list[tuple[U, qubits]],
              atol: float = 1e-8,
              dec_atol: float = 1e-8,
              log2_n_buckets: int = 12,
+             expand_branches_only: bool = False,
              verbose: bool = False,
              core_: str = None,
              **kwargs):
@@ -197,14 +198,16 @@ def simulate(circuit: list[tuple[U, qubits]],
             x_.n_remaining_branches for x_ in sim_.infos)
         n_completed_branches_ = sum(
             x_.n_completed_branches for x_ in sim_.infos)
-        branching_time_ = (time_ - init_time_) / n_explored_branches_ * 1e6
+        branching_time_ = (
+            time_ - init_time_
+        ) / n_explored_branches_ * 1e6 if n_explored_branches_ else float('inf')
 
         # Build message
         msg_ = f"NT={sim_.n_threads}, "
         msg_ += f"EB={n_explored_branches_:,}, "
         msg_ += f"RB={n_remaining_branches_:,}, "
         msg_ += f"CB={n_completed_branches_:,} "
-        msg_ += f"(BT={branching_time_:1.1f}μs, "
+        msg_ += f"(BT={branching_time_:1.3f}μs, "
         msg_ += f"ET={timedelta(seconds=round(time_ - init_time_))}, "
         msg_ += f"LV={psutil.cpu_percent(interval=None)}%, "
         msg_ += f"FM={psutil.virtual_memory().available / psutil.virtual_memory().total * 100:1.2f}%, "
@@ -226,7 +229,7 @@ def simulate(circuit: list[tuple[U, qubits]],
     mem_peak_gb_ = 0
 
     # Start simulation
-    sim_.start(branches_)
+    sim_.start(branches_, expand_branches_only=expand_branches_only)
     while (not sim_.ready(1000)):
         # Update memory used
         mem_used_gb_ = get_mem_gb_()
@@ -247,15 +250,19 @@ def simulate(circuit: list[tuple[U, qubits]],
     sim_info_, partial_branches_, *rest_ = sim_.join()
 
     # Partial branches should be empty
-    assert (not len(partial_branches_))
+    if not expand_branches_only:
+        assert (not len(partial_branches_))
 
     # Convert to dict
     sim_info_ = sim_info_.dict()
 
     # Update output
-    sim_info_['mem_peak_gb'] = mem_peak_gb_
-    sim_info_['n_branches/us'] = sim_info_['n_explored_branches'] / (
-        sim_info_['runtime_ms'] * 1e3)
+    if expand_branches_only:
+        sim_info_['partial_branches'] = partial_branches_
+    else:
+        sim_info_['mem_peak_gb'] = mem_peak_gb_
+        sim_info_['n_branches/us'] = sim_info_['n_explored_branches'] / (
+            sim_info_['runtime_ms'] * 1e3)
 
     # Return results
     return sim_info_, *rest_
