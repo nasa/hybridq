@@ -75,30 +75,6 @@ auto PauliFromState(State &&state) {
   return paulis_;
 }
 
-template <typename State>
-auto CountPaulis(State &&state) {
-  std::size_t I_ = 0;
-  std::size_t X_ = 0;
-  std::size_t Y_ = 0;
-  std::size_t Z_ = 0;
-  for (std::size_t i_ = 0, end_ = std::size(state) / 2; i_ < end_; ++i_)
-    switch (GetPauli(state, i_)) {
-      case 0:
-        I_ += 1;
-        break;
-      case 1:
-        X_ += 1;
-        break;
-      case 2:
-        Y_ += 1;
-        break;
-      case 3:
-        Z_ += 1;
-        break;
-    }
-  return std::tuple{I_, X_, Y_, Z_};
-}
-
 auto GetMemory() {
   // Get element from meminfo line
   static constexpr auto get_ = [](std::string str) {

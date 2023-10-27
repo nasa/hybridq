@@ -257,6 +257,15 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
                     "VectorCompletedBranches");
   ADD_OPAQUE_VECTOR(m, hqc::vector_type<info_type>, "VectorInfo");
   //
+  m.def("GetPauli", &hqc::GetPauli<const state_type &>, py::arg("state"),
+        py::arg("pos"), py::pos_only(),
+        "Return Pauli in position `pos` from `state`.");
+  m.def("SetPauli", &hqc::SetPauli<state_type &>, py::arg("state"),
+        py::arg("pos"), py::arg("op"), py::pos_only(),
+        "Set Pauli `op` in position `pos` of `state`.");
+  m.def("SetPauliFromChar", &hqc::SetPauliFromChar<state_type &>,
+        py::arg("state"), py::arg("pos"), py::arg("op"), py::pos_only(),
+        "Set Pauli `op` in position `pos` of `state`.");
   m.def("StateFromPauli", &hqc::StateFromPauli<state_type>, py::arg("paulis"),
         py::pos_only(), "Return `State` from a Pauli string.");
   m.def("PauliFromState", &hqc::PauliFromState<const state_type &>,

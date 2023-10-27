@@ -123,9 +123,8 @@ def get_clifford_rqc_(n_qubits, n_cycles, seed=None):
 
 
 def test_Pauli():
-    from hybridq_clifford.simulation import (PauliFromState, StateFromPauli,
-                                             CountPaulis, GetPauli, SetPauli,
-                                             SetPauliFromChar, VectorFromState)
+    from hybridq_clifford.core import (PauliFromState, StateFromPauli, GetPauli,
+                                       SetPauli, SetPauliFromChar)
 
     for _ in range(100):
 
@@ -140,13 +139,6 @@ def test_Pauli():
         assert (all(
             StateFromPauli(PauliFromState(x_)) == x_
             for x_ in np.random.randint(2, size=(100, 100))))
-
-        # Check that Paulis are counted correctly
-        assert (all(
-            CountPaulis(StateFromPauli(x_)) == tuple(map(x_.count, 'IXYZ'))
-            for x_ in (''.join(x_)
-                       for x_ in np.random.choice(list('IXYZ'), size=(100,
-                                                                      100)))))
 
         # Check that the right Pauli is returned
         assert (all(
@@ -172,15 +164,12 @@ def test_Pauli():
                 SetPauli(s_, i_, 'IXYZ'.index(c_))
             assert (PauliFromState(s_) == x_)
 
-            # Check VectorFromState
-            assert (list(VectorFromState(s_)) == list(map('IXYZ'.index, x_)))
-
 
 @pytest.mark.parametrize('n_qubits,n_gates,parallel',
                          [(6, 6, False)] * 3 + [(6, 6, True)] * 3)
 def test_Simulation(n_qubits, n_gates, parallel, *, verbose=False):
-    from hybridq_clifford.simulation import (simulate, GetPauliOperator,
-                                             PauliFromState)
+    from hybridq_clifford.simulation import (simulate, GetPauliOperator)
+    from hybridq_clifford.core import PauliFromState
 
     # Get random gate
     def rg_():
@@ -195,7 +184,7 @@ def test_Simulation(n_qubits, n_gates, parallel, *, verbose=False):
     initial_state_ = ''.join(np.random.choice(list('IXYZ'), size=n_qubits))
 
     # Simulate using clifford expansion
-    branches_, info_ = simulate(circuit=circ_,
+    info_, branches_ = simulate(circuit=circ_,
                                 paulis=initial_state_,
                                 parallel=parallel,
                                 verbose=verbose)
@@ -225,14 +214,18 @@ def test_Simulation(n_qubits, n_gates, parallel, *, verbose=False):
 
 
 @pytest.mark.parametrize('n_qubits', [8] * 5)
-def test_Clifford(n_qubits):
-    from hybridq_clifford.simulation import (simulate, Paulis_, PauliFromState)
+def test_Clifford(n_qubits, seed=None):
+    from hybridq_clifford.simulation import (simulate, Paulis_)
+    from hybridq_clifford.core import PauliFromState
     from hybridq_clifford.utils import diag_z_, trace_, mat_p_, mat_s_, mul_
+
+    # Initialize prng
+    rng_ = np.random.default_rng(seed)
 
     # Check that gates are really clifford
     assert (len(
         simulate(list(zip(r_pi_2_, its.repeat([0]))) + [(cz_, [0, 1])],
-                 'XY')[0]))
+                 'XY')[1]))
 
     # Check multiplication matrices for paulis
     assert (all(
@@ -243,8 +236,8 @@ def test_Clifford(n_qubits):
 
     # Check stabilizer multiplication
     for _ in range(1000):
-        s1_ = Stab_(np.random.randint(4, size=200), np.random.random())
-        s2_ = Stab_(np.random.randint(4, size=200), np.random.random())
+        s1_ = Stab_(rng_.integers(4, size=200), rng_.random())
+        s2_ = Stab_(rng_.integers(4, size=200), rng_.random())
         assert (Stab_(
             *mul_(s1_.paulis, s2_.paulis.copy(), s1_.phase, s2_.phase)) == s1_ *
                 s2_)
@@ -257,14 +250,24 @@ def test_Clifford(n_qubits):
     }
 
     # Generate random clifford
-    circuit_ = get_clifford_rqc_(n_qubits=n_qubits, n_cycles=30)
+    circuit_ = get_clifford_rqc_(n_qubits=n_qubits,
+                                 n_cycles=30,
+                                 seed=rng_.integers(2**32 - 1))
 
     # Simulate circuit using clifford expansion
-    stabs_ = simulate(circuit_, paulis_, parallel=False)[0]
+    stabs_ = simulate(circuit_,
+                      paulis_,
+                      parallel=False,
+                      norm_atol=1e-1,
+                      log2_n_buckets=0)[1]
+
+    # Check number of final stabilizers
+    assert len(stabs_) == 1 and len(stabs_[0]) == n_qubits
 
     # Convert stabilizers
-    stabs_ = dict(
-        (PauliFromState(x_[0]), x_[1]) for s_ in stabs_ for x_ in s_.items())
+    stabs_ = {
+        PauliFromState(x_[0]): int(np.round(x_[1])) for x_ in stabs_[0].items()
+    }
 
     # Convert phases and stabilizers
     phases_, rho_ = map(
@@ -289,6 +292,9 @@ def test_Clifford(n_qubits):
     np.testing.assert_allclose(ex_rho_,
                                density_matrix_(rho_, phases_),
                                atol=1e-5)
+
+    # Check diagonal for exact density matrix
+    np.testing.assert_allclose(np.diag(ex_rho_), np.abs(psi_)**2, atol=1e-5)
 
     # Get stabilizers which are in the Z-base
     z_rho_, z_phases_ = diag_z_(rho_.copy(), phases_.copy())

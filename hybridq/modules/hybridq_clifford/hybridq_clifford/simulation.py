@@ -262,7 +262,8 @@ def simulate(circuit: list[tuple[U, qubits]],
     else:
         sim_info_['mem_peak_gb'] = mem_peak_gb_
         sim_info_['n_branches/us'] = sim_info_['n_explored_branches'] / (
-            sim_info_['runtime_ms'] * 1e3)
+            sim_info_['runtime_ms'] *
+            1e3) if sim_info_['runtime_ms'] else float('inf')
 
     # Return results
     return sim_info_, *rest_
