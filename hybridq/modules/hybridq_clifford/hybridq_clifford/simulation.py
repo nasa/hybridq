@@ -133,15 +133,17 @@ def simulate(circuit: list[tuple[U, qubits]],
              verbose: bool = False,
              core_: str = None,
              **kwargs):
+    from types import ModuleType
     import importlib
 
     # Load core
-    core_ = importlib.import_module(
+    core_ = core_ if isinstance(core_, ModuleType) else importlib.import_module(
         'hybridq_clifford_core' if core_ is None else core_)
 
     # Load object
-    Branch, StateFromPauli, Simulator = map(
-        lambda x: getattr(core_, x), ['Branch', 'StateFromPauli', 'Simulator'])
+    StateFromPauli = core_.utils.StateFromPauli
+    Branch = core_.Branch
+    Simulator = core_.Simulator
 
     # Provide either 'paulis' or 'branches', but not both
     if not ((paulis is not None) ^ (branches is not None)):
@@ -182,7 +184,6 @@ def simulate(circuit: list[tuple[U, qubits]],
                      norm_atol=norm_atol,
                      n_threads=n_threads_,
                      log2_n_buckets=log2_n_buckets,
-                     verbose=verbose,
                      **kwargs)
 
     # Get initial time

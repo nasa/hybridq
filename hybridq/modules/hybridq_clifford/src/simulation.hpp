@@ -17,15 +17,30 @@ specific language governing permissions and limitations under the License.
 
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <future>
 #include <mutex>
+#include <optional>
 #include <thread>
 
 #include "utils.hpp"
 
 namespace hybridq_clifford {
+
+//-------------------
+template <template <typename...> typename T, typename... W>
+struct is_list_ {
+  static constexpr auto value = std::is_same_v<T<W...>, std::list<W...>>;
+};
+
+template <template <typename...> typename T, typename... W>
+constexpr auto is_list(const T<W...>) -> is_list_<T, W...>;
+
+template <typename T>
+constexpr auto is_list_v = decltype(is_list(std::decay_t<T>()))::value;
+//-------------------
 
 template <typename ListBranches, typename Branch, typename VectorPhases,
           typename VectorPositions, typename VectorQubits, typename Float>
@@ -46,7 +61,7 @@ auto UpdateBranch(Branch &&branch, VectorPhases &&phases,
   std::size_t ss_ = 0;
   for (std::size_t i_ = 0, end_ = std::size(qubits_); i_ < end_; ++i_) {
     auto &&q_ = qubits_[i_];
-    ss_ += (branch.state[2 * q_] + 2 * branch.state[2 * q_ + 1]) *
+    ss_ += (branch.state.get(2 * q_) + 2 * branch.state.get(2 * q_ + 1)) *
            (std::size_t{1} << (2 * i_));
   }
 
@@ -74,8 +89,8 @@ auto UpdateBranch(Branch &&branch, VectorPhases &&phases,
       for (std::size_t i_ = 0, end_ = std::size(qubits_); i_ < end_; ++i_) {
         const auto q_ = qubits_[i_];
         const auto new_ss_ = (ps_ / (std::size_t{1} << (2 * i_))) % 4;
-        new_branch_.state[2 * q_ + 0] = new_ss_ & 0b01;
-        new_branch_.state[2 * q_ + 1] = new_ss_ & 0b10;
+        new_branch_.state.set(2 * q_ + 0, new_ss_ & 0b01);
+        new_branch_.state.set(2 * q_ + 1, new_ss_ & 0b10);
       }
     }
   }
@@ -228,27 +243,32 @@ auto ExpandBranches(ListBranches &&branches, VectorPhases &&phases,
   branches.splice(std::end(branches), branches_[0]);
 }
 
-template <template <typename...> typename Vector, typename ListBranches>
+template <typename VectorSplitBranches, typename ListBranches>
 auto SplitBranches(ListBranches &&branches, std::size_t n_buckets) {
   // Initialize buckets
-  Vector<std::decay_t<ListBranches>> v_branches_(n_buckets);
+  VectorSplitBranches v_branches_(n_buckets);
 
   // Split
   if (n_buckets == 1)
-    v_branches_[0].splice(std::end(v_branches_[0]), branches);
+    v_branches_[0] = std::move(branches);
   else {
     std::size_t i_{0};
     while (std::size(branches)) {
-      v_branches_[i_++ % n_buckets].push_back(std::move(branches.front()));
-      branches.pop_front();
+      v_branches_[i_++ % n_buckets].push_back(std::move(branches.back()));
+      branches.pop_back();
     }
   }
 
   // Sort branches
   for (auto &br_ : v_branches_)
-    br_.sort([](auto &&x, auto &&y) {
-      return std::abs(x.phase) < std::abs(y.phase);
-    });
+    if constexpr (is_list_v<decltype(branches)>)
+      br_.sort([](auto &&x, auto &&y) {
+        return std::abs(x.phase) < std::abs(y.phase);
+      });
+    else
+      std::sort(std::begin(br_), std::end(br_), [](auto &&x, auto &&y) {
+        return std::abs(x.phase) < std::abs(y.phase);
+      });
 
   // Return split branches
   return v_branches_;
@@ -288,7 +308,8 @@ auto UpdateAllBranches(ListBranches &&branches, VectorPhases &&phases,
           .count();
 
   // Split branches
-  auto v_branches_ = SplitBranches<Vector>(branches, n_threads);
+  auto v_branches_ =
+      SplitBranches<Vector<std::decay_t<ListBranches>>>(branches, n_threads);
 
   // Branches should be empty
   assert(!std::size(branches));

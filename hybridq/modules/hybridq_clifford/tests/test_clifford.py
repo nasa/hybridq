@@ -123,8 +123,10 @@ def get_clifford_rqc_(n_qubits, n_cycles, seed=None):
 
 
 def test_Pauli():
-    from hybridq_clifford.core import (PauliFromState, StateFromPauli, GetPauli,
-                                       SetPauli, SetPauliFromChar)
+    from hybridq_clifford.core.utils import (PauliFromState, StateFromPauli,
+                                             GetPauli, SetPauli,
+                                             SetPauliFromChar)
+    from hybridq_clifford.core import State
 
     for _ in range(100):
 
@@ -137,7 +139,7 @@ def test_Pauli():
 
         # Check State -> Pauli -> State
         assert (all(
-            StateFromPauli(PauliFromState(x_)) == x_
+            StateFromPauli(PauliFromState(State(x_))) == State(x_)
             for x_ in np.random.randint(2, size=(100, 100))))
 
         # Check that the right Pauli is returned
@@ -169,7 +171,7 @@ def test_Pauli():
                          [(6, 6, False)] * 3 + [(6, 6, True)] * 3)
 def test_Simulation(n_qubits, n_gates, parallel, *, verbose=False):
     from hybridq_clifford.simulation import (simulate, GetPauliOperator)
-    from hybridq_clifford.core import PauliFromState
+    from hybridq_clifford.core.utils import PauliFromState
 
     # Get random gate
     def rg_():
@@ -216,7 +218,7 @@ def test_Simulation(n_qubits, n_gates, parallel, *, verbose=False):
 @pytest.mark.parametrize('n_qubits', [8] * 5)
 def test_Clifford(n_qubits, seed=None):
     from hybridq_clifford.simulation import (simulate, Paulis_)
-    from hybridq_clifford.core import PauliFromState
+    from hybridq_clifford.core.utils import PauliFromState
     from hybridq_clifford.utils import diag_z_, trace_, mat_p_, mat_s_, mul_
 
     # Initialize prng
@@ -318,3 +320,26 @@ def test_Clifford(n_qubits, seed=None):
     assert (np.isclose(np.log2(psi_.size * np.sum(np.abs(psi_)**4)),
                        len(z_rho_),
                        atol=1e-5))
+
+
+def random_branch(n):
+    from hybridq_clifford.core.utils import StateFromPauli
+    from hybridq_clifford.core import Branch
+
+    # Return random branch
+    return Branch(
+        StateFromPauli(''.join(np.random.choice(list('IXYZ'), size=n))),
+        np.random.normal(), np.random.normal(), np.random.randint(2**32 - 1))
+
+
+@pytest.mark.parametrize('n,m', [(100, 100) for _ in range(10)])
+def test_DumpBranches(n, m):
+    from hybridq_clifford.core.utils import (DumpBranches, LoadBranches)
+
+    # Generate random branches
+    branches_ = [random_branch(n) for _ in range(m)]
+
+    # Check Dump/Load branches
+    assert all(
+        x_ == y_
+        for x_, y_ in zip(branches_, LoadBranches(DumpBranches(branches_))))

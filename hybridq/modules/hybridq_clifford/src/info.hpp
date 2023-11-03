@@ -19,6 +19,8 @@ specific language governing permissions and limitations under the License.
 
 #include <pybind11/pybind11.h>
 
+#include <limits>
+
 namespace hybridq_clifford {
 
 namespace py = pybind11;

@@ -30,6 +30,11 @@ struct Branch {
   phase_type norm_phase;
   index_type gate_idx;
 
+  bool operator==(const Branch &other) const {
+    return state == other.state && phase == other.phase &&
+           norm_phase == other.norm_phase && gate_idx == other.gate_idx;
+  }
+
   std::ostream &operator<<(std::ostream &out) const {
     out << *this;
     return out;
@@ -38,7 +43,7 @@ struct Branch {
     out << "(state=";
     for (std::size_t i_ = 0, end_ = std::size(branch.state) / 2; i_ < end_;
          ++i_)
-      switch (branch.state[2 * i_ + 0] + 2 * branch.state[2 * i_ + 1]) {
+      switch (branch.state.get(2 * i_ + 0) + 2 * branch.state.get(2 * i_ + 1)) {
         case 0:
           out << "I";
           break;
