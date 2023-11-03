@@ -22,22 +22,24 @@ specific language governing permissions and limitations under the License.
 
 #include "branch.hpp"
 #include "defs.hpp"
+#include "extras/otoc.hpp"
 #include "info.hpp"
 #include "simulation.hpp"
 #include "state.hpp"
 #include "utils.hpp"
 
 #define ADD_OPAQUE_VECTOR(MOD, TYPE, NAME)       \
-  py::bind_vector<TYPE>(m, NAME, NAME);          \
+  py::bind_vector<TYPE>(MOD, NAME, NAME);        \
   py::implicitly_convertible<py::list, TYPE>();  \
   py::implicitly_convertible<py::tuple, TYPE>(); \
   py::implicitly_convertible<py::array, TYPE>();
 #define ADD_OPAQUE_MAP(MOD, TYPE, NAME) \
-  py::bind_map<TYPE>(m, NAME, NAME);    \
+  py::bind_map<TYPE>(MOD, NAME, NAME);  \
   py::implicitly_convertible<py::dict, TYPE>();
 
 namespace py = pybind11;
 namespace hqc = hybridq_clifford;
+namespace hqc_otoc = hybridq_clifford_otoc;
 
 // Set specific types
 using info_type = hqc::Info;
@@ -243,6 +245,11 @@ PYBIND11_MAKE_OPAQUE(completed_branches_type);
 PYBIND11_MAKE_OPAQUE(hqc::vector_type<completed_branches_type>);
 PYBIND11_MAKE_OPAQUE(hqc::vector_type<info_type>);
 PYBIND11_MAKE_OPAQUE(hqc::vector_type<branch_type>);
+//
+PYBIND11_MAKE_OPAQUE(hqc_otoc::completed_branches_type);
+PYBIND11_MAKE_OPAQUE(hqc::vector_type<hqc_otoc::completed_branches_type>);
+PYBIND11_MAKE_OPAQUE(hqc::vector_type<hqc_otoc::info_type>);
+// PYBIND11_MAKE_OPAQUE(hqc::vector_type<hqc_otoc::branch_type>);
 
 PYBIND11_MODULE(hybridq_clifford_core, m) {
   m.doc() =
@@ -250,6 +257,8 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
       "Clifford-expansion technique.";
   //
   auto m_utils = m.def_submodule("utils", "Utilities.");
+  auto m_extras = m.def_submodule("extras", "Extras.");
+  auto m_otoc = m_extras.def_submodule("otoc", "OTOC");
   //
   ADD_OPAQUE_VECTOR(m, hqc::BVector1D, "BVector1D");
   ADD_OPAQUE_VECTOR(m, hqc::FVector1D, "FVector1D");
@@ -258,11 +267,20 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
   ADD_OPAQUE_VECTOR(m, hqc::IVector1D, "IVector1D");
   ADD_OPAQUE_VECTOR(m, hqc::IVector2D, "IVector2D");
   ADD_OPAQUE_VECTOR(m, hqc::IVector3D, "IVector3D");
+  ADD_OPAQUE_VECTOR(m, hqc::vector_type<branch_type>, "VectorBranch");
   ADD_OPAQUE_MAP(m, completed_branches_type, "CompletedBranches");
   ADD_OPAQUE_VECTOR(m, hqc::vector_type<completed_branches_type>,
                     "VectorCompletedBranches");
   ADD_OPAQUE_VECTOR(m, hqc::vector_type<info_type>, "VectorInfo");
-  ADD_OPAQUE_VECTOR(m, hqc::vector_type<branch_type>, "VectorBranch");
+  //
+  // ADD_OPAQUE_VECTOR(m_otoc, hqc::vector_type<hqc_otoc::branch_type>,
+  // "VectorBranch");
+  ADD_OPAQUE_MAP(m_otoc, hqc_otoc::completed_branches_type,
+                 "CompletedBranches");
+  ADD_OPAQUE_VECTOR(m_otoc, hqc::vector_type<hqc_otoc::completed_branches_type>,
+                    "VectorCompletedBranches");
+  ADD_OPAQUE_VECTOR(m_otoc, hqc::vector_type<hqc_otoc::info_type>,
+                    "VectorInfo");
   //
   m_utils.def("GetPauli", &hqc::GetPauli<const state_type &>, py::arg("state"),
               py::arg("pos"), py::pos_only(),
@@ -365,6 +383,70 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
       .def_readonly("log2_n_buckets", &Simulator::log2_n_buckets)
       .def_property_readonly("infos", &Simulator::infos)
       .def("__repr__", [](const Simulator &self) {
+        std::string out_;
+        out_ += "Simulator(";
+        out_ += "atol=" + std::to_string(self.atol) + ", ";
+        out_ += "norm_atol=" + std::to_string(self.norm_atol) + ", ";
+        out_ += "merge_atol=" + std::to_string(self.merge_atol) + ", ";
+        out_ += "n_threads=" + std::to_string(self.n_threads) + ", ";
+        out_ += "log2_n_buckets=" + std::to_string(self.log2_n_buckets) + ", ";
+        return out_;
+      });
+  //
+  py::class_<hqc_otoc::info_type>(m_otoc, "Info")
+      .def(py::init<>())
+      .def_readonly("n_explored_branches",
+                    &hqc_otoc::info_type::n_explored_branches)
+      .def_readonly("n_remaining_branches",
+                    &hqc_otoc::info_type::n_remaining_branches)
+      .def_readonly("n_completed_branches",
+                    &hqc_otoc::info_type::n_completed_branches)
+      .def_readonly("n_threads", &hqc_otoc::info_type::n_threads)
+      .def_readonly("runtime_ms", &hqc_otoc::info_type::runtime_ms)
+      .def_readonly("branching_time_ms",
+                    &hqc_otoc::info_type::branching_time_ms)
+      .def_readonly("expanding_time_ms",
+                    &hqc_otoc::info_type::expanding_time_ms)
+      .def_readonly("log10_norm_atols", &hqc_otoc::info_type::log10_norm_atols)
+      .def_readonly("otoc_values", &hqc_otoc::info_type::otoc_values)
+      .def_readonly("otoc_values_no_int",
+                    &hqc_otoc::info_type::otoc_values_no_int)
+      .def_readonly("otoc_norms0", &hqc_otoc::info_type::otoc_norms0)
+      .def_readonly("otoc_norms1", &hqc_otoc::info_type::otoc_norms1)
+      .def_readonly("otoc_n_completed_branches",
+                    &hqc_otoc::info_type::otoc_n_completed_branches)
+      .def_readonly("otoc_n_explored_branches",
+                    &hqc_otoc::info_type::otoc_n_explored_branches)
+      .def("dict", &hqc_otoc::info_type::dict);
+  //
+  py::class_<hqc_otoc::Simulator>(m_otoc, "Simulator")
+      .def(py::init<hqc::vector_type<hqc_otoc::phases_type>,
+                    hqc::vector_type<hqc_otoc::positions_type>,
+                    hqc::vector_type<hqc_otoc::qubits_type>, std::size_t,
+                    hqc::IVector1D, hqc::float_type, hqc::float_type,
+                    hqc::float_type, std::size_t, std::size_t>(),
+           py::arg("phases"), py::arg("positions"), py::arg("qubits"),
+           py::kw_only(), py::arg("target_position"), py::arg("initial_state"),
+           py::arg("atol") = hqc::float_type{1e-8},
+           py::arg("norm_atol") = hqc::float_type{1e-8},
+           py::arg("merge_atol") = hqc::float_type{1e-8},
+           py::arg("n_threads") = 0, py::arg("log2_n_buckets") = 12)
+      .def("start",
+           &hqc_otoc::Simulator::start<
+               const hqc::vector_type<hqc_otoc::branch_type> &>,
+           py::arg("branches"), py::pos_only(), py::kw_only(),
+           py::arg("expand_branches_only") = false)
+      .def("stop", &hqc_otoc::Simulator::stop)
+      .def("join", &hqc_otoc::Simulator::join)
+      .def("ready", &hqc_otoc::Simulator::ready, py::arg("ms") = 0,
+           py::pos_only())
+      .def_readonly("atol", &hqc_otoc::Simulator::atol)
+      .def_readonly("norm_atol", &hqc_otoc::Simulator::norm_atol)
+      .def_readonly("merge_atol", &hqc_otoc::Simulator::merge_atol)
+      .def_readonly("n_threads", &hqc_otoc::Simulator::n_threads)
+      .def_readonly("log2_n_buckets", &hqc_otoc::Simulator::log2_n_buckets)
+      .def_property_readonly("infos", &hqc_otoc::Simulator::infos)
+      .def("__repr__", [](const hqc_otoc::Simulator &self) {
         std::string out_;
         out_ += "Simulator(";
         out_ += "atol=" + std::to_string(self.atol) + ", ";

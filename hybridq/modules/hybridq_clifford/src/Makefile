@@ -27,7 +27,7 @@ CFLAGS ?= -std=c++17 -Ofast -Wall -Wpedantic -Wfatal-errors \
 OUTPUT := $(OUTPUT_DIR)/core$(shell python3-config --extension-suffix)
 
 # Compile
-$(OUTPUT): core.cpp *.hpp *.cpp
+$(OUTPUT): core.cpp *.hpp *.cpp extras/*.hpp
 	$(CXX) $(CFLAGS) $< -o $@
 
 # Clean
