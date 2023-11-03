@@ -133,15 +133,15 @@ def simulate(circuit: list[tuple[U, qubits]],
              verbose: bool = False,
              core_: str = None,
              **kwargs):
+    from hybridq_clifford.core.utils import StateFromPauli
     from types import ModuleType
     import importlib
 
     # Load core
     core_ = core_ if isinstance(core_, ModuleType) else importlib.import_module(
-        'hybridq_clifford_core' if core_ is None else core_)
+        'hybridq_clifford.core' if core_ is None else core_)
 
     # Load object
-    StateFromPauli = core_.utils.StateFromPauli
     Branch = core_.Branch
     Simulator = core_.Simulator
 
