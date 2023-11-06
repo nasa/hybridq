@@ -101,11 +101,23 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
               py::arg("state"), py::pos_only(),
               "Return Pauli string from `State`.");
   m_utils.def(
+      "DumpStates",
+      [](const hqc::vector_type<hqc::state_type> &states) {
+        return py::bytes(hqc::DumpStates(states));
+      },
+      py::arg("states"), py::pos_only(), "Dump states.");
+  m_utils.def(
       "DumpBranches",
       [](const hqc::vector_type<hqc::branch_type> &branches) {
         return py::bytes(hqc::DumpBranches(branches));
       },
       py::arg("branches"), py::pos_only(), "Dump branches.");
+  m_utils.def(
+      "LoadStates",
+      [](const std::string &buffer) {
+        return hqc::LoadStates<hqc::vector_type, hqc::state_type>(buffer);
+      },
+      py::arg("buffer"), py::pos_only(), "Load states.");
   m_utils.def(
       "LoadBranches",
       [](const std::string &buffer) {

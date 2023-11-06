@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 
 #pragma once
 
+#include <iostream>
+
 namespace hybridq_clifford {
 
 template <typename StateType, typename PhaseType, typename IndexType>

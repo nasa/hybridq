@@ -322,14 +322,29 @@ def test_Clifford(n_qubits, seed=None):
                        atol=1e-5))
 
 
-def random_branch(n):
+def random_state(n):
     from hybridq_clifford.core.utils import StateFromPauli
+    return StateFromPauli(''.join(np.random.choice(list('IXYZ'), size=n)))
+
+
+def random_branch(n):
     from hybridq_clifford.core import Branch
 
     # Return random branch
-    return Branch(
-        StateFromPauli(''.join(np.random.choice(list('IXYZ'), size=n))),
-        np.random.normal(), np.random.normal(), np.random.randint(2**32 - 1))
+    return Branch(random_state(n), np.random.normal(), np.random.normal(),
+                  np.random.randint(2**32 - 1))
+
+
+@pytest.mark.parametrize('n,m', [(100, 100) for _ in range(10)])
+def test_DumpStates(n, m):
+    from hybridq_clifford.core.utils import (DumpStates, LoadStates)
+
+    # Generate random branches
+    states_ = [random_state(n) for _ in range(m)]
+
+    # Check Dump/Load branches
+    assert all(
+        x_ == y_ for x_, y_ in zip(states_, LoadStates(DumpStates(states_))))
 
 
 @pytest.mark.parametrize('n,m', [(100, 100) for _ in range(10)])

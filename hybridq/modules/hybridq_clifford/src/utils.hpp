@@ -75,6 +75,34 @@ auto PauliFromState(State &&state) {
   return paulis_;
 }
 
+template <typename State>
+auto DumpState(const State &state) {
+  const std::size_t size_ =
+      sizeof(decltype(std::size(state))) +
+      sizeof(typename State::base_type) * std::size(state.data());
+
+  // Initialize output
+  std::string out_(size_, '\00');
+
+  // Initialize head of the string
+  char *head_ = &out_[0];
+
+  // Dump state
+  {
+    const auto n_ = std::size(state);
+    const auto s_ = sizeof(typename State::base_type) * std::size(state.data());
+    //
+    std::memcpy(head_, &n_, sizeof(n_));
+    head_ += sizeof(n_);
+    //
+    std::memcpy(head_, &state.data()[0], s_);
+    head_ += s_;
+  }
+
+  // Return output
+  return out_;
+}
+
 template <typename Branch>
 auto DumpBranch(const Branch &branch) {
   // Compute size
@@ -126,6 +154,18 @@ auto DumpBranch(const Branch &branch) {
   return out_;
 }
 
+template <typename States>
+auto DumpStates(const States &states) {
+  // Initialize output
+  std::string out_;
+
+  // For each state, get dump
+  for (const auto &s_ : states) out_ += DumpState(s_);
+
+  // Return dump
+  return out_;
+}
+
 template <typename Branches>
 auto DumpBranches(const Branches &branches) {
   // Initialize output
@@ -136,6 +176,22 @@ auto DumpBranches(const Branches &branches) {
 
   // Return dump
   return out_;
+}
+
+template <typename State>
+auto LoadState(const char *buffer) {
+  auto n_ = std::size(State{});
+  //
+  std::memcpy(&n_, buffer, sizeof(n_));
+  buffer += sizeof(n_);
+  //
+  State state_(n_);
+  const auto s_ = sizeof(typename State::base_type) * std::size(state_.data());
+  std::memcpy(&state_.data()[0], buffer, s_);
+  buffer += s_;
+
+  // Return output
+  return std::tuple{buffer, state_};
 }
 
 template <typename Branch>
@@ -180,6 +236,22 @@ auto LoadBranch(const char *buffer) {
   return std::tuple{buffer, branch_};
 }
 
+template <template <typename...> typename Vector, typename State>
+auto LoadStates(const char *buffer, const char *end) {
+  // Initialize vector of branches
+  Vector<State> states_;
+
+  // Load till the whole buffer is empty
+  while (buffer < end) {
+    auto [new_buffer_, state_] = LoadState<State>(buffer);
+    states_.push_back(std::move(state_));
+    buffer = new_buffer_;
+  }
+
+  // Return vector of branches
+  return states_;
+}
+
 template <template <typename...> typename Vector, typename Branch>
 auto LoadBranches(const char *buffer, const char *end) {
   // Initialize vector of branches
@@ -194,6 +266,11 @@ auto LoadBranches(const char *buffer, const char *end) {
 
   // Return vector of branches
   return branches_;
+}
+
+template <template <typename...> typename Vector, typename State>
+auto LoadStates(const std::string &buffer) {
+  return LoadStates<Vector, State>(buffer.data(), &buffer.back());
 }
 
 template <template <typename...> typename Vector, typename Branch>
