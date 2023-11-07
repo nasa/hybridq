@@ -387,3 +387,57 @@ def test_DumpBranches(n, m):
     assert all(
         x_ == y_
         for x_, y_ in zip(branches_, LoadBranches(DumpBranches(branches_))))
+
+
+def prepare_state(state: str, /):
+    mps_ = {
+        '0': np.array([1, 0]),
+        '1': np.array([0, 1]),
+        '+': np.array([1, 1]) / np.sqrt(2),
+        '-': np.array([1, -1]) / np.sqrt(2),
+    }
+    return fts.reduce(np.kron, map(lambda x: mps_[x], state))
+
+
+@pytest.mark.parametrize('n_qubits,n_gates', [(6, 6) for _ in range(10)])
+def test_OTOC(n_qubits, n_gates):
+    from hybridq_clifford.simulation import GetPauliOperator
+    from hybridq_clifford.extras.otoc import simulate
+
+    # Get a random initial state
+    initial_state_ = ''.join(np.random.choice(list('01+-'), size=n_qubits))
+
+    # Get a random butterfly
+    butterfly_ = ''.join(np.random.choice(list('IXYZ'), size=n_qubits))
+
+    # Get a random target position
+    target_position_ = np.random.randint(n_qubits)
+
+    # Get random circuit for U
+    circ_U_ = [[
+        unitary_group(2**2).rvs(),
+        np.random.choice(n_qubits, size=2, replace=False)
+    ] for _ in range(n_gates)]
+
+    # Build U
+    U_ = fts.reduce(lambda x, y: y @ x,
+                    map(fts.partial(expand_gate_, n_qubits=n_qubits), circ_U_))
+
+    # Get exact otoc
+    psi_ = prepare_state(initial_state_)
+    Z_ = GetPauliOperator(''.join(
+        'Z' if i_ == target_position_ else 'I' for i_ in range(n_qubits)))
+    q0_ = U_.conj().T @ GetPauliOperator(butterfly_) @ U_ @ psi_
+    q1_ = Z_ @ U_.conj().T @ GetPauliOperator(butterfly_) @ U_ @ Z_ @ psi_
+    ex_otoc_ = np.real(np.vdot(q0_, q1_))
+
+    # Get otoc from expansion
+    exp_otoc_ = simulate(circ_U=circ_U_,
+                         butterfly=butterfly_,
+                         initial_state=initial_state_,
+                         target_position=target_position_,
+                         verbose=True,
+                         max_compress=2)[1].otoc_values[-1]
+
+    # Check
+    np.testing.assert_allclose(ex_otoc_, exp_otoc_, atol=1e-4)
