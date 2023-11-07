@@ -172,7 +172,7 @@ def mul_(x, y):
 def CompressCircuit(circuit: iter[tuple[array, list[int]]],
                     /,
                     *,
-                    max_compress: int = 4,
+                    max_compress: int = 5,
                     verbose: bool = False):
     """
     Compress `circuit` to have gates up to `max_compress` qubits.
@@ -217,7 +217,7 @@ def simulate(circuit: list[tuple[U, qubits]],
              paulis: str | dict[str, float] = None,
              branches=None,
              *,
-             max_compress: int = 4,
+             max_compress: int = 5,
              parallel: bool | int = True,
              norm_atol: float = 1e-8,
              atol: float = 1e-8,
