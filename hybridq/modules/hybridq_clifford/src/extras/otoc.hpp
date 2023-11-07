@@ -152,9 +152,6 @@ auto UpdateBranches_(
         complex_type{0, -1},
     };
 
-    // Get hash of the new state
-    const auto n_ = hash_(new_branch.state);
-
     // Get target Pauli
     const auto target_pauli_ = GetPauli(new_branch.state, target_position);
 
@@ -162,11 +159,15 @@ auto UpdateBranches_(
     std::size_t proj_ph_ = 0;
     state_type proj_(std::size(new_branch.state) / 2);
 
+    // Build projection
     for (std::size_t i_ = 0, end_ = std::size(proj_); i_ < end_; ++i_) {
       const auto p_ = GetPauli(new_branch.state, i_);
       proj_.set(i_, v_pauli_[initial_state[i_]][p_]);
       proj_ph_ += v_phase_[initial_state[i_]][p_];
     }
+
+    // Get hash of the new projection
+    const auto n_ = hash_(proj_);
 
     // Get phases
     const auto phase0_ = new_branch.phase * ph_[proj_ph_ % 4];
