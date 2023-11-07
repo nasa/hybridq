@@ -167,6 +167,35 @@ def test_Pauli():
             assert (PauliFromState(s_) == x_)
 
 
+@pytest.mark.parametrize('n_qubits,n_gates,max_compress',
+                         [(10, 10, i_) for i_ in [0, 2, 4] for _ in range(5)])
+def test_CompressCircuit(n_qubits, n_gates, max_compress):
+    from hybridq_clifford.simulation import (CompressCircuit, mul_)
+
+    # Set seed
+    random_unitary = unitary_group(2**2).rvs
+    rng_ = np.random.default_rng()
+
+    # Get random circuit
+    circ_ = list(
+        zip(random_unitary(n_gates), [
+            rng_.choice(n_qubits, size=2, replace=False) for _ in range(n_gates)
+        ]))
+
+    # Get exact
+    U_ = np.eye(2**n_qubits)
+    for c_ in circ_:
+        U_ = expand_gate_(c_, n_qubits) @ U_
+
+    # Get compressed
+    W_ = (np.eye(1), ())
+    for c_ in CompressCircuit(circ_, max_compress=max_compress):
+        W_ = mul_(c_, W_)
+
+    # Check
+    np.testing.assert_allclose(U_, expand_gate_(W_, n_qubits))
+
+
 @pytest.mark.parametrize('n_qubits,n_gates,parallel',
                          [(6, 6, False)] * 3 + [(6, 6, True)] * 3)
 def test_Simulation(n_qubits, n_gates, parallel, *, verbose=False):

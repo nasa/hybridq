@@ -120,10 +120,107 @@ def DecomposeOperator(gate: np.array,
     return dec_, pos_
 
 
+# Multply two gates
+def mul_(x, y):
+    """
+    z = x @ y
+    """
+    from string import (ascii_lowercase, ascii_uppercase)
+
+    # Get matrices and qubits
+    m_x_, q_x_ = x
+    m_y_, q_y_ = y
+
+    # Reshape matrix for tensor multiplication
+    m_x_ = np.reshape(m_x_, [2] * 2 * len(q_x_))
+    m_y_ = np.reshape(m_y_, [2] * 2 * len(q_y_))
+
+    # Get all qubits
+    qubits_ = sorted(set(q_x_).union(q_y_))
+
+    # Check min/max qubit
+    assert min(qubits_) >= 0 and max(qubits_) < len(ascii_lowercase)
+
+    # Get indexes
+    shift_ = 0
+    left_inds_ = {
+        q_: ascii_lowercase[i_ + shift_] for i_, q_ in enumerate(q_x_)
+    }
+    #
+    shift_ += len(left_inds_)
+    center_inds_ = {
+        q_: ascii_lowercase[i_ + shift_] for i_, q_ in enumerate(qubits_)
+    }
+    #
+    shift_ += len(center_inds_)
+    right_inds_ = {
+        q_: ascii_lowercase[i_ + shift_] for i_, q_ in enumerate(q_y_)
+    }
+
+    # Build multiplication map
+    map_ = ''.join(left_inds_[q_] for q_ in q_x_) + ''.join(
+        center_inds_[q_] for q_ in q_x_)
+    map_ += ','
+    map_ += ''.join(center_inds_[q_] for q_ in q_y_) + ''.join(
+        right_inds_[q_] for q_ in q_y_)
+    map_ += '->'
+    map_ += ''.join(left_inds_.get(q_, center_inds_[q_]) for q_ in qubits_)
+    map_ += ''.join(right_inds_.get(q_, center_inds_[q_]) for q_ in qubits_)
+
+    # Return new gate
+    return np.reshape(np.einsum(map_, m_x_, m_y_),
+                      [2**len(qubits_)] * 2), qubits_
+
+
+def CompressCircuit(circuit: iter[tuple[array, list[int]]],
+                    /,
+                    *,
+                    max_compress: int = 4,
+                    verbose: bool = False):
+    """
+    Compress `circuit` to have gates up to `max_compress` qubits.
+    """
+
+    # Initialize new circuit
+    circuit_ = []
+
+    # For each gate ...
+    for gate_ in tqdm(circuit, disable=not verbose, desc='Compress'):
+        # Get qubits
+        qs_ = set(gate_[1])
+
+        # Find last element in circuit_ that doesn't commute with gate_
+        if (pos_ := next((i_ for i_, g_ in enumerate(reversed(circuit_))
+                          if qs_.intersection(g_[1])), -1)) >= 0:
+
+            # Get absolute position
+            pos_ = len(circuit_) - pos_ - 1
+
+            # If final gate is small enough ...
+            if len(qs_.union(circuit_[pos_][1])) <= max_compress:
+                # Remove gate
+                g_ = circuit_.pop(pos_)
+
+                # Multiply and add
+                circuit_.insert(pos_, mul_(gate_, g_))
+
+            # Otherwise, just add
+            else:
+                circuit_.insert(pos_ + 1, gate_)
+
+        # If all commute, just prepend at the beginning
+        else:
+            circuit_.insert(0, gate_)
+
+    # Return compressed circuit
+    return circuit_
+
+
 def simulate(circuit: list[tuple[U, qubits]],
              paulis: str | dict[str, float] = None,
              branches=None,
              *,
+             max_compress: int = 4,
              parallel: bool | int = True,
              norm_atol: float = 1e-8,
              atol: float = 1e-8,
@@ -161,6 +258,12 @@ def simulate(circuit: list[tuple[U, qubits]],
     branches_ = [
         Branch(StateFromPauli(p_), ph_, ph_, 0) for p_, ph_ in paulis.items()
     ]
+
+    # Compress circuit
+    if max_compress > 0:
+        circuit = CompressCircuit(circuit,
+                                  max_compress=max_compress,
+                                  verbose=verbose)
 
     # Decompose circuit
     phases_, positions_, qubits_ = zip(
