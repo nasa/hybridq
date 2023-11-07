@@ -138,9 +138,6 @@ def mul_(x, y):
     # Get all qubits
     qubits_ = sorted(set(q_x_).union(q_y_))
 
-    # Check min/max qubit
-    assert min(qubits_) >= 0 and max(qubits_) < len(ascii_lowercase)
-
     # Get indexes
     shift_ = 0
     left_inds_ = {
