@@ -21,6 +21,8 @@ specific language governing permissions and limitations under the License.
 
 #include <limits>
 
+#include "archive.hpp"
+
 namespace hybridq_clifford {
 
 namespace py = pybind11;
@@ -62,6 +64,16 @@ struct Info {
   std::size_t branching_time_ms{inf<std::size_t>};
   std::size_t expanding_time_ms{inf<std::size_t>};
 
+  bool operator==(const Info &other) const {
+    return n_explored_branches == other.n_explored_branches &&
+           n_completed_branches == other.n_completed_branches &&
+           n_remaining_branches == other.n_remaining_branches &&
+           n_total_branches == other.n_total_branches &&
+           n_threads == other.n_threads && runtime_ms == other.runtime_ms &&
+           branching_time_ms == other.branching_time_ms &&
+           expanding_time_ms == other.expanding_time_ms;
+  }
+
   auto dict() const {
     py::dict out_;
     if (!isinf(n_explored_branches))
@@ -82,3 +94,35 @@ struct Info {
 };
 
 }  // namespace hybridq_clifford
+
+namespace hybridq_clifford::archive {
+
+template <>
+struct Dump<Info> {
+  auto operator()(const Info &info) {
+    return dump(info.n_explored_branches) + dump(info.n_completed_branches) +
+           dump(info.n_remaining_branches) + dump(info.n_total_branches) +
+           dump(info.n_threads) + dump(info.runtime_ms) +
+           dump(info.branching_time_ms) + dump(info.expanding_time_ms);
+  }
+};
+
+template <>
+struct Load<Info> {
+  auto operator()(const char *buffer) {
+    auto [h1_, n_explored_branches_] = load<std::size_t>(buffer);
+    auto [h2_, n_completed_branches_] = load<std::size_t>(h1_);
+    auto [h3_, n_remaining_branches_] = load<std::size_t>(h2_);
+    auto [h4_, n_total_branches_] = load<std::size_t>(h3_);
+    auto [h5_, n_threads_] = load<std::size_t>(h4_);
+    auto [h6_, runtime_ms_] = load<std::size_t>(h5_);
+    auto [h7_, branching_time_ms_] = load<std::size_t>(h6_);
+    auto [h8_, expanding_time_ms_] = load<std::size_t>(h7_);
+    return std::pair{h8_,
+                     Info{n_explored_branches_, n_completed_branches_,
+                          n_remaining_branches_, n_total_branches_, n_threads_,
+                          runtime_ms_, branching_time_ms_, expanding_time_ms_}};
+  }
+};
+
+}  // namespace hybridq_clifford::archive

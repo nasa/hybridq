@@ -364,29 +364,9 @@ def random_branch(n):
                   np.random.randint(2**32 - 1))
 
 
-@pytest.mark.parametrize('n,m', [(100, 100) for _ in range(10)])
-def test_DumpStates(n, m):
-    from hybridq_clifford.core.utils import (DumpStates, LoadStates)
-
-    # Generate random branches
-    states_ = [random_state(n) for _ in range(m)]
-
-    # Check Dump/Load branches
-    assert all(
-        x_ == y_ for x_, y_ in zip(states_, LoadStates(DumpStates(states_))))
-
-
-@pytest.mark.parametrize('n,m', [(100, 100) for _ in range(10)])
-def test_DumpBranches(n, m):
-    from hybridq_clifford.core.utils import (DumpBranches, LoadBranches)
-
-    # Generate random branches
-    branches_ = [random_branch(n) for _ in range(m)]
-
-    # Check Dump/Load branches
-    assert all(
-        x_ == y_
-        for x_, y_ in zip(branches_, LoadBranches(DumpBranches(branches_))))
+def test_LoadDump():
+    from hybridq_clifford.core.extras.tests import TestLoadDump
+    TestLoadDump()
 
 
 def prepare_state(state: str, /):

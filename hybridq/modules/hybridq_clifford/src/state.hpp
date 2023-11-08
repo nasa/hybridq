@@ -17,20 +17,30 @@ specific language governing permissions and limitations under the License.
 
 #pragma once
 
+#include <cstdint>
+
+#include "archive.hpp"
+
 namespace hybridq_clifford {
 
 template <template <typename...> typename vector_type,
           typename BaseType = std::uint64_t>
 struct State {
   using base_type = BaseType;
+  using data_type = vector_type<base_type>;
   static constexpr std::size_t block_size = 8 * sizeof(base_type);
+
+  // Array to store data
+  data_type _data;
 
   // Initialize bitset
   State(std::size_t n = 0)
-      : _n{n}, _data(n / block_size + ((n % block_size) != 0), 0) {}
+      : _data(n / block_size + ((n % block_size) != 0), 0), _n{n} {}
 
   template <typename Vector, typename Vector_ = typename std::decay_t<Vector>,
-            typename = std::enable_if_t<!std::is_same_v<Vector_, State>>>
+            std::enable_if_t<!std::is_integral_v<Vector> &&
+                                 !std::is_same_v<Vector_, State>,
+                             bool> = true>
   State(Vector &&v) : State(std::size(v)) {
     std::size_t i_ = 0;
     for (const auto &x : v) this->set(i_++, x);
@@ -41,10 +51,6 @@ struct State {
   State(const State &) = default;
   State &operator=(State &&) = default;
   State &operator=(const State &) = default;
-
-  // Get underlying data
-  auto &data() { return _data; }
-  const auto &data() const { return _data; }
 
   // Get size of the bitset
   auto size() const { return _n; }
@@ -78,7 +84,6 @@ struct State {
 
  private:
   std::size_t _n{0};
-  vector_type<base_type> _data;
 };
 
 }  // namespace hybridq_clifford
@@ -90,3 +95,27 @@ struct std::hash<hybridq_clifford::State<vector_type, base_type>> {
     return s.hash();
   }
 };
+
+namespace hybridq_clifford::archive {
+
+template <template <typename...> typename vector_type, typename BaseType>
+struct Dump<State<vector_type, BaseType>> {
+  auto operator()(const State<vector_type, BaseType> &state) const {
+    using Array = typename State<vector_type, BaseType>::data_type;
+    return dump<std::size_t>(std::size(state)) + dump<Array>(state._data);
+  }
+};
+
+template <template <typename...> typename vector_type, typename BaseType>
+struct Load<State<vector_type, BaseType>> {
+  auto operator()(const char *buffer) const {
+    using Array = typename State<vector_type, BaseType>::data_type;
+    auto [h1_, size_] = load<std::size_t>(buffer);
+    auto [h2_, array_] = load<Array>(h1_);
+    State<vector_type, BaseType> state_(size_);
+    state_._data = std::move(array_);
+    return std::pair{h2_, state_};
+  }
+};
+
+}  // namespace hybridq_clifford::archive

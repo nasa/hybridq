@@ -68,7 +68,7 @@ auto UpdateBranches_(Branches &&branches,
                     log2_n_buckets == state_type::block_size
                         ? ~state_type::base_type{0}
                         : ((state_type::base_type{1} << log2_n_buckets) - 1)](
-                   auto &&state) { return state.data()[0] & mask; };
+                   auto &&state) { return state._data[0] & mask; };
 
   // Update dataset of completed branches using explored branches
   auto update_completed_branches_ =

@@ -19,6 +19,8 @@ specific language governing permissions and limitations under the License.
 
 #include <iostream>
 
+#include "archive.hpp"
+
 namespace hybridq_clifford {
 
 template <typename StateType, typename PhaseType, typename IndexType>
@@ -67,3 +69,29 @@ struct Branch {
 };
 
 }  // namespace hybridq_clifford
+
+namespace hybridq_clifford::archive {
+
+template <typename StateType, typename PhaseType, typename IndexType>
+struct Dump<Branch<StateType, PhaseType, IndexType>> {
+  using Branch_ = Branch<StateType, PhaseType, IndexType>;
+  auto operator()(const Branch_ &branch) {
+    return dump(branch.state) + dump(branch.phase) + dump(branch.norm_phase) +
+           dump(branch.gate_idx);
+  }
+};
+
+template <typename StateType, typename PhaseType, typename IndexType>
+struct Load<Branch<StateType, PhaseType, IndexType>> {
+  using Branch_ = Branch<StateType, PhaseType, IndexType>;
+  auto operator()(const char *buffer) {
+    auto [h1_, state_] = load<typename Branch_::state_type>(buffer);
+    auto [h2_, phase_] = load<typename Branch_::phase_type>(h1_);
+    auto [h3_, norm_phase_] = load<typename Branch_::phase_type>(h2_);
+    auto [h4_, gate_idx_] = load<typename Branch_::index_type>(h3_);
+    return std::pair{
+        h4_, Branch_{std::move(state_), phase_, norm_phase_, gate_idx_}};
+  }
+};
+
+}  // namespace hybridq_clifford::archive

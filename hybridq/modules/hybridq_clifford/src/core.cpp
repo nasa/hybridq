@@ -22,7 +22,9 @@ specific language governing permissions and limitations under the License.
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
+#include "archive.hpp"
 #include "extras/otoc.hpp"
+#include "tests/tests.hpp"
 
 #define ADD_OPAQUE_VECTOR(MOD, TYPE, NAME)       \
   py::bind_vector<TYPE>(MOD, NAME, NAME);        \
@@ -62,6 +64,7 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
   auto m_utils = m.def_submodule("utils", "Utilities.");
   auto m_extras = m.def_submodule("extras", "Extras.");
   auto m_otoc = m_extras.def_submodule("otoc", "OTOC");
+  auto m_tests = m_extras.def_submodule("tests", "Tests");
   //
   ADD_OPAQUE_VECTOR(m, hqc::BVector1D, "BVector1D");
   ADD_OPAQUE_VECTOR(m, hqc::FVector1D, "FVector1D");
@@ -100,30 +103,6 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
   m_utils.def("PauliFromState", &hqc::PauliFromState<const hqc::state_type &>,
               py::arg("state"), py::pos_only(),
               "Return Pauli string from `State`.");
-  m_utils.def(
-      "DumpStates",
-      [](const hqc::vector_type<hqc::state_type> &states) {
-        return py::bytes(hqc::DumpStates(states));
-      },
-      py::arg("states"), py::pos_only(), "Dump states.");
-  m_utils.def(
-      "DumpBranches",
-      [](const hqc::vector_type<hqc::branch_type> &branches) {
-        return py::bytes(hqc::DumpBranches(branches));
-      },
-      py::arg("branches"), py::pos_only(), "Dump branches.");
-  m_utils.def(
-      "LoadStates",
-      [](const std::string &buffer) {
-        return hqc::LoadStates<hqc::vector_type, hqc::state_type>(buffer);
-      },
-      py::arg("buffer"), py::pos_only(), "Load states.");
-  m_utils.def(
-      "LoadBranches",
-      [](const std::string &buffer) {
-        return hqc::LoadBranches<hqc::vector_type, hqc::branch_type>(buffer);
-      },
-      py::arg("buffer"), py::pos_only(), "Load branches.");
   //
   py::class_<hqc::state_type>(m, "State")
       .def(py::init<std::size_t>(), py::arg("n"), py::pos_only(),
@@ -134,21 +113,29 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
            "Get bit in given position.")
       .def("set", &hqc::state_type::set, py::arg("pos"), py::arg("value"),
            py::pos_only(), "Set bit in given position.")
-      .def(
-          "data", [](const hqc::state_type &self) { return self.data(); },
-          "Get underlying data.")
       .def("__eq__", [](const hqc::state_type &self,
                         const hqc::state_type &other) { return self == other; })
       .def("__len__",
            [](const hqc::state_type &self) { return std::size(self); })
-      .def("__repr__", [](const hqc::state_type &self) {
-        std::string repr_;
-        repr_ = "State(";
-        for (std::size_t i_ = 0, end_ = std::size(self); i_ < end_; ++i_)
-          repr_ += self.get(i_) ? '1' : '0';
-        repr_ += ")";
-        return repr_;
-      });
+      .def("__repr__",
+           [](const hqc::state_type &self) {
+             std::string repr_;
+             repr_ = "State(";
+             for (std::size_t i_ = 0, end_ = std::size(self); i_ < end_; ++i_)
+               repr_ += self.get(i_) ? '1' : '0';
+             repr_ += ")";
+             return repr_;
+           })
+      .def(py::pickle(
+          [](const hqc::state_type &self) {
+            return py::bytes(hqc::archive::dump(self));
+          },
+          [](py::bytes buffer) {
+            return hqc::archive::load<hqc::state_type>(
+                       static_cast<const char *>(
+                           py::buffer_info(py::buffer(buffer).request()).ptr))
+                .second;
+          }));
   //
   py::class_<hqc::branch_type>(m, "Branch")
       .def(py::init<>())
@@ -162,11 +149,22 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
            [](const hqc::branch_type &self, const hqc::branch_type &other) {
              return self == other;
            })
-      .def("__repr__", [](const hqc::branch_type &self) {
-        std::stringstream ss;
-        self << ss;
-        return "Branch" + ss.str();
-      });
+      .def("__repr__",
+           [](const hqc::branch_type &self) {
+             std::stringstream ss;
+             self << ss;
+             return "Branch" + ss.str();
+           })
+      .def(py::pickle(
+          [](const hqc::branch_type &self) {
+            return py::bytes(hqc::archive::dump(self));
+          },
+          [](py::bytes buffer) {
+            return hqc::archive::load<hqc::branch_type>(
+                       static_cast<const char *>(
+                           py::buffer_info(py::buffer(buffer).request()).ptr))
+                .second;
+          }));
   //
   py::class_<hqc::info_type>(m, "Info")
       .def(py::init<>())
@@ -179,7 +177,17 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
       .def_readonly("runtime_ms", &hqc::info_type::runtime_ms)
       .def_readonly("branching_time_ms", &hqc::info_type::branching_time_ms)
       .def_readonly("expanding_time_ms", &hqc::info_type::expanding_time_ms)
-      .def("dict", &hqc::info_type::dict);
+      .def("dict", &hqc::info_type::dict)
+      .def(py::pickle(
+          [](const hqc::info_type &self) {
+            return py::bytes(hqc::archive::dump(self));
+          },
+          [](py::bytes buffer) {
+            return hqc::archive::load<hqc::info_type>(
+                       static_cast<const char *>(
+                           py::buffer_info(py::buffer(buffer).request()).ptr))
+                .second;
+          }));
   //
   py::class_<hqc::Simulator>(m, "Simulator")
       .def(py::init<hqc::vector_type<hqc::phases_type>,
@@ -240,7 +248,17 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
                     &hqc_otoc::info_type::otoc_n_completed_branches)
       .def_readonly("otoc_n_explored_branches",
                     &hqc_otoc::info_type::otoc_n_explored_branches)
-      .def("dict", &hqc_otoc::info_type::dict);
+      .def("dict", &hqc_otoc::info_type::dict)
+      .def(py::pickle(
+          [](const hqc_otoc::info_type &self) {
+            return py::bytes(hqc::archive::dump(self));
+          },
+          [](py::bytes buffer) {
+            return hqc::archive::load<hqc_otoc::info_type>(
+                       static_cast<const char *>(
+                           py::buffer_info(py::buffer(buffer).request()).ptr))
+                .second;
+          }));
   //
   py::class_<hqc_otoc::Simulator>(m_otoc, "Simulator")
       .def(py::init<hqc::vector_type<hqc_otoc::phases_type>,
@@ -279,4 +297,6 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
         out_ += "log2_n_buckets=" + std::to_string(self.log2_n_buckets) + ", ";
         return out_;
       });
+  //
+  m_tests.def("TestLoadDump", &hqc::tests::TestLoadDump);
 }

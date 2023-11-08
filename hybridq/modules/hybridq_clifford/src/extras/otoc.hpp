@@ -19,41 +19,12 @@ specific language governing permissions and limitations under the License.
 
 #include "../branch.hpp"
 #include "../defs.hpp"
-#include "../info.hpp"
 #include "../simulation.hpp"
 #include "../state.hpp"
 #include "../utils.hpp"
+#include "otoc_info.hpp"
 
 namespace hybridq_clifford::otoc {
-
-namespace py = pybind11;
-
-struct Info : hybridq_clifford::Info {
-  std::size_t cleaning_time_ms{std::numeric_limits<std::size_t>::max()};
-  FVector1D log10_norm_atols;
-  FVector1D otoc_values;
-  FVector1D otoc_values_no_int;
-  FVector1D otoc_norms0;
-  FVector1D otoc_norms1;
-  IVector1D otoc_n_completed_branches;
-  IVector1D otoc_n_explored_branches;
-
-  auto dict() const {
-    auto out_ = static_cast<const hybridq_clifford::Info *>(this)->dict();
-    if (std::size(log10_norm_atols))
-      out_["log10_norm_atols"] = log10_norm_atols;
-    if (std::size(otoc_values)) out_["otoc_values"] = otoc_values;
-    if (std::size(otoc_values_no_int))
-      out_["otoc_values_no_int"] = otoc_values_no_int;
-    if (std::size(otoc_norms0)) out_["otoc_norms0"] = otoc_norms0;
-    if (std::size(otoc_norms1)) out_["otoc_norms1"] = otoc_norms1;
-    if (std::size(otoc_n_completed_branches))
-      out_["otoc_n_completed_branches"] = otoc_n_completed_branches;
-    if (std::size(otoc_n_explored_branches))
-      out_["otoc_n_explored_branches"] = otoc_n_explored_branches;
-    return out_;
-  }
-};
 
 // Set specific types
 using info_type = Info;
@@ -122,7 +93,7 @@ auto UpdateBranches_(
                     log2_n_buckets == state_type::block_size
                         ? ~state_type::base_type{0}
                         : ((state_type::base_type{1} << log2_n_buckets) - 1)](
-                   auto &&state) { return state.data()[0] & mask; };
+                   auto &&state) { return state._data[0] & mask; };
 
   // Update dataset of completed branches using explored branches
   const auto update_ = [&hash_, &completed_branches_, merge_atol,
