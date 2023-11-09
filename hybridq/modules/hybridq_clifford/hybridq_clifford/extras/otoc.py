@@ -19,8 +19,12 @@ from __future__ import annotations
 from ..simulation import simulate as simulate_
 
 
-def simulate(circ_U: list[tuple[U, qubits]], initial_state: str,
-             butterfly: str | dict[str, float], target_position: int, **kwargs):
+def simulate(circ_U: list[tuple[U, qubits]],
+             initial_state: str,
+             butterfly: str | dict[int, str],
+             target_position: int,
+             log10_dnorm_atol: float = 0.1,
+             **kwargs):
     """
     Compute OTOC value for the operator `circ_U`.
 
@@ -29,16 +33,26 @@ def simulate(circ_U: list[tuple[U, qubits]], initial_state: str,
     hybridq_clifford.simulation.simulate
     """
 
-    # Check if butterfly is valid
-    if set(butterfly.upper()).difference('IXYZ'):
-        raise ValueError("'butterfly' must be a string containing 'IXYZ' only")
-
     # Check if initial state is valid
     if set(initial_state).difference('01+-'):
         raise ValueError(
             "'initial_state' must be a string containing '01+-' only")
+
+    # If butterfly is dict, build string
+    if isinstance(butterfly, dict):
+        # Check butterfly
+        if any(not 0 <= x_ < len(initial_state)
+               for x_ in butterfly.keys()) or any(
+                   x_.upper() not in 'IXYZ' for x_ in butterfly.values()):
+            raise ValueError("'butterfly' is not valid")
+        butterfly = ''.join(
+            butterfly.get(x_, 'I') for x_ in range(len(initial_state)))
+
+    # Check if butterfly is valid
+    if set(butterfly.upper()).difference('IXYZ'):
+        raise ValueError("'butterfly' must be a string containing 'IXYZ' only")
     if len(butterfly) != len(initial_state):
-        raise ValueError("'initial_state' has the wrong number of qubits")
+        raise ValueError("'butterfly' has the wrong number of qubits")
 
     # Check target position
     if not 0 <= target_position < len(initial_state):
@@ -50,5 +64,6 @@ def simulate(circ_U: list[tuple[U, qubits]], initial_state: str,
                      paulis=butterfly.upper(),
                      initial_state=['01+-'.index(x_) for x_ in initial_state],
                      target_position=target_position,
+                     log10_dnorm_atol=log10_dnorm_atol,
                      core_='hybridq_clifford.core.extras.otoc',
                      **kwargs)

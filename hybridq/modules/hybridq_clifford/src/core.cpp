@@ -265,13 +265,15 @@ PYBIND11_MODULE(hybridq_clifford_core, m) {
                     hqc::vector_type<hqc_otoc::positions_type>,
                     hqc::vector_type<hqc_otoc::qubits_type>, std::size_t,
                     hqc::IVector1D, hqc::float_type, hqc::float_type,
-                    hqc::float_type, std::size_t, std::size_t>(),
+                    hqc::float_type, std::size_t, std::size_t,
+                    hqc::float_type>(),
            py::arg("phases"), py::arg("positions"), py::arg("qubits"),
            py::kw_only(), py::arg("target_position"), py::arg("initial_state"),
            py::arg("atol") = hqc::float_type{1e-8},
            py::arg("norm_atol") = hqc::float_type{1e-8},
            py::arg("merge_atol") = hqc::float_type{1e-8},
-           py::arg("n_threads") = 0, py::arg("log2_n_buckets") = 12)
+           py::arg("n_threads") = 0, py::arg("log2_n_buckets") = 12,
+           py::arg("log10_dnorm_atol") = 0.1)
       .def("start",
            &hqc_otoc::Simulator::start<
                const hqc::vector_type<hqc_otoc::branch_type> &>,

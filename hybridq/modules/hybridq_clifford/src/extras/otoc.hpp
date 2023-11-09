@@ -48,15 +48,13 @@ auto UpdateBranches_(
     const IVector1D &initial_state, const float_type atol,
     const float_type norm_atol, const float_type merge_atol,
     const std::size_t n_threads, const std::size_t log2_n_buckets,
-    bool expand_branches_only, int &stop_, vector_type<info_type> &infos_) {
-  // Set delta_norm_atol
-  static constexpr float log10_dnorm_atol = 0.1;
-
+    const float_type log10_dnorm_atol, bool expand_branches_only, int &stop_,
+    vector_type<info_type> &infos_) {
   // Initialize branches
   list_branches_type branches_(std::begin(branches), std::end(branches));
 
   // Get bucket corresponding to a given normalization phase
-  const auto get_na_bucket_ = [norm_atol](auto &&x) {
+  const auto get_na_bucket_ = [norm_atol, log10_dnorm_atol](auto &&x) {
     return -std::floor(std::log10(std::max(norm_atol, std::abs(x))) /
                        log10_dnorm_atol);
   };
@@ -340,13 +338,15 @@ struct Simulator {
   const float_type merge_atol{1e-8};
   const std::size_t n_threads{0};
   const std::size_t log2_n_buckets{12};
+  const float_type log10_dnorm_atol{0.1};
 
   Simulator(const vector_type<phases_type> &phases,
             const vector_type<positions_type> &positions,
             const vector_type<qubits_type> &qubits, std::size_t target_position,
             const IVector1D &initial_state, float_type atol = 1e-8,
             float_type norm_atol = 1e-8, float_type merge_atol = 1e-8,
-            std::size_t n_threads = 0, std::size_t log2_n_buckets = 12)
+            std::size_t n_threads = 0, std::size_t log2_n_buckets = 12,
+            float_type log10_dnorm_atol = 0.1)
       : phases{phases},
         positions{positions},
         qubits{qubits},
@@ -357,7 +357,8 @@ struct Simulator {
         merge_atol{merge_atol},
         n_threads{n_threads > 0 ? n_threads
                                 : std::thread::hardware_concurrency()},
-        log2_n_buckets{log2_n_buckets} {
+        log2_n_buckets{log2_n_buckets},
+        log10_dnorm_atol{log10_dnorm_atol} {
     // Check norm atol
     if (norm_atol > 1 || norm_atol < 0)
       throw std::logic_error("'norm_atol' must be within 0 and 1 (included).");
@@ -370,10 +371,10 @@ struct Simulator {
 
     // Initialize core
     _core = [branches, expand_branches_only, this]() -> core_output {
-      return UpdateBranches_(branches, phases, positions, qubits,
-                             target_position, initial_state, atol, norm_atol,
-                             merge_atol, n_threads, log2_n_buckets,
-                             expand_branches_only, _stop, _infos);
+      return UpdateBranches_(
+          branches, phases, positions, qubits, target_position, initial_state,
+          atol, norm_atol, merge_atol, n_threads, log2_n_buckets,
+          log10_dnorm_atol, expand_branches_only, _stop, _infos);
     };
 
     // Run simulation (in background)
