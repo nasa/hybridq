@@ -69,35 +69,18 @@ auto load(const char *buffer);
 
 /* FUNDAMENTAL */
 
-template <typename T, ENABLE_IF(std::is_fundamental_v<T>)>
+template <typename T, ENABLE_IF(std::is_trivially_copyable_v<T>)>
 auto dump_(const T &a) {
   std::string out_(sizeof(T), '\00');
   std::memcpy(out_.data(), &a, sizeof(T));
   return out_;
 }
 
-template <typename T, ENABLE_IF(std::is_fundamental_v<T>)>
+template <typename T, ENABLE_IF(std::is_trivially_copyable_v<T>)>
 auto load_(const char *buffer) {
   T out_;
   std::memcpy(&out_, buffer, sizeof(T));
   return std::pair{buffer + sizeof(T), out_};
-}
-
-/* COMPLEX NUMBERS */
-
-template <typename... T, typename V = typename std::complex<T...>::value_type>
-auto dump_(const std::complex<T...> &c) {
-  std::string out_(2 * sizeof(V), '\00');
-  std::memcpy(out_.data(), &c, 2 * sizeof(V));
-  return out_;
-}
-
-template <typename Complex, ENABLE_IF(is_complex_v<Complex>),
-          typename V = typename Complex::value_type>
-auto load_(const char *buffer) {
-  Complex c_;
-  std::memcpy(&c_, buffer, 2 * sizeof(V));
-  return std::pair{buffer + 2 * sizeof(V), c_};
 }
 
 /* STRINGS */
@@ -112,10 +95,10 @@ auto load_(const char *buffer) {
   return std::pair{buffer_ + size_, out_};
 }
 
-/* VECTOR OF FUNDAMENTALS */
+/* VECTOR OF TRIVIALLY COPYABLE */
 
 template <typename... T, typename V = typename std::vector<T...>::value_type,
-          ENABLE_IF(std::is_fundamental_v<V>)>
+          ENABLE_IF(std::is_trivially_copyable_v<V>)>
 auto dump_(const std::vector<T...> &a) {
   std::string out_(sizeof(V) * std::size(a), '\00');
   std::memcpy(out_.data(), a.data(), sizeof(V) * std::size(a));
@@ -124,32 +107,12 @@ auto dump_(const std::vector<T...> &a) {
 
 template <typename Vector, ENABLE_IF(is_vector_v<Vector>),
           typename V = typename Vector::value_type,
-          ENABLE_IF(std::is_fundamental_v<V>)>
+          ENABLE_IF(std::is_trivially_copyable_v<V>)>
 auto load_(const char *buffer) {
   const auto [buffer_, size_] = load<std::size_t>(buffer);
   Vector out_(size_);
   std::memcpy(out_.data(), buffer_, sizeof(V) * size_);
   return std::pair{buffer_ + sizeof(V) * size_, out_};
-}
-
-/* VECTOR OF COMPLEX NUMBERS */
-
-template <typename... T,
-          typename V = typename std::vector<std::complex<T...>>::value_type,
-          ENABLE_IF(is_complex_v<V>)>
-auto dump_(const std::vector<std::complex<T...>> &a) {
-  std::string out_(2 * sizeof(V) * std::size(a), '\00');
-  std::memcpy(out_.data(), a.data(), 2 * sizeof(V) * std::size(a));
-  return dump<std::size_t>(std::size(a)) + out_;
-}
-
-template <typename Vector, ENABLE_IF(is_vector_v<Vector>),
-          typename V = typename Vector::value_type, ENABLE_IF(is_complex_v<V>)>
-auto load_(const char *buffer) {
-  const auto [buffer_, size_] = load<std::size_t>(buffer);
-  Vector out_(size_);
-  std::memcpy(out_.data(), buffer_, 2 * sizeof(V) * size_);
-  return std::pair{buffer_ + 2 * sizeof(V) * size_, out_};
 }
 
 /* ARBITRARY VECTOR/LIST/SET */
@@ -165,7 +128,7 @@ auto dump_(const Vector &a) {
 template <typename Vector, ENABLE_IF(is_list_v<Vector> || is_vector_v<Vector>),
           typename V = typename Vector::value_type,
           ENABLE_IF(is_list_v<Vector> ||
-                    (!std::is_fundamental_v<V> && !is_complex_v<V>))>
+                    (!std::is_trivially_copyable_v<V> && !is_complex_v<V>))>
 auto load_(const char *buffer) {
   auto [buffer_, size_] = load<std::size_t>(buffer);
   Vector out_;
