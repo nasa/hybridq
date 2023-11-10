@@ -366,7 +366,17 @@ def random_branch(n):
 
 def test_LoadDump():
     from hybridq_clifford.core.extras.tests import TestLoadDump
+    import pickle
+
     TestLoadDump()
+
+    # Check pickle
+    assert all(
+        pickle.loads(pickle.dumps(s_)) == s_
+        for s_ in (random_state(100) for _ in range(100)))
+    assert all(
+        pickle.loads(pickle.dumps(b_)) == b_
+        for b_ in (random_branch(100) for _ in range(100)))
 
 
 def prepare_state(state: str, /):
