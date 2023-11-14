@@ -131,10 +131,10 @@ def plot_qubits(layout,
     plt.grid(ls=':')
 
     # Get min/max
-    x_min = min(*(x for x, _ in layout + missing_qubits))
-    x_max = max(*(x for x, _ in layout + missing_qubits))
-    y_min = min(*(y for _, y in layout + missing_qubits))
-    y_max = max(*(y for _, y in layout + missing_qubits))
+    x_min = min(*(x for x, _ in tuple(layout) + tuple(missing_qubits)))
+    x_max = max(*(x for x, _ in tuple(layout) + tuple(missing_qubits)))
+    y_min = min(*(y for _, y in tuple(layout) + tuple(missing_qubits)))
+    y_max = max(*(y for _, y in tuple(layout) + tuple(missing_qubits)))
 
     # Fix ticks
     plt.xticks(range(x_min, x_max + 1))
