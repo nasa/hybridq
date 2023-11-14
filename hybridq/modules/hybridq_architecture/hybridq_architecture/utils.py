@@ -82,6 +82,8 @@ def plot_qubits(layout,
     """
     Plot `layout`.
     """
+    import matplotlib.pyplot as plt
+
     if len(layout):
         layout = list(map(lambda x, y: (y, x), *mit.transpose(layout)))
     if len(subset):
