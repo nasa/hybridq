@@ -117,8 +117,9 @@ def generate_OTOC(layout: dict[any, list[Coupling]],
         raise ValueError('Only {I, X, Y, Z} are valid butterfly operators')
 
     # Check if ancilla/targets are in layout
-    if set(targets).union([ancilla]).difference(all_qubits):
-        raise ValueError(f"Ancilla/Targets must be in layout.")
+    if ancilla is not None:
+        if set(targets).union([ancilla]).difference(all_qubits):
+            raise ValueError(f"Ancilla/Targets must be in layout.")
 
     # Check if targets are unique
     if len(set(targets)) != len(targets):
@@ -135,12 +136,13 @@ def generate_OTOC(layout: dict[any, list[Coupling]],
             f"of targets (expected {len(targets)-1}, got {len(butterfly_op)}).")
 
     # Check that there is a coupling between the ancilla qubit and the measurement qubit
-    if next((False for s in sequence[:min(depth, len(sequence))]
-             for w in layout[s] if sort(w) == sort([ancilla, targets[0]])),
-            True):
-        raise ValueError(
-            f"No available two-qubit gate between ancilla {ancilla} "
-            f"and qubit {targets[0]}.")
+    if ancilla is not None:
+        if next((False for s in sequence[:min(depth, len(sequence))]
+                 for w in layout[s] if sort(w) == sort([ancilla, targets[0]])),
+                True):
+            raise ValueError(
+                f"No available two-qubit gate between ancilla {ancilla} "
+                f"and qubit {targets[0]}.")
 
     # Initialize Circuit
     circ = Circuit()
@@ -156,21 +158,24 @@ def generate_OTOC(layout: dict[any, list[Coupling]],
     ])
 
     # Add CZ between ancilla and first target qubit
-    circ.append(
-        Gate('CZ', [ancilla, targets[0]],
-             tags={
-                 'depth': 0,
-                 'sequence': 'first_control'
-             }))
+    if ancilla is not None:
+        circ.append(
+            Gate('CZ', [ancilla, targets[0]],
+                 tags={
+                     'depth': 0,
+                     'sequence': 'first_control'
+                 }))
 
     # Generate U
-    U = generate_U(layout=layout,
-                   qubits_order=qubits_order,
-                   depth=depth,
-                   sequence=sequence,
-                   one_qb_gates=one_qb_gates,
-                   two_qb_gates=two_qb_gates,
-                   exclude_qubits=[ancilla]).update_all_tags({'U': True})
+    U = generate_U(
+        layout=layout,
+        qubits_order=qubits_order,
+        depth=depth,
+        sequence=sequence,
+        one_qb_gates=one_qb_gates,
+        two_qb_gates=two_qb_gates,
+        exclude_qubits=[] if ancilla is None else [ancilla]).update_all_tags(
+            {'U': True})
 
     # Add U to circuit
     circ += U
@@ -193,11 +198,12 @@ def generate_OTOC(layout: dict[any, list[Coupling]],
         }) for gate in U.inv().remove_all_tags(['U']))
 
     # Add CZ between ancilla and first target qubit
-    circ.append(
-        Gate('CZ', [ancilla, targets[0]],
-             tags={
-                 'depth': 2 * depth - 1,
-                 'sequence': 'second_control'
-             }))
+    if ancilla is not None:
+        circ.append(
+            Gate('CZ', [ancilla, targets[0]],
+                 tags={
+                     'depth': 2 * depth - 1,
+                     'sequence': 'second_control'
+                 }))
 
     return circ
