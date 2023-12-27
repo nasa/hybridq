@@ -144,4 +144,4 @@ def plot_qubits(layout,
     plt.gca().invert_yaxis()
 
     # Return figure
-    return plt
+    return plt.gca()
